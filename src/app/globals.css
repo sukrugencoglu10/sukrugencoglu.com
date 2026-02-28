@@ -241,6 +241,12 @@
   transform: translateX(0);
 }
 
+@media (max-width: 767px) {
+  .brand-name {
+    font-size: 0.91rem !important;
+  }
+}
+
 @media (min-width: 768px) {
   .md\:hidden {
     display: none !important;
