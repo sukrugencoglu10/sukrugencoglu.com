@@ -46,8 +46,8 @@ export default function Footer() {
               <Image
                 src="/g.svg"
                 alt="Şükrü Gençoğlu İkinci Logo"
-                width={58}
-                height={80}
+                width={73}
+                height={100}
                 className="object-contain"
               />
             </div>
