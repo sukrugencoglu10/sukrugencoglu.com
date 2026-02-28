@@ -1,0 +1,249 @@
+@import "tailwindcss";
+
+@theme {
+  /* Renk Paleti — sg.com referanslı */
+  --color-accent: #12b347;
+  --color-accent-light: #3ecf6a;
+  --color-accent-dark: #0e933a;
+
+  --color-yellow: #f4bd13;
+  --color-yellow-light: #fcd84a;
+
+  --color-blue: #1e6296;
+  --color-blue-light: #2d7ab5;
+
+  --color-purple: #81358a;
+  --color-purple-light: #9b44a5;
+
+  /* Yüzey renkleri */
+  --color-surface: #ffffff;
+  --color-surface-secondary: #f8f9fa;
+  --color-surface-tertiary: #f0f2f5;
+
+  /* Metin renkleri */
+  --color-ink: #111111;
+  --color-ink-secondary: #444444;
+  --color-ink-muted: #666666;
+  --color-ink-subtle: #9ca3af;
+
+  /* Kenarlık */
+  --color-border: #eaeaea;
+  --color-border-light: #f3f4f6;
+
+  /* Tipografi */
+  --font-sans: var(--font-outfit), system-ui, -apple-system, sans-serif;
+
+  /* Gölgeler */
+  --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.08), 0 4px 16px rgba(0, 0, 0, 0.05);
+  --shadow-card-hover:
+    0 4px 12px rgba(0, 0, 0, 0.12), 0 16px 40px rgba(0, 0, 0, 0.08);
+  --shadow-btn: 0 2px 8px rgba(18, 179, 71, 0.35);
+  --color-orange: #ff6b00;
+  --color-orange-dark: #e56000;
+
+  /* Animasyonlar */
+  --animate-fade-up: fadeUp 0.6s ease-out both;
+  --animate-fade-in: fadeIn 0.5s ease-out both;
+}
+
+@keyframes fadeUp {
+  from {
+    opacity: 0;
+    transform: translateY(24px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@layer base {
+  :root {
+    scroll-behavior: smooth;
+  }
+
+  html {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    zoom: 67%;
+  }
+
+  body {
+    background-color: #ffffff;
+    color: #111111;
+  }
+
+  ::selection {
+    background-color: rgba(18, 179, 71, 0.15);
+    color: #0e933a;
+  }
+}
+
+/* Navbar tab links — work & about */
+.nav-tab {
+  position: relative;
+  display: inline-block;
+  text-decoration: none;
+  color: #666666;
+  font-size: 0.95rem;
+  font-weight: 500;
+  transition: color 0.2s;
+}
+
+.nav-tab:hover {
+  color: #e879a0;
+}
+
+.nav-tab.active {
+  color: #e879a0;
+}
+
+.nav-tab-dot {
+  position: absolute;
+  bottom: -10px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: block;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background-color: #e879a0;
+  opacity: 0;
+  transition: opacity 0.25s;
+}
+
+.nav-tab:hover .nav-tab-dot,
+.nav-tab.active .nav-tab-dot {
+  opacity: 1;
+}
+
+@layer utilities {
+  .container-site {
+    margin-left: auto;
+    margin-right: auto;
+    padding-left: 1rem;
+    padding-right: 1rem;
+    max-width: 80rem;
+  }
+
+  @media (min-width: 640px) {
+    .container-site {
+      padding-left: 1.5rem;
+      padding-right: 1.5rem;
+    }
+  }
+
+  @media (min-width: 1024px) {
+    .container-site {
+      padding-left: 2rem;
+      padding-right: 2rem;
+    }
+  }
+
+  .section-padding {
+    padding-top: 5rem;
+    padding-bottom: 5rem;
+  }
+
+  @media (min-width: 768px) {
+    .section-padding {
+      padding-top: 7rem;
+      padding-bottom: 7rem;
+    }
+  }
+
+  .scrolling-words {
+    display: inline-block;
+    vertical-align: middle;
+    height: 1.4em;
+    margin-top: -0.45em;
+    margin-bottom: -0.45em;
+    overflow: hidden;
+    transform: translateY(-0.12em); /* Bloğu hafifçe yukarı iterek satırla mükemmel hizalar */
+  }
+  .scrolling-words .word {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start; /* Sadece TR için başa dayalı (eski hali) */
+    height: 1.4em;
+    line-height: normal;
+  }
+  
+  html[lang="en"] .scrolling-words .word {
+    justify-content: center; /* Sadece EN için yatay ortalama */
+  }
+
+  @media (max-width: 767px) {
+    .scrolling-words .word {
+      justify-content: center !important; /* Mobil görünümde sözcükleri kesinlikle ortala */
+      width: 100%;
+      text-align: center;
+    }
+  }
+  .scrolling-words .word:first-child {
+    animation: scrollWordsTrans 5s infinite cubic-bezier(0.75, 0, 0.25, 1);
+  }
+
+  @keyframes scrollWordsTrans {
+    0%, 45% { margin-top: -2.8em; }
+    50%, 95% { margin-top: -1.4em; }
+    100% { margin-top: 0; }
+  }
+}
+
+/* Branding Styles */
+.brand-link {
+  display: flex !important;
+  flex-direction: row-reverse !important;
+  align-items: center !important;
+  gap: 12px !important;
+  text-decoration: none !important;
+  transform: scale(2.04) !important; /* Mobil için %10 ekstra büyüme üzerine %20 ekleme */
+  transform-origin: center center !important;
+}
+
+@media (min-width: 768px) {
+  .brand-link {
+    transform: scale(1.86) !important;
+    transform-origin: left center !important;
+    margin-left: 20px;
+  }
+}
+
+.brand-name {
+  font-family: var(--font-signature) !important;
+  font-size: 1.3rem !important;
+  font-weight: 400 !important;
+  color: #111 !important;
+  opacity: 0;
+  position: absolute;
+  right: 100%;
+  margin-right: 15px; /* Logodan biraz uzaklaşması için */
+  transform: translateX(-10px); /* Soldan sağa kayarak gelmesi için */
+  transition: all 0.5s cubic-bezier(0.23, 1, 0.32, 1);
+  white-space: nowrap;
+  pointer-events: none;
+  display: inline-block;
+  line-height: 1;
+}
+
+.brand-link:hover .brand-name {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+@media (min-width: 768px) {
+  .md\:hidden {
+    display: none !important;
+  }
+}
+
