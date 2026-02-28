@@ -62,7 +62,7 @@ export default function Footer() {
               {[
                 { label: t.nav.home, href: "#home" },
                 { label: t.nav.work, href: "#work" },
-                { label: t.nav.about, href: "#about" },
+                { label: t.nav.about, href: "/about" },
                 { label: t.nav.contact, href: "#contact" },
               ].map((link) => (
                 <li key={link.href}>
