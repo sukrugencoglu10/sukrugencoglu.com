@@ -5,11 +5,27 @@ import Image from "next/image";
 import { useLanguage } from "@/context/LanguageContext";
 import Badge from "@/components/ui/Badge";
 
-const skills = [
-  "Next.js", "React", "TypeScript", "Node.js",
-  "Tailwind CSS", "Google Ads", "Meta Ads",
-  "Google Analytics 4", "GTM", "Looker Studio",
-  "CRO", "SEO", "Figma",
+const techStack = [
+  {
+    icon: "\u{1F4CA}",
+    title: "Analytics",
+    items: ["Google Analytics 4", "Google Tag Manager", "Server-Side Tracking", "Looker Studio", "Data Analysis"],
+  },
+  {
+    icon: "\u{1F680}",
+    title: "Growth",
+    items: ["Conversion Rate Optimization", "A/B Testing", "Google Ads", "Meta Ads", "SEO & Performance"],
+  },
+  {
+    icon: "\u{1F4BB}",
+    title: "Development",
+    items: ["Frontend Development", "SQL & Databases", "Python", "API Integrations", "Web Performance"],
+  },
+  {
+    icon: "\u{1F3A8}",
+    title: "Design",
+    items: ["Adobe Creative Cloud", "Figma", "UX/UI Design", "Landing Pages", "Ad Creatives"],
+  },
 ];
 
 function StatCounter({
@@ -96,22 +112,6 @@ export default function AboutSection() {
             <p className="text-ink-muted leading-relaxed">{t.about.bio2}</p>
             {t.about.bio3 && <p className="text-ink-muted leading-relaxed">{t.about.bio3}</p>}
 
-            {/* Beceriler */}
-            <div className="flex flex-col gap-3">
-              <h3 className="text-sm font-semibold uppercase tracking-wider text-ink-muted">
-                {t.about.skills_title}
-              </h3>
-              <div className="flex flex-wrap gap-2">
-                {skills.map((skill) => (
-                  <span
-                    key={skill}
-                    className="rounded-full border border-border bg-surface-secondary px-3 py-1 text-xs font-medium text-ink-secondary hover:border-[#1e6296] hover:text-[#1e6296] transition-colors cursor-default"
-                  >
-                    {skill}
-                  </span>
-                ))}
-              </div>
-            </div>
           </div>
 
           {/* Sağ: Logo + İstatistikler */}
@@ -141,6 +141,32 @@ export default function AboutSection() {
                 />
               ))}
             </div>
+          </div>
+        </div>
+
+        {/* Tech Stack */}
+        <div className="mt-16 pt-12 border-t border-border">
+          <div className="text-center mb-10">
+            <span className="text-xs font-semibold uppercase tracking-wider text-ink-muted">
+              {t.about.skills_title}
+            </span>
+            <h3 className="text-2xl sm:text-3xl font-extrabold text-ink mt-2">Tech Stack</h3>
+          </div>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+            {techStack.map((category) => (
+              <div
+                key={category.title}
+                className="flex flex-col items-center gap-3 p-6 rounded-xl border border-border bg-surface-secondary hover:border-[#1e6296]/30 transition-colors"
+              >
+                <span className="text-3xl">{category.icon}</span>
+                <h4 className="text-sm font-bold text-ink uppercase tracking-wide">{category.title}</h4>
+                <ul className="flex flex-col gap-1.5 text-center">
+                  {category.items.map((item) => (
+                    <li key={item} className="text-xs text-ink-muted">{item}</li>
+                  ))}
+                </ul>
+              </div>
+            ))}
           </div>
         </div>
       </div>
