@@ -82,9 +82,9 @@ export default function Navbar() {
             <Image
               src="/ff.svg"
               alt="Şükrü Gençoğlu"
-              width={60}
-              height={60}
-              className="w-[60px] h-[60px] object-cover"
+              width={45}
+              height={45}
+              className="w-[45px] h-[45px] object-cover"
               style={{ borderRadius: "50%" }}
               priority
             />

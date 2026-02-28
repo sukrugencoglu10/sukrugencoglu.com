@@ -41,7 +41,7 @@ export default function Footer() {
       <div className="container-site py-12">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 md:gap-12">
           {/* Logo + Tagline */}
-          <div className="flex flex-col gap-4">
+          <div className="flex flex-col gap-4 items-center md:items-start">
             <div className="flex items-center gap-3">
               <Image
                 src="/g.svg"
@@ -54,11 +54,11 @@ export default function Footer() {
           </div>
 
           {/* Navigasyon */}
-          <div className="flex flex-col gap-3">
-            <h4 className="text-xs font-semibold uppercase tracking-wider text-ink-muted">
+          <div className="flex flex-col gap-3 items-center md:items-start">
+            <h4 className="text-xs font-semibold uppercase tracking-wider text-ink-muted text-center md:text-left">
               {t.footer.nav_title}
             </h4>
-            <ul className="flex flex-col gap-2">
+            <ul className="flex flex-col gap-2 items-center md:items-start">
               {[
                 { label: t.nav.home, href: "#home" },
                 { label: t.nav.work, href: "#work" },

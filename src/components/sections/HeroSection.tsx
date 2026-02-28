@@ -33,12 +33,22 @@ export default function HeroSection() {
             fontSize: 'clamp(1.875rem, 3.5vw, 3.375rem)',
           }}
         >
-          {t.hero.headline_start}{" "}
-          <span className="scrolling-words text-[#f4c724]">
-            <span className="word">{t.hero.word1}</span>
-            <span className="word">{t.hero.word2}</span>
-            <span className="word">{t.hero.word1}</span>
-          </span>{" "}
+          <span className={lang === 'tr' ? "md:whitespace-nowrap" : ""}>
+            {t.hero.headline_start}{" "}
+            <span className="scrolling-words text-[#f4c724]">
+              <span className="word">{t.hero.word1}</span>
+              <span className="word">{t.hero.word2}</span>
+              <span className="word">{t.hero.word1}</span>
+            </span>
+          </span>
+          {lang === 'tr' ? (
+            <>
+              <br className="hidden md:block" />
+              <span className="md:hidden"> </span>
+            </>
+          ) : (
+            " "
+          )}
           {t.hero.headline_end.includes('<br />') ? (
             <span dangerouslySetInnerHTML={{ __html: t.hero.headline_end }} />
           ) : (

@@ -15,6 +15,7 @@ export interface Project {
   resultEN: string;
   tags: string[];
   imageSeed: number;
+  logo?: string;
   problemTR: string;
   problemEN: string;
   solutionTR: string;
@@ -28,6 +29,7 @@ export const projects: Project[] = [
     titleTR: "Konteyner Satış Optimizasyonu",
     titleEN: "Container Sales Optimization",
     company: "Pekcon",
+    logo: "/pek.svg",
     categoryTR: "CRO / Web Geliştirme",
     categoryEN: "CRO / Web Development",
     resultTR: "%92 Dönüşüm Artışı",
@@ -48,6 +50,7 @@ export const projects: Project[] = [
     titleTR: "Sanayi Odaklı B2B Büyüme",
     titleEN: "Industrial-Focused B2B Growth",
     company: "Demirkol",
+    logo: "/dem.peg",
     categoryTR: "B2B Teknik Pazarlama",
     categoryEN: "B2B Technical Marketing",
     resultTR: "+180% Qualified Leads",

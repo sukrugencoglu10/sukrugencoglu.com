@@ -25,12 +25,48 @@ const ChevronDown = ({ className }: { className?: string }) => (
 export default function ProjectTable() {
   const { lang } = useLanguage();
   const [openId, setOpenId] = useState<string | null>(null);
+  const [lightbox, setLightbox] = useState<string | null>(null);
 
   const toggle = (id: string) => {
     setOpenId(openId === id ? null : id);
   };
 
   return (
+    <>
+    {/* Lightbox */}
+    {lightbox && (
+      <div
+        onClick={() => setLightbox(null)}
+        style={{
+          position: "fixed", inset: 0, zIndex: 9999,
+          backgroundColor: "rgba(0,0,0,0.85)",
+          display: "flex", alignItems: "center", justifyContent: "center",
+          cursor: "zoom-out",
+        }}
+      >
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src={lightbox}
+          alt="Tam görüntü"
+          onClick={(e) => e.stopPropagation()}
+          style={{
+            maxWidth: "90vw", maxHeight: "90vh",
+            objectFit: "contain",
+            borderRadius: "8px",
+            boxShadow: "0 25px 60px rgba(0,0,0,0.5)",
+          }}
+        />
+        <button
+          onClick={() => setLightbox(null)}
+          style={{
+            position: "absolute", top: "20px", right: "24px",
+            background: "rgba(255,255,255,0.15)", border: "none",
+            color: "#fff", fontSize: "1.5rem", width: "40px", height: "40px",
+            borderRadius: "50%", cursor: "pointer", lineHeight: 1,
+          }}
+        >×</button>
+      </div>
+    )}
     <div className="w-full rounded-2xl border border-border bg-white shadow-[var(--shadow-card)] overflow-hidden">
       {/* Table Header */}
       <div className="hidden md:grid grid-cols-[60px_1fr_200px_200px_50px] gap-4 p-5 lg:p-6 bg-surface-secondary border-b border-border text-xs font-semibold uppercase tracking-wider text-ink-muted">
@@ -65,9 +101,22 @@ export default function ProjectTable() {
                 </div>
 
                 <div className="flex items-center gap-3">
-                  {/* Fake Logo */}
-                  <div className="w-12 h-12 rounded-lg bg-orange/10 flex items-center justify-center text-orange font-bold text-xl overflow-hidden shrink-0">
-                    {project.company.charAt(0)}
+                  {/* Logo */}
+                  <div
+                    className="w-12 h-12 rounded-lg bg-white border border-border flex items-center justify-center text-orange font-bold text-xl overflow-hidden shrink-0"
+                    style={project.logo ? { cursor: "zoom-in" } : {}}
+                    onClick={project.logo ? (e) => { e.stopPropagation(); setLightbox(project.logo!); } : undefined}
+                  >
+                    {project.logo ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img
+                        src={project.logo}
+                        alt={project.company}
+                        style={{ width: "100%", height: "100%", objectFit: "contain", padding: "4px" }}
+                      />
+                    ) : (
+                      project.company.charAt(0)
+                    )}
                   </div>
                   <div className="flex flex-col">
                     <span className="font-semibold text-lg text-ink leading-tight">
@@ -157,5 +206,6 @@ export default function ProjectTable() {
         })}
       </div>
     </div>
+    </>
   );
 }
