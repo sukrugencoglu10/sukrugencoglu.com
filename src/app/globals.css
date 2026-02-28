@@ -245,6 +245,12 @@
   .brand-name {
     font-size: 0.91rem !important;
   }
+
+  section#home {
+    height: auto !important;
+    padding-top: 48px !important;
+    padding-bottom: 48px !important;
+  }
 }
 
 @media (min-width: 768px) {
