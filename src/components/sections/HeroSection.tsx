@@ -10,14 +10,7 @@ export default function HeroSection() {
   return (
     <section
       id='home'
-      className="flex flex-row items-center justify-between gap-4"
-      style={{
-        maxWidth: '1440px',
-        margin: '0 auto',
-        padding: '0 5%',
-        height: 'calc(100vh / 0.67 - 65px)',
-        overflow: 'hidden',
-      }}
+      className="flex flex-row items-center justify-between gap-4 max-w-[1440px] mx-auto px-[5%] h-[calc(100vh/0.67-65px)] overflow-hidden"
     >
       {/* Sol: Metin */}
       <div className={`${lang === 'en' ? 'w-[65%] lg:w-[55%]' : 'w-[50%] lg:w-[42%]'} z-10 relative flex flex-col items-start text-left shrink-0`}>
@@ -28,10 +21,7 @@ export default function HeroSection() {
         </p>
 
         <h1
-          className="font-extrabold leading-[1.1] tracking-tight mb-8 text-[#111]"
-          style={{
-            fontSize: 'clamp(1.875rem, 3.5vw, 3.375rem)',
-          }}
+          className="font-extrabold leading-[1.1] tracking-tight mb-8 text-[#111] text-[clamp(1.875rem,3.5vw,3.375rem)]"
         >
           <span className={lang === 'tr' ? "md:whitespace-nowrap" : ""}>
             {t.hero.headline_start}{" "}
@@ -67,7 +57,7 @@ export default function HeroSection() {
           </a>
 
           <Link
-            href='/#work'
+            href='/services'
             className="text-[#666] underline text-[0.85rem] font-medium transition-colors duration-200 hover:text-[#111]"
           >
             {t.hero.cta_secondary}

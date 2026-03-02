@@ -15,7 +15,7 @@ export const en = {
     word2: "new",
     headline_end: "potential customers <br /> with Google & Meta Ads",
     cta_primary: "Get Started",
-    cta_secondary: "Browse all projects",
+    cta_secondary: "+Plus Services",
   },
   work: {
     badge: "Case Studies",
@@ -25,8 +25,8 @@ export const en = {
   },
   services: {
     badge: "Services",
-    title: "Services",
-    title_accent: "",
+    title: "Building AI-Powered",
+    title_accent: "Software Infrastructures",
     items: [
       {
         title: "High-Performance Web Development",

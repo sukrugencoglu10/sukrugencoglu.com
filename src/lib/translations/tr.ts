@@ -17,7 +17,7 @@ export const tr: Translations = {
     word2: "yeni",
     headline_end: "potansiyel müşterilere ulaşın",
     cta_primary: "Hemen Başlayın",
-    cta_secondary: "Tüm projeleri incele",
+    cta_secondary: "+Plus Hizmetlerimiz",
   },
   work: {
     badge: "Vaka Çalışmaları",
@@ -27,23 +27,23 @@ export const tr: Translations = {
   },
   services: {
     badge: "Hizmetlerimiz",
-    title: "Hizmetler",
-    title_accent: "",
+    title: "Aİ Destekli Yazılım Altyapıları",
+    title_accent: "Kuruyoruz",
     items: [
       {
-        title: "High-Performance Web Development",
+        title: "Yüksek Performanslı Web Geliştirme",
         desc: "Hızın dönüşüm demek olduğunu biliyorum. Next.js, React ve Tailwind CSS kullanarak, Google Core Web Vitals skorları yeşil yanan, SEO uyumlu ve kullanıcıyı satışa ikna eden ultra hızlı web deneyimleri inşa ediyorum."
       },
       {
-        title: "Ghost Tracking & Data Architecture",
-        desc: "iOS 14+ kısıtlamaları ve çerezlerin ölümüyle verinin %30'u karanlıkta kalıyor. Server-Side GTM (Google Tag Manager) kurulumları ile veriyi tarayıcıdan değil, doğrudan sunucudan (Stape/Google Cloud) alarak reklam platformlarına (Facebook CAPI, Google Ads) %100 doğrulukla iletiyorum."
+        title: "Gelişmiş Veri Takibi & Veri Mimarisi",
+        desc: "iOS 14+ kısıtlamaları ve çerezlerin ölümüyle verinin %30'u karanlıkta kalıyor. Sunucu Taraflı GTM (Google Tag Manager) kurulumları ile veriyi tarayıcıdan değil, doğrudan sunucudan (Stape/Google Cloud) alarak reklam platformlarına (Facebook CAPI, Google Ads) %100 doğrulukla iletiyorum."
       },
       {
-        title: "Business Intelligence & Dashboards",
+        title: "İş Zekası & Veri Panelleri",
         desc: "Karmaşık veri panelleri arasında kaybolmanıza izin vermiyorum. Google Analytics 4 ve Google Ads verilerini Looker Studio üzerinde birleştirerek; reklam harcamalarınızı, dönüşüm maliyetlerinizi ve karlılığınızı saniyeler içinde görebileceğiniz şeffaf raporlar sunuyorum."
       },
       {
-        title: "Marketing Automation (n8n & AI)",
+        title: "Pazarlama Otomasyonu (n8n & Yapay Zeka)",
         desc: "Manuel işleri operasyonunuzdan çıkarıyorum. n8n ve yapay zeka araçlarıyla; gelen potansiyel müşterileri anında CRM sisteminize aktarıyor, bildirimleri otomatize ediyor ve veri akışını insan hatasından arındırıyorum."
       }
     ]
@@ -76,7 +76,7 @@ export const tr: Translations = {
     cta: "Mesaj Gönder",
     or_reach: "Ya da doğrudan ulaşın",
     whatsapp_message: "Merhaba Şükrü Bey, hizmetleriniz hakkında bilgi alabilir miyim?",
-    whatsapp_tooltip: "WhatsApp ile Sorun",
+    whatsapp_tooltip: "WhatsApp'tan Bize Sorun",
   },
   footer: {
     tagline: "Web'i, bir proje bir proje inşa ediyorum.",

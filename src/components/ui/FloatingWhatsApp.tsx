@@ -11,7 +11,7 @@ export default function FloatingWhatsApp() {
   const whatsappUrl = `https://wa.me/905324072694?text=${encodeURIComponent(t.contact.whatsapp_message)}`;
 
   return (
-    <div className="fixed bottom-6 right-6 z-[100] flex items-center justify-end">
+    <div className="fixed bottom-12 right-8 md:bottom-6 md:right-6 z-[100] flex items-center justify-end">
       {/* Tooltip (Konuşma Balonu) */}
       <div
         className={`

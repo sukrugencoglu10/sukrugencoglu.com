@@ -168,7 +168,9 @@
     margin-top: -0.45em;
     margin-bottom: -0.45em;
     overflow: hidden;
-    transform: translateY(-0.12em); /* Bloğu hafifçe yukarı iterek satırla mükemmel hizalar */
+    transform: translateY(
+      -0.12em
+    ); /* Bloğu hafifçe yukarı iterek satırla mükemmel hizalar */
   }
   .scrolling-words .word {
     display: flex;
@@ -177,7 +179,7 @@
     height: 1.4em;
     line-height: normal;
   }
-  
+
   html[lang="en"] .scrolling-words .word {
     justify-content: center; /* Sadece EN için yatay ortalama */
   }
@@ -194,9 +196,17 @@
   }
 
   @keyframes scrollWordsTrans {
-    0%, 45% { margin-top: -2.8em; }
-    50%, 95% { margin-top: -1.4em; }
-    100% { margin-top: 0; }
+    0%,
+    45% {
+      margin-top: -2.8em;
+    }
+    50%,
+    95% {
+      margin-top: -1.4em;
+    }
+    100% {
+      margin-top: 0;
+    }
   }
 }
 
@@ -207,7 +217,9 @@
   align-items: center !important;
   gap: 12px !important;
   text-decoration: none !important;
-  transform: scale(2.04) !important; /* Mobil için %10 ekstra büyüme üzerine %20 ekleme */
+  transform: scale(
+    2.04
+  ) !important; /* Mobil için %10 ekstra büyüme üzerine %20 ekleme */
   transform-origin: center center !important;
 }
 
@@ -243,7 +255,8 @@
 
 @media (max-width: 767px) {
   .brand-name {
-    font-size: 0.91rem !important;
+    font-size: 0.75rem !important;
+    margin-right: 0px;
   }
 
   section#home {
@@ -258,4 +271,3 @@
     display: none !important;
   }
 }
-

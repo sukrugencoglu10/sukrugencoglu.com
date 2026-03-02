@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import Link from "next/link";
 import { useLanguage } from "@/context/LanguageContext";
 
 const socialLinks = [
@@ -60,18 +61,20 @@ export default function Footer() {
             </h4>
             <ul className="flex flex-col gap-2 items-center md:items-start">
               {[
-                { label: t.nav.home, href: "#home" },
-                { label: t.nav.work, href: "#work" },
+                { label: t.nav.home, href: "/" },
+                { label: t.nav.work, href: "/#work" },
+                { label: t.nav.process, href: "/#process" },
+                { label: t.nav.services, href: "/services" },
                 { label: t.nav.about, href: "/about" },
-                { label: t.nav.contact, href: "#contact" },
+                { label: t.nav.contact, href: "/#contact" },
               ].map((link) => (
                 <li key={link.href}>
-                  <a
+                  <Link
                     href={link.href}
                     className="text-sm text-ink-secondary hover:text-accent transition-colors"
                   >
                     {link.label}
-                  </a>
+                  </Link>
                 </li>
               ))}
             </ul>
