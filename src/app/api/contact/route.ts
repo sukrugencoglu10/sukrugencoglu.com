@@ -12,7 +12,15 @@ export async function POST(req: Request) {
 
     if (!name || !email || !message) {
       return NextResponse.json(
-        { error: 'Name, email, and message are required.' },
+        { error: 'Ad, e-posta ve mesaj alanları zorunludur.' },
+        { status: 400 }
+      );
+    }
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+       return NextResponse.json(
+        { error: 'Lütfen geçerli bir e-posta adresi girin. (Örn: ornek@mail.com)' },
         { status: 400 }
       );
     }

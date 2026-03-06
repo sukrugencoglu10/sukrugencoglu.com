@@ -161,6 +161,9 @@ export default function ContactSection() {
                     type="email"
                     name="email"
                     required
+                    pattern="^[^\s@]+@[^\s@]+\.[^\s@]+$"
+                    onInvalid={(e) => (e.target as HTMLInputElement).setCustomValidity("Lütfen 'ornek@mail.com' formatında geçerli bir adres girin.")}
+                    onInput={(e) => (e.target as HTMLInputElement).setCustomValidity("")}
                     value={formData.email}
                     onChange={handleChange}
                     className="rounded-xl border border-border bg-surface px-4 py-2.5 text-sm text-ink placeholder:text-ink-subtle focus:outline-none focus:ring-2 focus:ring-[#a855f7]/40 focus:border-[#a855f7] transition-all"
