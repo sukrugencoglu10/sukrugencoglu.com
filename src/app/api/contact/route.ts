@@ -3,6 +3,10 @@ import { Resend } from 'resend';
 
 export async function POST(req: Request) {
   try {
+    if (!process.env.RESEND_API_KEY) {
+      console.error('RESEND_API_KEY is missing');
+      return NextResponse.json({ error: 'Sunucu yapılandırma hatası: API Anahtarı eksik. Vercel veya .env.local ayarlarınızı kontrol edin.' }, { status: 500 });
+    }
     const resend = new Resend(process.env.RESEND_API_KEY);
     const { name, email, message } = await req.json();
 
@@ -27,8 +31,10 @@ export async function POST(req: Request) {
     }
 
     return NextResponse.json({ success: true, data });
-  } catch (error) {
+  } catch (error: any) {
     console.error('Unexpected error in /api/contact:', error);
-    return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
+    return NextResponse.json({ 
+      error: error?.message || 'Beklenmeyen bir sunucu hatası oluştu. (Internal Server Error)' 
+    }, { status: 500 });
   }
 }
