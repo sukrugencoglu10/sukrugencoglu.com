@@ -63,7 +63,7 @@ export default function Footer() {
               {[
                 { label: t.nav.home, href: "/" },
                 { label: t.nav.work, href: "/#work" },
-                { label: t.nav.process, href: "/#process" },
+                { label: t.nav.process, href: "/nasil-calisiriz" },
                 { label: t.nav.services, href: "/services" },
                 { label: t.nav.about, href: "/about" },
                 { label: t.nav.contact, href: "/#contact" },

@@ -10,7 +10,7 @@ import LanguageToggle from "@/components/ui/LanguageToggle";
 const NAV_LINKS = [
   { key: "home" as const, href: "/" },
   { key: "work" as const, href: "/#work" },
-  { key: "process" as const, href: "/#process" },
+  { key: "process" as const, href: "/nasil-calisiriz" },
   { key: "services" as const, href: "/services" },
   { key: "about" as const, href: "/about" },
   { key: "contact" as const, href: "/#contact" },
