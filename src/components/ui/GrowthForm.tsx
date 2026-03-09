@@ -5,16 +5,18 @@ import { motion, AnimatePresence } from "framer-motion";
 
 const STEPS = [
   { id: 1, title: "Odak Noktası", subtitle: "Hangi alanda büyümek istiyorsunuz?" },
-  { id: 2, title: "Kapasite", subtitle: "Tahmini aylık reklam bütçeniz nedir?" },
-  { id: 3, title: "İletişim", subtitle: "Analiz raporunuzu nereye gönderelim?" },
+  { id: 2, title: "Sektör", subtitle: "Hangi sektörde faaliyet gösteriyorsunuz?" },
+  { id: 3, title: "Kapasite", subtitle: "Tahmini aylık reklam bütçeniz nedir?" },
+  { id: 4, title: "İletişim", subtitle: "Analiz raporunuzu nereye gönderelim?" },
 ];
 
-const SECTORS = ["Google'da Üstte Görülme", "WhatsApp & Telefon Araması", "Form Doldurulması", "Diğer"];
+const GOALS = ["Google'da Üstte Görülme", "WhatsApp & Telefon Araması", "Form Doldurulması", "Diğer"];
+const INDUSTRIES = ["E-Ticaret", "İnşaat & Gayrimenkul", "Sağlık & Estetik", "Hukuk & Danışmanlık", "Eğitim", "Diğer"];
 const BUDGETS = ["10.000₺ – 20.000₺", "20.000₺ – 50.000₺", "50.000₺ – 150.000₺+", "Belirtmek İstemiyorum"];
 
 export default function GrowthForm() {
   const [currentStep, setCurrentStep] = useState(1);
-  const [formData, setFormData] = useState({ sector: "", budget: "", email: "" });
+  const [formData, setFormData] = useState({ goal: "", industry: "", budget: "", email: "" });
   const [isLoading, setIsLoading] = useState(false);
   const [sent, setSent] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -35,7 +37,7 @@ export default function GrowthForm() {
         body: JSON.stringify({
           name: "B2B Müşteri Adayı",
           email: formData.email,
-          message: `Sektör: ${formData.sector}\nAylık Reklam Bütçesi: ${formData.budget}`,
+          message: `Hedef: ${formData.goal}\nSektör: ${formData.industry}\nAylık Reklam Bütçesi: ${formData.budget}`,
         }),
       });
       const data = await response.json();
@@ -117,18 +119,18 @@ export default function GrowthForm() {
             {STEPS[currentStep - 1].subtitle}
           </p>
 
-          {/* Step 1: Sector */}
+          {/* Step 1: Goal */}
           {currentStep === 1 && (
             <div className="flex flex-col gap-2">
-              {SECTORS.map((opt) => (
+              {GOALS.map((opt) => (
                 <button
                   key={opt}
                   onClick={() => {
-                    setFormData({ ...formData, sector: opt });
+                    setFormData({ ...formData, goal: opt });
                     nextStep();
                   }}
                   className={`w-full p-3.5 rounded-xl border text-left text-sm transition-all ${
-                    formData.sector === opt
+                    formData.goal === opt
                       ? "border-[#a855f7]/50 bg-[#a855f7]/8 text-[#a855f7]"
                       : "border-border bg-surface text-ink hover:border-[#a855f7]/30 hover:bg-[#a855f7]/5"
                   }`}
@@ -139,8 +141,36 @@ export default function GrowthForm() {
             </div>
           )}
 
-          {/* Step 2: Budget */}
+          {/* Step 2: Industry */}
           {currentStep === 2 && (
+            <div className="flex flex-col gap-2">
+              {INDUSTRIES.map((opt) => (
+                <button
+                  key={opt}
+                  onClick={() => {
+                    setFormData({ ...formData, industry: opt });
+                    nextStep();
+                  }}
+                  className={`w-full p-3.5 rounded-xl border text-left text-sm transition-all ${
+                    formData.industry === opt
+                      ? "border-[#a855f7]/50 bg-[#a855f7]/8 text-[#a855f7]"
+                      : "border-border bg-surface text-ink hover:border-[#a855f7]/30 hover:bg-[#a855f7]/5"
+                  }`}
+                >
+                  {opt}
+                </button>
+              ))}
+              <button
+                onClick={() => setCurrentStep(1)}
+                className="text-xs text-ink-subtle hover:text-ink-muted transition-colors text-center mt-1"
+              >
+                ← Geri Dön
+              </button>
+            </div>
+          )}
+
+          {/* Step 3: Budget */}
+          {currentStep === 3 && (
             <div className="flex flex-col gap-2">
               {BUDGETS.map((opt) => (
                 <button
@@ -159,7 +189,7 @@ export default function GrowthForm() {
                 </button>
               ))}
               <button
-                onClick={() => setCurrentStep(1)}
+                onClick={() => setCurrentStep(2)}
                 className="text-xs text-ink-subtle hover:text-ink-muted transition-colors text-center mt-1"
               >
                 ← Geri Dön
@@ -167,8 +197,8 @@ export default function GrowthForm() {
             </div>
           )}
 
-          {/* Step 3: Email */}
-          {currentStep === 3 && (
+          {/* Step 4: Email */}
+          {currentStep === 4 && (
             <div className="flex flex-col gap-3">
               <input
                 type="email"
@@ -202,7 +232,7 @@ export default function GrowthForm() {
               </button>
 
               <button
-                onClick={() => setCurrentStep(2)}
+                onClick={() => setCurrentStep(3)}
                 className="text-xs text-ink-subtle hover:text-ink-muted transition-colors text-center mt-1"
               >
                 ← Geri Dön
