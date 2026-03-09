@@ -170,7 +170,7 @@ export default function GrowthDashboard() {
             onClick={() => goTo(i)}
             className="w-2 h-2 rounded-full transition-all duration-300"
             style={{
-              backgroundColor: i === index ? sl.color : "#1e629630",
+              backgroundColor: i === index ? "#1e6296" : "#1e629630",
               transform: i === index ? "scale(1.3)" : "scale(1)",
             }}
           />
