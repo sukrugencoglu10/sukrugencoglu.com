@@ -73,6 +73,12 @@ export default function GrowthForm() {
   return (
     <div className="bg-white rounded-2xl border border-border p-6 sm:p-8 shadow-[var(--shadow-card)]">
 
+      {/* Form Başlık */}
+      <div className="mb-6 pb-5 border-b border-border">
+        <p className="text-[10px] uppercase tracking-[0.25em] text-ink-subtle mb-1">Ücretsiz Analiz</p>
+        <h3 className="text-lg font-bold text-ink">Büyüme Potansiyelinizi Keşfedin</h3>
+      </div>
+
       {/* Progress */}
       <div className="flex justify-between mb-8 gap-2">
         {STEPS.map((step) => (
