@@ -83,28 +83,8 @@ export default function MantikhHaritasiSection() {
 
           {/* Right: Growth Dashboard (2/5) */}
           <div className="lg:col-span-2">
-            <div className="sticky top-24 flex flex-col gap-4">
+            <div className="sticky top-24">
               <GrowthDashboard />
-
-              {/* CTA button */}
-              <a
-                href="#contact"
-                className="inline-flex items-center justify-center gap-2 bg-[#1e6296] text-white font-semibold text-sm px-5 py-3 rounded-xl hover:bg-[#2d7ab5] transition-colors shadow-[0_4px_16px_rgba(30,98,150,0.3)]"
-              >
-                {mh.cta_label}
-                <svg
-                  width="15"
-                  height="15"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2.5"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                >
-                  <path d="M5 12h14M12 5l7 7-7 7" />
-                </svg>
-              </a>
             </div>
           </div>
         </div>
