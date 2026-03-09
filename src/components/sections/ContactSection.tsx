@@ -1,9 +1,8 @@
 "use client";
 
-import { useState, type FormEvent } from "react";
 import { useLanguage } from "@/context/LanguageContext";
 import Badge from "@/components/ui/Badge";
-import Button from "@/components/ui/Button";
+import GrowthForm from "@/components/ui/GrowthForm";
 
 const socialLinks = [
   {
@@ -41,51 +40,12 @@ const socialLinks = [
 
 export default function ContactSection() {
   const { t } = useLanguage();
-  const [sent, setSent] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  const [formData, setFormData] = useState({
-    name: "",
-    email: "",
-    message: "",
-  });
-
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    setFormData((prev) => ({ ...prev, [e.target.name]: e.target.value }));
-  };
-
-  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    setIsLoading(true);
-    setError(null);
-
-    try {
-      const response = await fetch("/api/contact", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(formData),
-      });
-
-      const data = await response.json();
-
-      if (response.ok) {
-        setSent(true);
-      } else {
-        setError(data.error || "An error occurred while sending the message.");
-      }
-    } catch (err) {
-      setError("An error occurred while sending the message.");
-      console.error(err);
-    } finally {
-      setIsLoading(false);
-    }
-  };
 
   return (
     <section id="contact" className="section-padding bg-surface-secondary">
       <div className="container-site">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16 items-start">
+
           {/* Sol: Başlık + Sosyal */}
           <div className="flex flex-col gap-6">
             <Badge color="purple">{t.contact.badge}</Badge>
@@ -118,110 +78,8 @@ export default function ContactSection() {
             </div>
           </div>
 
-          {/* Sağ: Form */}
-          <div className="bg-white rounded-2xl border border-border p-6 sm:p-8 shadow-[var(--shadow-card)]">
-            {sent ? (
-              <div className="flex flex-col items-center justify-center h-full gap-4 text-center py-8">
-                <div className="w-16 h-16 rounded-full bg-[#a855f7]/10 flex items-center justify-center text-[#a855f7] text-3xl">
-                  ✓
-                </div>
-                <h3 className="text-xl font-bold text-ink">
-                  {t.contact.cta === "Send Message"
-                    ? "Message sent!"
-                    : "Mesaj gönderildi!"}
-                </h3>
-                <p className="text-ink-muted text-sm">
-                  {t.contact.cta === "Send Message"
-                    ? "I'll get back to you soon."
-                    : "En kısa sürede geri döneceğim."}
-                </p>
-              </div>
-            ) : (
-              <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-                <div className="flex flex-col gap-1.5">
-                  <label className="text-sm font-medium text-ink">
-                    {t.contact.name_label}
-                  </label>
-                  <input
-                    type="text"
-                    name="name"
-                    required
-                    value={formData.name}
-                    onChange={handleChange}
-                    className="rounded-xl border border-border bg-surface px-4 py-2.5 text-sm text-ink placeholder:text-ink-subtle focus:outline-none focus:ring-2 focus:ring-[#a855f7]/40 focus:border-[#a855f7] transition-all"
-                    placeholder="Şükrü Gençoğlu"
-                  />
-                </div>
-
-                <div className="flex flex-col gap-1.5">
-                  <label className="text-sm font-medium text-ink">
-                    {t.contact.email_label}
-                  </label>
-                  <input
-                    type="email"
-                    name="email"
-                    required
-                    pattern="^[^\s@]+@[^\s@]+\.[^\s@]+$"
-                    onInvalid={(e) => (e.target as HTMLInputElement).setCustomValidity("Lütfen 'ornek@mail.com' formatında geçerli bir adres girin.")}
-                    onInput={(e) => (e.target as HTMLInputElement).setCustomValidity("")}
-                    value={formData.email}
-                    onChange={handleChange}
-                    className="rounded-xl border border-border bg-surface px-4 py-2.5 text-sm text-ink placeholder:text-ink-subtle focus:outline-none focus:ring-2 focus:ring-[#a855f7]/40 focus:border-[#a855f7] transition-all"
-                    placeholder="ornek@mail.com"
-                  />
-                </div>
-
-                <div className="flex flex-col gap-1.5">
-                  <label className="text-sm font-medium text-ink">
-                    {t.contact.message_label}
-                  </label>
-                  <textarea
-                    name="message"
-                    required
-                    value={formData.message}
-                    onChange={handleChange}
-                    rows={5}
-                    className="rounded-xl border border-border bg-surface px-4 py-2.5 text-sm text-ink placeholder:text-ink-subtle focus:outline-none focus:ring-2 focus:ring-[#a855f7]/40 focus:border-[#a855f7] transition-all resize-none"
-                    placeholder={t.contact.message_placeholder}
-                  />
-                </div>
-                
-                {error && (
-                  <div className="text-sm font-medium text-red-500 bg-red-50 p-3 rounded-lg border border-red-100">
-                    {error}
-                  </div>
-                )}
-
-                <Button disabled={isLoading} type="submit" variant="primary" size="lg" className="mt-1 !bg-[#c084fc] hover:!bg-[#a855f7] hover:shadow-[0_4px_16px_rgba(192,132,252,0.45)] text-white disabled:opacity-70 disabled:cursor-not-allowed transition-all">
-                  {isLoading ? (
-                    <span className="flex items-center justify-center gap-2">
-                       <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                      </svg>
-                      Gönderiliyor...
-                    </span>
-                  ) : (
-                    <>
-                      {t.contact.cta}
-                      <svg
-                        width="16"
-                        height="16"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="2.5"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      >
-                        <path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z" />
-                      </svg>
-                    </>
-                  )}
-                </Button>
-              </form>
-            )}
-          </div>
+          {/* Sağ: Growth Form */}
+          <GrowthForm />
         </div>
       </div>
     </section>

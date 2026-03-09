@@ -84,4 +84,36 @@ export const tr: Translations = {
     contact_title: "Sosyal Medya",
     copyright: "© 2025 Şükrü Gençoğlu. Tüm hakları saklıdır.",
   },
+  mantikhHaritasi: {
+    badge: "Mantık Haritası",
+    title: "Reklam Yönetiminde",
+    title_accent: "Doğru Strateji",
+    subtitle: "Dönüşüm sağlayan reklamlar için sistematik bir yaklaşım — her adımda, her kararla.",
+    cta_label: "Ücretsiz Görüşme Al",
+    card_title: "Dönüşüm Odaklı Reklam Yönetimi",
+    card_desc: "Her adımda ölçülebilir sonuçlar. Her kampanyada stratejik kararlar.",
+    items: [
+      {
+        title: "Reklam verme ve çıkma amacımız, niyetimiz, hedefimiz nedir?",
+        subs: ["Google'da ilk sayfada çıkma", "Telefon aramaları", "WhatsApp tıklanmaları", "Form"],
+      },
+      {
+        title: "Reklam yayında kalmaz, yönetilir",
+        subs: [],
+      },
+      {
+        title: "Doğru reklam kampanyası ile doğru amaca hizmet ederek doğru hedef kitleye ulaşma",
+        subs: ["Niş hedef kitleye stratejik kampanya kurulumu", "Özel optimizasyon"],
+      },
+      {
+        title: "Reklamların optimize edilmesi",
+        subs: ["Takip edilmesi", "Gelen aramalar incelenmesi", "Gereksiz tıklamaların kapatılması"],
+      },
+      { title: "Profesyonel reklam yönetimi", subs: [] },
+      { title: "Dönüşüm odaklı olmalı, her tıklama müşteri değildir", subs: [] },
+      { title: "Ölçülebilir başarı ve görünürlük", subs: [] },
+      { title: "Güven vererek daha fazla satış ve müşteri kazanma", subs: [] },
+      { title: "Raporlama", subs: [] },
+    ],
+  },
 };

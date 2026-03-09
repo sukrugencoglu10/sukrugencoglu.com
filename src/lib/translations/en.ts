@@ -82,6 +82,38 @@ export const en = {
     contact_title: "Social Media",
     copyright: "© 2025 Şükrü Gençoğlu. All rights reserved.",
   },
+  mantikhHaritasi: {
+    badge: "Logic Map",
+    title: "The Right Strategy in",
+    title_accent: "Ad Management",
+    subtitle: "A systematic approach to running ads that convert — every step, every decision.",
+    cta_label: "Get a Free Consultation",
+    card_title: "Conversion-Focused Ad Management",
+    card_desc: "Measurable results at every step. Strategic decisions in every campaign.",
+    items: [
+      {
+        title: "What is our goal, intention, and target for advertising?",
+        subs: ["First page on Google", "Phone calls", "WhatsApp clicks", "Contact form"],
+      },
+      {
+        title: "Ads are not just running — they are managed",
+        subs: [],
+      },
+      {
+        title: "Reaching the right audience with the right campaign for the right goal",
+        subs: ["Strategic campaign setup for niche audiences", "Custom optimization"],
+      },
+      {
+        title: "Ad optimization",
+        subs: ["Tracking", "Analyzing incoming calls", "Blocking unnecessary clicks"],
+      },
+      { title: "Professional ad management", subs: [] },
+      { title: "Conversion-focused — not every click is a customer", subs: [] },
+      { title: "Measurable success and visibility", subs: [] },
+      { title: "Gaining more sales and customers through trust", subs: [] },
+      { title: "Reporting", subs: [] },
+    ],
+  },
 };
 
 export interface Translations {
@@ -152,5 +184,18 @@ export interface Translations {
     nav_title: string;
     contact_title: string;
     copyright: string;
+  };
+  mantikhHaritasi: {
+    badge: string;
+    title: string;
+    title_accent: string;
+    subtitle: string;
+    cta_label: string;
+    card_title: string;
+    card_desc: string;
+    items: {
+      title: string;
+      subs: string[];
+    }[];
   };
 }
