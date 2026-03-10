@@ -10,8 +10,11 @@ export default function HeroSection() {
   return (
     <section
       id='home'
-      className="flex flex-row items-center justify-between gap-4 max-w-[1440px] mx-auto px-[5%] h-[calc(100vh/0.67-65px)] overflow-hidden"
+      className="flex flex-col h-[calc(100vh/0.67-65px)] border-b border-[#e879a0]/25"
     >
+      {/* Ana içerik satırı */}
+      <div className="flex flex-row items-center justify-between gap-4 max-w-[1440px] mx-auto px-[5%] flex-1 w-full overflow-hidden">
+
       {/* Sol: Metin */}
       <div className={`${lang === 'en' ? 'w-[65%] lg:w-[55%]' : 'w-[50%] lg:w-[42%]'} z-10 relative flex flex-col items-start text-left shrink-0`}>
         <p
@@ -71,6 +74,8 @@ export default function HeroSection() {
           <MasonryGallery />
         </div>
       </div>
+
+      </div>{/* /Ana içerik satırı */}
     </section>
   );
 }
