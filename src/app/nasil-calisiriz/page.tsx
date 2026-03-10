@@ -19,6 +19,15 @@ export default function ProcessPage() {
             priority
           />
         </div>
+        <div className="relative w-full overflow-hidden rounded-2xl shadow-xl border border-border bg-white mt-8">
+          <Image
+            src="/unnamed (1).png"
+            alt="Nasıl Çalışırız - İş Süreci 2"
+            width={1920}
+            height={1080}
+            className="w-full h-auto object-contain"
+          />
+        </div>
       </div>
     </div>
   );
