@@ -8,32 +8,43 @@ import { useLanguage } from "@/context/LanguageContext";
 import LanguageToggle from "@/components/ui/LanguageToggle";
 
 const NAV_LINKS = [
-  { key: "home" as const, href: "/" },
-  { key: "work" as const, href: "/#work" },
-  { key: "process" as const, href: "/nasil-calisiriz" },
-  { key: "services" as const, href: "/services" },
-  { key: "about" as const, href: "/about" },
-  { key: "contact" as const, href: "/#contact" },
+  { key: "home" as const, path: "" },
+  { key: "work" as const, path: "#work" },
+  { key: "process" as const, path: "/nasil-calisiriz" },
+  { key: "services" as const, path: "/services" },
+  { key: "about" as const, path: "/about" },
+  { key: "contact" as const, path: "#contact" },
 ];
 
 export default function Navbar() {
-  const { t } = useLanguage();
+  const { t, lang } = useLanguage();
   const pathname = usePathname();
   const [mobileOpen, setMobileOpen] = useState(false);
+
+  const getHref = (path: string) => {
+    if (path.startsWith("#")) return `/${lang}${path}`;
+    if (path === "") return `/${lang}`;
+    return `/${lang}${path}`;
+  };
+
   const [activeSection, setActiveSection] = useState(
-    pathname === "/about" ? "about" : pathname === "/services" ? "services" : "home"
+    pathname.endsWith("/about") ? "about" : pathname.endsWith("/services") ? "services" : "home"
   );
 
   useEffect(() => {
-    if (pathname === "/about") {
+    if (pathname.endsWith("/about")) {
       setActiveSection("about");
       return;
     }
-    if (pathname === "/services") {
+    if (pathname.endsWith("/services")) {
       setActiveSection("services");
       return;
     }
-    
+    if (pathname.endsWith("/nasil-calisiriz")) {
+      setActiveSection("process");
+      return;
+    }
+
     // For other paths, rely on intersection observer or standard hash
     setActiveSection("home");
     
@@ -76,7 +87,7 @@ export default function Navbar() {
         {/* Logo container - Mobil'de tam orta, Masaüstü'nde sol */}
         <div className="md:static absolute left-1/2 md:left-auto transform -translate-x-[50%] md:translate-x-0 ml-[-20px] md:ml-10 z-20">
           <Link
-            href="/"
+            href={`/${lang}`}
             className="brand-link"
           >
             <Image
@@ -96,14 +107,14 @@ export default function Navbar() {
 
         {/* Desktop Nav Links */}
         <nav className="hidden md:flex" style={{ gap: "32px", alignItems: "center" }}>
-          {NAV_LINKS.map(({ key, href }) => {
+          {NAV_LINKS.map(({ key, path }) => {
             const isTab = true;
             const isActive = activeSection === key;
             if (isTab) {
               return (
                 <Link
                   key={key}
-                  href={href}
+                  href={getHref(path)}
                   className={`nav-tab${isActive ? " active" : ""}`}
                 >
                   {t.nav[key]}
@@ -114,7 +125,7 @@ export default function Navbar() {
             return (
               <Link
                 key={key}
-                href={href}
+                href={getHref(path)}
                 style={{
                   textDecoration: "none",
                   color: isActive ? "#12b347" : "#666666",
@@ -144,7 +155,7 @@ export default function Navbar() {
         >
           {/* btn-orange */}
           <Link
-            href="/#contact"
+            href={`/${lang}#contact`}
             style={{
               backgroundColor: "#ff5f00",
               color: "white",
@@ -196,13 +207,13 @@ export default function Navbar() {
           className="md:hidden"
           style={{ borderTop: "1px solid #eaeaea", backgroundColor: "#fff", padding: "16px 5% 20px" }}
         >
-          {NAV_LINKS.map(({ key, href }) => {
+          {NAV_LINKS.map(({ key, path }) => {
             const isTab = true;
             const isActive = activeSection === key;
             return (
               <Link
                 key={key}
-                href={href}
+                href={getHref(path)}
                 onClick={() => setMobileOpen(false)}
                 style={{
                   display: "block",
@@ -235,7 +246,7 @@ export default function Navbar() {
           })}
           <div style={{ marginTop: "16px", display: "flex", flexDirection: "column", gap: "10px" }}>
             <Link
-              href="/#contact"
+              href={`/${lang}#contact`}
               onClick={() => setMobileOpen(false)}
               style={{ display: "block", textAlign: "center", padding: "9px", border: "1px solid #ff5f00", backgroundColor: "#ff5f00", borderRadius: "4px", color: "white", textDecoration: "none", fontWeight: 600, transition: "all 0.3s ease", boxShadow: "0 0 0 rgba(255, 95, 0, 0)" }}
               onMouseEnter={(e) => {

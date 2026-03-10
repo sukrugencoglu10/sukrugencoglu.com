@@ -35,7 +35,7 @@ const socialLinks = [
 ];
 
 export default function Footer() {
-  const { t } = useLanguage();
+  const { t, lang } = useLanguage();
 
   return (
     <footer className="bg-surface-secondary border-t border-border">
@@ -61,12 +61,12 @@ export default function Footer() {
             </h4>
             <ul className="flex flex-col gap-2 items-center md:items-start">
               {[
-                { label: t.nav.home, href: "/" },
-                { label: t.nav.work, href: "/#work" },
-                { label: t.nav.process, href: "/nasil-calisiriz" },
-                { label: t.nav.services, href: "/services" },
-                { label: t.nav.about, href: "/about" },
-                { label: t.nav.contact, href: "/#contact" },
+                { label: t.nav.home, href: `/${lang}` },
+                { label: t.nav.work, href: `/${lang}#work` },
+                { label: t.nav.process, href: `/${lang}/nasil-calisiriz` },
+                { label: t.nav.services, href: `/${lang}/services` },
+                { label: t.nav.about, href: `/${lang}/about` },
+                { label: t.nav.contact, href: `/${lang}#contact` },
               ].map((link) => (
                 <li key={link.href}>
                   <Link
