@@ -10,7 +10,7 @@ import LanguageToggle from "@/components/ui/LanguageToggle";
 const NAV_LINKS = [
   { key: "home" as const, path: "" },
   { key: "work" as const, path: "#work" },
-  { key: "process" as const, path: "/nasil-calisiriz" },
+  { key: "process" as const, path: null }, // dile göre değişir
   { key: "services" as const, path: "/services" },
   { key: "about" as const, path: "/about" },
   { key: "contact" as const, path: "#contact" },
@@ -21,7 +21,8 @@ export default function Navbar() {
   const pathname = usePathname();
   const [mobileOpen, setMobileOpen] = useState(false);
 
-  const getHref = (path: string) => {
+  const getHref = (path: string | null) => {
+    if (path === null) return `/${lang}/${lang === "tr" ? "nasil-calisiriz" : "how-we-work"}`;
     if (path.startsWith("#")) return `/${lang}${path}`;
     if (path === "") return `/${lang}`;
     return `/${lang}${path}`;
@@ -40,7 +41,7 @@ export default function Navbar() {
       setActiveSection("services");
       return;
     }
-    if (pathname.endsWith("/nasil-calisiriz")) {
+    if (pathname.endsWith("/nasil-calisiriz") || pathname.endsWith("/how-we-work")) {
       setActiveSection("process");
       return;
     }

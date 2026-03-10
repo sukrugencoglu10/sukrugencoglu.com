@@ -63,7 +63,7 @@ export default function Footer() {
               {[
                 { label: t.nav.home, href: `/${lang}` },
                 { label: t.nav.work, href: `/${lang}#work` },
-                { label: t.nav.process, href: `/${lang}/nasil-calisiriz` },
+                { label: t.nav.process, href: `/${lang}/${lang === "tr" ? "nasil-calisiriz" : "how-we-work"}` },
                 { label: t.nav.services, href: `/${lang}/services` },
                 { label: t.nav.about, href: `/${lang}/about` },
                 { label: t.nav.contact, href: `/${lang}#contact` },
