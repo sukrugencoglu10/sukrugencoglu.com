@@ -1,10 +1,5 @@
 import Image from "next/image";
 
-export const metadata = {
-  title: "Nasıl Çalışırız - Şükrü Gençoğlu",
-  description: "Şükrü Gençoğlu'nun çalışma süreci ve metodolojisi.",
-};
-
 export default function ProcessPage() {
   return (
     <div className="w-full min-h-screen bg-surface flex flex-col items-center justify-start pt-20">

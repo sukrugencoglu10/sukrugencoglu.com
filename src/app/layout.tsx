@@ -1,10 +1,6 @@
 import type { Metadata } from "next";
 import { Outfit, Alex_Brush } from "next/font/google";
 import "./globals.css";
-import { LanguageProvider } from "@/context/LanguageContext";
-import Navbar from "@/components/layout/Navbar";
-import Footer from "@/components/layout/Footer";
-import FloatingWhatsApp from "@/components/ui/FloatingWhatsApp";
 
 const inter = Outfit({
   subsets: ["latin", "latin-ext"],
@@ -59,12 +55,7 @@ export default function RootLayout({
   return (
     <html lang="tr" className={`${inter.variable} ${signature.variable}`}>
       <body className="bg-white text-ink font-sans antialiased">
-        <LanguageProvider>
-          <Navbar />
-          <main>{children}</main>
-          <Footer />
-          <FloatingWhatsApp />
-        </LanguageProvider>
+        {children}
       </body>
     </html>
   );

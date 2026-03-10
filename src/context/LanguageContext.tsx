@@ -22,8 +22,14 @@ const LanguageContext = createContext<LanguageContextValue | null>(null);
 
 const translations: Record<Lang, Translations> = { en, tr };
 
-export function LanguageProvider({ children }: { children: ReactNode }) {
-  const [lang, setLang] = useState<Lang>("tr");
+export function LanguageProvider({
+  children,
+  initialLang = "tr",
+}: {
+  children: ReactNode;
+  initialLang?: Lang;
+}) {
+  const [lang, setLang] = useState<Lang>(initialLang);
 
   useEffect(() => {
     document.documentElement.lang = lang;
