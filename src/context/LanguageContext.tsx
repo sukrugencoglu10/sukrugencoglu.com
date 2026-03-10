@@ -31,6 +31,11 @@ export function LanguageProvider({
 }) {
   const [lang, setLang] = useState<Lang>(initialLang);
 
+  // URL'den gelen initialLang değişince state'i güncelle
+  useEffect(() => {
+    setLang(initialLang);
+  }, [initialLang]);
+
   useEffect(() => {
     document.documentElement.lang = lang;
   }, [lang]);
