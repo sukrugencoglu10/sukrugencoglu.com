@@ -44,42 +44,42 @@ export default function ContactSection() {
   return (
     <section id="contact" className="section-padding bg-surface-secondary">
       <div className="container-site">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16 items-start">
-
-          {/* Sol: Başlık + Sosyal */}
-          <div className="flex flex-col gap-6">
-            <Badge color="purple">{t.contact.badge}</Badge>
-            <h2 className="text-3xl sm:text-4xl font-extrabold text-ink tracking-tight">
-              {t.contact.title}{" "}
-              <span className="text-[#a855f7]">{t.contact.title_accent}</span>
-            </h2>
-            <p className="text-ink-muted leading-relaxed max-w-md">
-              {t.contact.subtitle}
-            </p>
-
-            <div className="flex flex-col gap-2 mt-2">
-              <p className="text-xs font-semibold uppercase tracking-wider text-ink-muted mb-2">
-                {t.contact.or_reach}
-              </p>
-              {socialLinks.map((s) => (
-                <a
-                  key={s.name}
-                  href={s.href}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center gap-3 group text-ink-secondary hover:text-[#a855f7] transition-colors"
-                >
-                  <span className="p-2 rounded-lg bg-surface border border-border group-hover:bg-[#a855f7]/10 group-hover:border-[#a855f7]/30 transition-all">
-                    {s.icon}
-                  </span>
-                  <span className="text-sm font-medium">{s.label}</span>
-                </a>
-              ))}
-            </div>
+        <div className="flex flex-col gap-6 max-w-2xl">
+          <Badge color="purple">{t.contact.badge}</Badge>
+          <h2 className="text-3xl sm:text-4xl font-extrabold text-ink tracking-tight">
+            {t.contact.title}{" "}
+            <span className="text-[#a855f7]">{t.contact.title_accent}</span>
+          </h2>
+          <div>
+            <p className="text-[10px] uppercase tracking-[0.25em] text-ink-subtle mb-1">Ücretsiz Analiz</p>
+            <h3 className="text-lg font-bold text-ink">Büyüme Potansiyelinizi Keşfedin</h3>
           </div>
 
-          {/* Sağ: Growth Form */}
           <GrowthForm />
+
+          <p className="text-ink-muted leading-relaxed max-w-md">
+            {t.contact.subtitle}
+          </p>
+
+          <div className="flex flex-col gap-2">
+            <p className="text-xs font-semibold uppercase tracking-wider text-ink-muted mb-2">
+              {t.contact.or_reach}
+            </p>
+            {socialLinks.map((s) => (
+              <a
+                key={s.name}
+                href={s.href}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-3 group text-ink-secondary hover:text-[#a855f7] transition-colors"
+              >
+                <span className="p-2 rounded-lg bg-surface border border-border group-hover:bg-[#a855f7]/10 group-hover:border-[#a855f7]/30 transition-all">
+                  {s.icon}
+                </span>
+                <span className="text-sm font-medium">{s.label}</span>
+              </a>
+            ))}
+          </div>
         </div>
       </div>
     </section>
