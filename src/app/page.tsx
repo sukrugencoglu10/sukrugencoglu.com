@@ -8,7 +8,7 @@ export default function HomePage() {
   return (
     <>
       <HeroSection />
-      <div className="relative z-10 -mt-[80px]">
+      <div className="relative z-10 mt-0 md:-mt-[80px]">
         <MarqueeText />
       </div>
       <WorkSection />
