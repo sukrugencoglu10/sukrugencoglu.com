@@ -11,7 +11,14 @@ export function middleware(request: NextRequest) {
     (l) => pathname === `/${l}` || pathname.startsWith(`/${l}/`)
   );
 
-  if (hasValidLang) return NextResponse.next();
+  if (hasValidLang) {
+    const detectedLang = validLangs.find(
+      (l) => pathname === `/${l}` || pathname.startsWith(`/${l}/`)
+    ) ?? "tr";
+    const response = NextResponse.next();
+    response.headers.set("x-lang", detectedLang);
+    return response;
+  }
 
   // Kök path → /tr
   if (pathname === "/") {

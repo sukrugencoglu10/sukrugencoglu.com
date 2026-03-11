@@ -1,4 +1,27 @@
+import type { Metadata } from "next";
 import Image from "next/image";
+
+const baseUrl = "https://www.sukrugencoglu.com";
+
+export const metadata: Metadata = {
+  title: "Nasıl Çalışırız | Şükrü Gençoğlu",
+  description:
+    "Dijital pazarlama ve web geliştirme projelerinde izlediğimiz süreç ve çalışma yöntemimiz hakkında detaylı bilgi.",
+  alternates: {
+    canonical: `${baseUrl}/tr/nasil-calisiriz`,
+    languages: {
+      tr: `${baseUrl}/tr/nasil-calisiriz`,
+      en: `${baseUrl}/en/how-we-work`,
+      "x-default": `${baseUrl}/tr/nasil-calisiriz`,
+    },
+  },
+  openGraph: {
+    title: "Nasıl Çalışırız | Şükrü Gençoğlu",
+    description:
+      "Dijital pazarlama ve web geliştirme projelerinde izlediğimiz süreç ve çalışma yöntemimiz hakkında detaylı bilgi.",
+    url: `${baseUrl}/tr/nasil-calisiriz`,
+  },
+};
 
 export default function ProcessPage() {
   return (

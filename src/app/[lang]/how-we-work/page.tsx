@@ -1,4 +1,27 @@
+import type { Metadata } from "next";
 import Image from "next/image";
+
+const baseUrl = "https://www.sukrugencoglu.com";
+
+export const metadata: Metadata = {
+  title: "How We Work | Şükrü Gençoğlu",
+  description:
+    "Learn about our working process and methodology for digital marketing and web development projects.",
+  alternates: {
+    canonical: `${baseUrl}/en/how-we-work`,
+    languages: {
+      tr: `${baseUrl}/tr/nasil-calisiriz`,
+      en: `${baseUrl}/en/how-we-work`,
+      "x-default": `${baseUrl}/tr/nasil-calisiriz`,
+    },
+  },
+  openGraph: {
+    title: "How We Work | Şükrü Gençoğlu",
+    description:
+      "Learn about our working process and methodology for digital marketing and web development projects.",
+    url: `${baseUrl}/en/how-we-work`,
+  },
+};
 
 export default function HowWeWorkPage() {
   return (
