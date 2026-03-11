@@ -9,7 +9,7 @@ export default function WorkSection() {
   const { t, lang } = useLanguage();
 
   return (
-    <section id="work" className="section-padding bg-surface-secondary">
+    <section id={lang === "tr" ? "calisimalar" : "work"} className="section-padding bg-surface-secondary">
       <div className="container-site">
         {/* Başlık */}
         <div className="flex flex-col items-center gap-4 text-center mb-12">

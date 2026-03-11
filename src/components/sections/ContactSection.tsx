@@ -39,10 +39,10 @@ const socialLinks = [
 ];
 
 export default function ContactSection() {
-  const { t } = useLanguage();
+  const { t, lang } = useLanguage();
 
   return (
-    <section id="contact" className="section-padding bg-surface-secondary">
+    <section id={lang === "tr" ? "iletisim" : "contact"} className="section-padding bg-surface-secondary">
       <div className="container-site">
         <div className="flex flex-col gap-6 max-w-2xl">
           <Badge color="purple">{t.contact.badge}</Badge>

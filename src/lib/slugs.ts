@@ -5,11 +5,15 @@ export const PAGE_SLUGS: Record<Lang, Record<string, string>> = {
     services: "hizmetler",
     about: "hakkimda",
     process: "nasil-calisiriz",
+    work: "calisimalar",
+    contact: "iletisim",
   },
   en: {
     services: "services",
     about: "about",
     process: "how-we-work",
+    work: "work",
+    contact: "contact",
   },
 };
 

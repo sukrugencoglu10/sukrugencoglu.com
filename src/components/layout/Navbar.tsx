@@ -18,8 +18,8 @@ export default function Navbar() {
 
   const getHref = (key: NavKey): string => {
     if (key === "home") return `/${lang}`;
-    if (key === "work") return `/${lang}#work`;
-    if (key === "contact") return `/${lang}#contact`;
+    if (key === "work") return `/${lang}#${getSlug(lang, "work")}`;
+    if (key === "contact") return `/${lang}#${getSlug(lang, "contact")}`;
     return `/${lang}/${getSlug(lang, key)}`;
   };
 
@@ -47,12 +47,23 @@ export default function Navbar() {
     const observer = new IntersectionObserver(
       (entries) => {
         entries.forEach((e) => {
-          if (e.isIntersecting) setActiveSection(e.target.id);
+          if (e.isIntersecting) {
+            // Section ID'sini nav key'e çevir
+            const idToKey: Record<string, string> = {
+              home: "home",
+              work: "work",
+              calisimalar: "work",
+              contact: "contact",
+              iletisim: "contact",
+            };
+            setActiveSection(idToKey[e.target.id] ?? e.target.id);
+          }
         });
       },
       { rootMargin: "-80px 0px -60% 0px" }
     );
-    ["home", "work", "process", "contact"].forEach((id) => {
+    // Hem TR hem EN ID'leri gözlemle
+    ["home", "work", "calisimalar", "contact", "iletisim"].forEach((id) => {
       const el = document.getElementById(id);
       if (el) observer.observe(el);
     });
@@ -151,7 +162,7 @@ export default function Navbar() {
         >
           {/* btn-orange */}
           <Link
-            href={`/${lang}#contact`}
+            href={`/${lang}#${getSlug(lang, "contact")}`}
             style={{
               backgroundColor: "#ff5f00",
               color: "white",
@@ -242,7 +253,7 @@ export default function Navbar() {
           })}
           <div style={{ marginTop: "16px", display: "flex", flexDirection: "column", gap: "10px" }}>
             <Link
-              href={`/${lang}#contact`}
+              href={`/${lang}#${getSlug(lang, "contact")}`}
               onClick={() => setMobileOpen(false)}
               style={{ display: "block", textAlign: "center", padding: "9px", border: "1px solid #ff5f00", backgroundColor: "#ff5f00", borderRadius: "4px", color: "white", textDecoration: "none", fontWeight: 600, transition: "all 0.3s ease", boxShadow: "0 0 0 rgba(255, 95, 0, 0)" }}
               onMouseEnter={(e) => {
