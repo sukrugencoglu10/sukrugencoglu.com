@@ -75,6 +75,28 @@ export const en = {
     or_reach: "Or reach me directly",
     whatsapp_message: "Hello Şükrü, I'd like to get more information about your services.",
     whatsapp_tooltip: "Chat on WhatsApp",
+    free_analysis_label: "Free Analysis",
+    form_title: "Discover Your Growth Potential",
+  },
+  growthForm: {
+    steps: [
+      { title: "Focus Area", subtitle: "What area do you want to grow in?" },
+      { title: "Industry", subtitle: "What industry are you in?" },
+      { title: "Budget", subtitle: "What is your estimated monthly ad budget?" },
+      { title: "Contact", subtitle: "Where should we send your analysis report?" },
+    ],
+    goals: ["Ranking on Google", "WhatsApp & Phone Calls", "Contact Form Submissions", "Other"],
+    industries: ["E-Commerce", "Construction & Real Estate", "Health & Beauty", "Legal & Consulting", "Education", "Other"],
+    budgets: ["$500 – $1,000", "$1,000 – $2,500", "$2,500 – $7,500+", "Prefer Not to Say"],
+    email_placeholder: "Your Email Address",
+    submit: "Start Analysis",
+    sending: "Sending...",
+    back: "← Back",
+    success_title: "Analysis Request Received!",
+    success_desc: "We'll get back to you with a custom growth report as soon as possible.",
+    error_invalid_email: "Please enter a valid email address.",
+    error_generic: "An error occurred, please try again.",
+    error_connection: "Connection error. Please try again.",
   },
   footer: {
     tagline: "Building the web, one project at a time.",
@@ -178,6 +200,23 @@ export interface Translations {
     or_reach: string;
     whatsapp_message: string;
     whatsapp_tooltip: string;
+    free_analysis_label: string;
+    form_title: string;
+  };
+  growthForm: {
+    steps: { title: string; subtitle: string }[];
+    goals: string[];
+    industries: string[];
+    budgets: string[];
+    email_placeholder: string;
+    submit: string;
+    sending: string;
+    back: string;
+    success_title: string;
+    success_desc: string;
+    error_invalid_email: string;
+    error_generic: string;
+    error_connection: string;
   };
   footer: {
     tagline: string;

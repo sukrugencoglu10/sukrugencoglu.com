@@ -51,8 +51,8 @@ export default function ContactSection() {
             <span className="text-[#a855f7]">{t.contact.title_accent}</span>
           </h2>
           <div>
-            <p className="text-[10px] uppercase tracking-[0.25em] text-ink-subtle mb-1">Ücretsiz Analiz</p>
-            <h3 className="text-lg font-bold text-ink">Büyüme Potansiyelinizi Keşfedin</h3>
+            <p className="text-[10px] uppercase tracking-[0.25em] text-ink-subtle mb-1">{t.contact.free_analysis_label}</p>
+            <h3 className="text-lg font-bold text-ink">{t.contact.form_title}</h3>
           </div>
 
           <GrowthForm />

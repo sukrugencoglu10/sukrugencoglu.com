@@ -2,30 +2,23 @@
 
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-
-const STEPS = [
-  { id: 1, title: "Odak Noktası", subtitle: "Hangi alanda büyümek istiyorsunuz?" },
-  { id: 2, title: "Sektör", subtitle: "Hangi sektörde faaliyet gösteriyorsunuz?" },
-  { id: 3, title: "Kapasite", subtitle: "Tahmini aylık reklam bütçeniz nedir?" },
-  { id: 4, title: "İletişim", subtitle: "Analiz raporunuzu nereye gönderelim?" },
-];
-
-const GOALS = ["Google'da Üstte Görülme", "WhatsApp & Telefon Araması", "Form Doldurulması", "Diğer"];
-const INDUSTRIES = ["E-Ticaret", "İnşaat & Gayrimenkul", "Sağlık & Estetik", "Hukuk & Danışmanlık", "Eğitim", "Diğer"];
-const BUDGETS = ["10.000₺ – 20.000₺", "20.000₺ – 50.000₺", "50.000₺ – 150.000₺+", "Belirtmek İstemiyorum"];
+import { useLanguage } from "@/context/LanguageContext";
 
 export default function GrowthForm() {
+  const { t } = useLanguage();
+  const gf = t.growthForm;
+
   const [currentStep, setCurrentStep] = useState(1);
   const [formData, setFormData] = useState({ goal: "", industry: "", budget: "", email: "" });
   const [isLoading, setIsLoading] = useState(false);
   const [sent, setSent] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const nextStep = () => setCurrentStep((prev) => Math.min(prev + 1, STEPS.length));
+  const nextStep = () => setCurrentStep((prev) => Math.min(prev + 1, gf.steps.length));
 
   const handleSubmit = async () => {
     if (!formData.email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
-      setError("Lütfen geçerli bir e-posta adresi girin.");
+      setError(gf.error_invalid_email);
       return;
     }
     setIsLoading(true);
@@ -35,19 +28,19 @@ export default function GrowthForm() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          name: "B2B Müşteri Adayı",
+          name: "B2B Lead",
           email: formData.email,
-          message: `Hedef: ${formData.goal}\nSektör: ${formData.industry}\nAylık Reklam Bütçesi: ${formData.budget}`,
+          message: `Goal: ${formData.goal}\nIndustry: ${formData.industry}\nMonthly Ad Budget: ${formData.budget}`,
         }),
       });
       const data = await response.json();
       if (response.ok) {
         setSent(true);
       } else {
-        setError(data.error || "Bir hata oluştu, lütfen tekrar deneyin.");
+        setError(data.error || gf.error_generic);
       }
     } catch {
-      setError("Bağlantı hatası. Lütfen tekrar deneyin.");
+      setError(gf.error_connection);
     } finally {
       setIsLoading(false);
     }
@@ -64,9 +57,9 @@ export default function GrowthForm() {
         >
           ✓
         </motion.div>
-        <h3 className="text-xl font-semibold text-ink">Analiz Talebiniz Alındı!</h3>
+        <h3 className="text-xl font-semibold text-ink">{gf.success_title}</h3>
         <p className="text-ink-muted text-sm max-w-xs">
-          En kısa sürede size özel büyüme raporuyla geri döneceğiz.
+          {gf.success_desc}
         </p>
       </div>
     );
@@ -77,21 +70,21 @@ export default function GrowthForm() {
 
       {/* Progress */}
       <div className="flex justify-between mb-8 gap-2">
-        {STEPS.map((step) => (
-          <div key={step.id} className="flex flex-col items-center gap-2 flex-1">
+        {gf.steps.map((step, i) => (
+          <div key={i} className="flex flex-col items-center gap-2 flex-1">
             <div
               className={`h-1 w-full rounded-full transition-all duration-500 ${
-                currentStep >= step.id
+                currentStep >= i + 1
                   ? "bg-[#a855f7] shadow-[0_0_8px_rgba(168,85,247,0.4)]"
                   : "bg-border"
               }`}
             />
             <span
               className={`text-[10px] uppercase tracking-widest transition-colors ${
-                currentStep === step.id ? "text-[#a855f7]" : "text-ink-subtle"
+                currentStep === i + 1 ? "text-[#a855f7]" : "text-ink-subtle"
               }`}
             >
-              0{step.id}
+              0{i + 1}
             </span>
           </div>
         ))}
@@ -107,16 +100,16 @@ export default function GrowthForm() {
           transition={{ duration: 0.25 }}
         >
           <h2 className="text-xl font-semibold text-ink mb-1">
-            {STEPS[currentStep - 1].title}
+            {gf.steps[currentStep - 1].title}
           </h2>
           <p className="text-ink-muted text-sm mb-6">
-            {STEPS[currentStep - 1].subtitle}
+            {gf.steps[currentStep - 1].subtitle}
           </p>
 
           {/* Step 1: Goal */}
           {currentStep === 1 && (
             <div className="flex flex-col gap-2">
-              {GOALS.map((opt) => (
+              {gf.goals.map((opt) => (
                 <button
                   key={opt}
                   onClick={() => {
@@ -138,7 +131,7 @@ export default function GrowthForm() {
           {/* Step 2: Industry */}
           {currentStep === 2 && (
             <div className="flex flex-col gap-2">
-              {INDUSTRIES.map((opt) => (
+              {gf.industries.map((opt) => (
                 <button
                   key={opt}
                   onClick={() => {
@@ -158,7 +151,7 @@ export default function GrowthForm() {
                 onClick={() => setCurrentStep(1)}
                 className="text-xs text-ink-subtle hover:text-ink-muted transition-colors text-center mt-1"
               >
-                ← Geri Dön
+                {gf.back}
               </button>
             </div>
           )}
@@ -166,7 +159,7 @@ export default function GrowthForm() {
           {/* Step 3: Budget */}
           {currentStep === 3 && (
             <div className="flex flex-col gap-2">
-              {BUDGETS.map((opt) => (
+              {gf.budgets.map((opt) => (
                 <button
                   key={opt}
                   onClick={() => {
@@ -186,7 +179,7 @@ export default function GrowthForm() {
                 onClick={() => setCurrentStep(2)}
                 className="text-xs text-ink-subtle hover:text-ink-muted transition-colors text-center mt-1"
               >
-                ← Geri Dön
+                {gf.back}
               </button>
             </div>
           )}
@@ -196,7 +189,7 @@ export default function GrowthForm() {
             <div className="flex flex-col gap-3">
               <input
                 type="email"
-                placeholder="E-posta Adresiniz"
+                placeholder={gf.email_placeholder}
                 value={formData.email}
                 onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                 onKeyDown={(e) => e.key === "Enter" && handleSubmit()}
@@ -218,10 +211,10 @@ export default function GrowthForm() {
                       <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                       <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
                     </svg>
-                    Gönderiliyor...
+                    {gf.sending}
                   </>
                 ) : (
-                  "Analizi Başlat"
+                  gf.submit
                 )}
               </button>
 
@@ -229,7 +222,7 @@ export default function GrowthForm() {
                 onClick={() => setCurrentStep(3)}
                 className="text-xs text-ink-subtle hover:text-ink-muted transition-colors text-center mt-1"
               >
-                ← Geri Dön
+                {gf.back}
               </button>
             </div>
           )}
