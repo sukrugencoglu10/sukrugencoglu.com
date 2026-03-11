@@ -60,7 +60,7 @@ export default function Navbar() {
             const idToKey: Record<string, string> = {
               home: "home",
               work: "work",
-              calisimalar: "work",
+              calismalar: "work",
               contact: "contact",
               iletisim: "contact",
             };
@@ -71,7 +71,7 @@ export default function Navbar() {
       { rootMargin: "-80px 0px -60% 0px" }
     );
     // Hem TR hem EN ID'leri gözlemle
-    ["home", "work", "calisimalar", "contact", "iletisim"].forEach((id) => {
+    ["home", "work", "calismalar", "contact", "iletisim"].forEach((id) => {
       const el = document.getElementById(id);
       if (el) observer.observe(el);
     });
