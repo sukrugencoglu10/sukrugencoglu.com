@@ -18,8 +18,8 @@ export default function Navbar() {
 
   const getHref = (key: NavKey): string => {
     if (key === "home") return `/${lang}`;
-    if (key === "work") return lang === "en" ? "/en/work" : `/tr#${getSlug("tr", "work")}`;
-    if (key === "contact") return lang === "en" ? "/en/contact" : `/tr#${getSlug("tr", "contact")}`;
+    if (key === "work") return `/${lang}/${getSlug(lang, "work")}`;
+    if (key === "contact") return `/${lang}/${getSlug(lang, "contact")}`;
     return `/${lang}/${getSlug(lang, key)}`;
   };
 
@@ -170,7 +170,7 @@ export default function Navbar() {
         >
           {/* btn-orange */}
           <Link
-            href={lang === "en" ? "/en/contact" : `/tr#${getSlug("tr", "contact")}`}
+            href={`/${lang}/${getSlug(lang, "contact")}`}
             style={{
               backgroundColor: "#ff5f00",
               color: "white",
@@ -261,7 +261,7 @@ export default function Navbar() {
           })}
           <div style={{ marginTop: "16px", display: "flex", flexDirection: "column", gap: "10px" }}>
             <Link
-              href={lang === "en" ? "/en/contact" : `/tr#${getSlug("tr", "contact")}`}
+              href={`/${lang}/${getSlug(lang, "contact")}`}
               onClick={() => setMobileOpen(false)}
               style={{ display: "block", textAlign: "center", padding: "9px", border: "1px solid #ff5f00", backgroundColor: "#ff5f00", borderRadius: "4px", color: "white", textDecoration: "none", fontWeight: 600, transition: "all 0.3s ease", boxShadow: "0 0 0 rgba(255, 95, 0, 0)" }}
               onMouseEnter={(e) => {

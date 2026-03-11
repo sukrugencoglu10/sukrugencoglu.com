@@ -63,11 +63,11 @@ export default function Footer() {
             <ul className="flex flex-col gap-2 items-center md:items-start">
               {[
                 { label: t.nav.home, href: `/${lang}` },
-                { label: t.nav.work, href: lang === "en" ? "/en/work" : `/tr#${getSlug("tr", "work")}` },
+                { label: t.nav.work, href: `/${lang}/${getSlug(lang, "work")}` },
                 { label: t.nav.process, href: `/${lang}/${getSlug(lang, "process")}` },
                 { label: t.nav.services, href: `/${lang}/${getSlug(lang, "services")}` },
                 { label: t.nav.about, href: `/${lang}/${getSlug(lang, "about")}` },
-                { label: t.nav.contact, href: lang === "en" ? "/en/contact" : `/tr#${getSlug("tr", "contact")}` },
+                { label: t.nav.contact, href: `/${lang}/${getSlug(lang, "contact")}` },
               ].map((link) => (
                 <li key={link.href}>
                   <Link
