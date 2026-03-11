@@ -3,6 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useLanguage } from "@/context/LanguageContext";
+import { getSlug } from "@/lib/slugs";
 
 const socialLinks = [
   {
@@ -63,9 +64,9 @@ export default function Footer() {
               {[
                 { label: t.nav.home, href: `/${lang}` },
                 { label: t.nav.work, href: `/${lang}#work` },
-                { label: t.nav.process, href: `/${lang}/${lang === "tr" ? "nasil-calisiriz" : "how-we-work"}` },
-                { label: t.nav.services, href: `/${lang}/services` },
-                { label: t.nav.about, href: `/${lang}/about` },
+                { label: t.nav.process, href: `/${lang}/${getSlug(lang, "process")}` },
+                { label: t.nav.services, href: `/${lang}/${getSlug(lang, "services")}` },
+                { label: t.nav.about, href: `/${lang}/${getSlug(lang, "about")}` },
                 { label: t.nav.contact, href: `/${lang}#contact` },
               ].map((link) => (
                 <li key={link.href}>

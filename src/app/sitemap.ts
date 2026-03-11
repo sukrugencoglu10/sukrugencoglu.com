@@ -4,19 +4,17 @@ export default function sitemap(): MetadataRoute.Sitemap {
   const baseUrl = "https://www.sukrugencoglu.com";
   const lastModified = new Date();
 
-  const sharedPages = [
-    { path: "", priority: 1, changeFrequency: "weekly" as const },
-    { path: "/about", priority: 0.8, changeFrequency: "monthly" as const },
-    { path: "/services", priority: 0.8, changeFrequency: "monthly" as const },
-  ];
-
   const trPages = [
-    ...sharedPages,
+    { path: "", priority: 1, changeFrequency: "weekly" as const },
+    { path: "/hakkimda", priority: 0.8, changeFrequency: "monthly" as const },
+    { path: "/hizmetler", priority: 0.8, changeFrequency: "monthly" as const },
     { path: "/nasil-calisiriz", priority: 0.7, changeFrequency: "monthly" as const },
   ];
 
   const enPages = [
-    ...sharedPages,
+    { path: "", priority: 1, changeFrequency: "weekly" as const },
+    { path: "/about", priority: 0.8, changeFrequency: "monthly" as const },
+    { path: "/services", priority: 0.8, changeFrequency: "monthly" as const },
     { path: "/how-we-work", priority: 0.7, changeFrequency: "monthly" as const },
   ];
 

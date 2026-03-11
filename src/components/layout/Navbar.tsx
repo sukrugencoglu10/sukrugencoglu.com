@@ -6,26 +6,21 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useLanguage } from "@/context/LanguageContext";
 import LanguageToggle from "@/components/ui/LanguageToggle";
+import { getSlug } from "@/lib/slugs";
 
-const NAV_LINKS = [
-  { key: "home" as const, path: "" },
-  { key: "work" as const, path: "#work" },
-  { key: "process" as const, path: null }, // dile göre değişir
-  { key: "services" as const, path: "/services" },
-  { key: "about" as const, path: "/about" },
-  { key: "contact" as const, path: "#contact" },
-];
+const NAV_KEYS = ["home", "work", "process", "services", "about", "contact"] as const;
+type NavKey = typeof NAV_KEYS[number];
 
 export default function Navbar() {
   const { t, lang } = useLanguage();
   const pathname = usePathname();
   const [mobileOpen, setMobileOpen] = useState(false);
 
-  const getHref = (path: string | null) => {
-    if (path === null) return `/${lang}/${lang === "tr" ? "nasil-calisiriz" : "how-we-work"}`;
-    if (path.startsWith("#")) return `/${lang}${path}`;
-    if (path === "") return `/${lang}`;
-    return `/${lang}${path}`;
+  const getHref = (key: NavKey): string => {
+    if (key === "home") return `/${lang}`;
+    if (key === "work") return `/${lang}#work`;
+    if (key === "contact") return `/${lang}#contact`;
+    return `/${lang}/${getSlug(lang, key)}`;
   };
 
   const [activeSection, setActiveSection] = useState(
@@ -33,11 +28,11 @@ export default function Navbar() {
   );
 
   useEffect(() => {
-    if (pathname.endsWith("/about")) {
+    if (pathname.endsWith("/about") || pathname.endsWith("/hakkimda")) {
       setActiveSection("about");
       return;
     }
-    if (pathname.endsWith("/services")) {
+    if (pathname.endsWith("/services") || pathname.endsWith("/hizmetler")) {
       setActiveSection("services");
       return;
     }
@@ -108,14 +103,14 @@ export default function Navbar() {
 
         {/* Desktop Nav Links */}
         <nav className="hidden md:flex" style={{ gap: "32px", alignItems: "center" }}>
-          {NAV_LINKS.map(({ key, path }) => {
+          {NAV_KEYS.map((key) => {
             const isTab = true;
             const isActive = activeSection === key;
             if (isTab) {
               return (
                 <Link
                   key={key}
-                  href={getHref(path)}
+                  href={getHref(key)}
                   className={`nav-tab${isActive ? " active" : ""}`}
                 >
                   {t.nav[key]}
@@ -126,7 +121,7 @@ export default function Navbar() {
             return (
               <Link
                 key={key}
-                href={getHref(path)}
+                href={getHref(key)}
                 style={{
                   textDecoration: "none",
                   color: isActive ? "#12b347" : "#666666",
@@ -208,13 +203,13 @@ export default function Navbar() {
           className="md:hidden"
           style={{ borderTop: "1px solid #eaeaea", backgroundColor: "#fff", padding: "16px 5% 20px" }}
         >
-          {NAV_LINKS.map(({ key, path }) => {
+          {NAV_KEYS.map((key) => {
             const isTab = true;
             const isActive = activeSection === key;
             return (
               <Link
                 key={key}
-                href={getHref(path)}
+                href={getHref(key)}
                 onClick={() => setMobileOpen(false)}
                 style={{
                   display: "block",

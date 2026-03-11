@@ -3,6 +3,7 @@
 import { useLanguage } from '@/context/LanguageContext';
 import MasonryGallery from '@/components/ui/MasonryGallery';
 import Link from 'next/link';
+import { getSlug } from '@/lib/slugs';
 
 export default function HeroSection() {
   const { t, lang } = useLanguage();
@@ -60,7 +61,7 @@ export default function HeroSection() {
           </a>
 
           <Link
-            href={`/${lang}/services`}
+            href={`/${lang}/${getSlug(lang, "services")}`}
             className="text-[#666] underline text-[0.85rem] font-medium transition-colors duration-200 hover:text-[#111]"
           >
             {t.hero.cta_secondary}

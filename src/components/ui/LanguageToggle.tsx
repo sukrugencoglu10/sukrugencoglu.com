@@ -3,6 +3,16 @@
 import { useRouter, usePathname } from "next/navigation";
 import { useLanguage } from "@/context/LanguageContext";
 import type { Lang } from "@/context/LanguageContext";
+import { PAGE_SLUGS } from "@/lib/slugs";
+
+// Her slug için tersten arama: slug → page key
+function slugToPageKey(slug: string, lang: Lang): string | null {
+  const slugMap = PAGE_SLUGS[lang];
+  for (const [key, val] of Object.entries(slugMap)) {
+    if (val === slug) return key;
+  }
+  return null;
+}
 
 export default function LanguageToggle() {
   const { lang } = useLanguage();
@@ -10,6 +20,20 @@ export default function LanguageToggle() {
   const pathname = usePathname();
 
   const handleLangChange = (newLang: Lang) => {
+    // /tr/hizmetler → parçala
+    const parts = pathname.split("/"); // ["", "tr", "hizmetler"]
+    const currentSlug = parts[2]; // "hizmetler"
+
+    if (currentSlug) {
+      const pageKey = slugToPageKey(currentSlug, lang);
+      if (pageKey) {
+        const newSlug = PAGE_SLUGS[newLang][pageKey];
+        router.push(`/${newLang}/${newSlug}`);
+        return;
+      }
+    }
+
+    // Slug eşleşmezse sadece dil prefix'ini değiştir
     const newPath = pathname.replace(/^\/(tr|en)/, `/${newLang}`);
     router.push(newPath);
   };
