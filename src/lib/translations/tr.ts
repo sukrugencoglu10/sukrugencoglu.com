@@ -4,7 +4,7 @@ export const tr: Translations = {
   nav: {
     home: "Ana Sayfa",
     work: "Çalışmalar",
-    process: "Nasıl Çalışırız",
+    process: "Stüdyo",
     services: "Hizmetlerimiz",
     about: "Hakkımda",
     contact: "İletişim",

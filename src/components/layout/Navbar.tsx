@@ -8,7 +8,7 @@ import { useLanguage } from "@/context/LanguageContext";
 import LanguageToggle from "@/components/ui/LanguageToggle";
 import { getSlug } from "@/lib/slugs";
 
-const NAV_KEYS = ["home", "work", "process", "services", "about", "contact"] as const;
+const NAV_KEYS = ["home", "work", "services", "process", "about", "contact"] as const;
 type NavKey = typeof NAV_KEYS[number];
 
 export default function Navbar() {

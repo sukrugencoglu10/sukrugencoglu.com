@@ -2,7 +2,7 @@ export const en = {
   nav: {
     home: "Home",
     work: "Work",
-    process: "How We Work",
+    process: "Studio",
     services: "Services",
     about: "About",
     contact: "Contact",

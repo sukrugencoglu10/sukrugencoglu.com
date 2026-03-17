@@ -4,14 +4,14 @@ export const PAGE_SLUGS: Record<Lang, Record<string, string>> = {
   tr: {
     services: "hizmetler",
     about: "hakkimda",
-    process: "nasil-calisiriz",
+    process: "studyo",
     work: "calismalar",
     contact: "iletisim",
   },
   en: {
     services: "services",
     about: "about",
-    process: "how-we-work",
+    process: "studyo",
     work: "work",
     contact: "contact",
   },
