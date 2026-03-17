@@ -176,19 +176,8 @@ function OutputBox({ text, loading }) {
   )
 }
 
-// ─── Ana bileşen ──────────────────────────────────────────────────────────────
-export default function StudyoPage() {
-  const [authed, setAuthed] = useState(false)
-  const [authChecked, setAuthChecked] = useState(false)
-
-  useEffect(() => {
-    if (sessionStorage.getItem('studyo_auth') === '1') setAuthed(true)
-    setAuthChecked(true)
-  }, [])
-
-  if (!authChecked) return null
-  if (!authed) return <LoginScreen onSuccess={() => setAuthed(true)} />
-
+// ─── İçerik bileşeni (tüm hook'lar burada) ────────────────────────────────────
+function StudyoContent() {
   // Adım 1 state
   const [konu, setKonu] = useState('')
   const [kitle, setKitle] = useState('')
@@ -459,4 +448,19 @@ ${nlText}`
 
     </div>
   )
+}
+
+// ─── Ana bileşen — sadece auth hook'ları burada ───────────────────────────────
+export default function StudyoPage() {
+  const [authed, setAuthed] = useState(false)
+  const [authChecked, setAuthChecked] = useState(false)
+
+  useEffect(() => {
+    if (sessionStorage.getItem('studyo_auth') === '1') setAuthed(true)
+    setAuthChecked(true)
+  }, [])
+
+  if (!authChecked) return null
+  if (!authed) return <LoginScreen onSuccess={() => setAuthed(true)} />
+  return <StudyoContent />
 }
