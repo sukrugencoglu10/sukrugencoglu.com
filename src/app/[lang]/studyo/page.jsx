@@ -1,10 +1,88 @@
 'use client'
 
-// app/studyo/page.jsx
-// Erişim: sukrugencoglu.com/studyo
-// Geliştirmek için bu dosyayı düzenle
+// app/[lang]/studyo/page.jsx
+// Erişim: sukrugencoglu.com/tr/studyo  |  sukrugencoglu.com/en/studyo
+// Giriş korumalı — STUDYO_USER + STUDYO_PASS env var'larıyla
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+
+// ─── Login ekranı ─────────────────────────────────────────────────────────────
+function LoginScreen({ onSuccess }) {
+  const [username, setUsername] = useState('')
+  const [password, setPassword] = useState('')
+  const [error, setError] = useState('')
+  const [loading, setLoading] = useState(false)
+
+  const handleSubmit = async (e) => {
+    e.preventDefault()
+    setLoading(true)
+    setError('')
+    try {
+      const res = await fetch('/api/studyo-auth', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, password }),
+      })
+      const data = await res.json()
+      if (data.ok) {
+        sessionStorage.setItem('studyo_auth', '1')
+        onSuccess()
+      } else {
+        setError(data.error || 'Giriş başarısız')
+      }
+    } catch {
+      setError('Bağlantı hatası')
+    }
+    setLoading(false)
+  }
+
+  return (
+    <div style={{
+      minHeight: '100vh',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      background: '#fafafa',
+      fontFamily: 'inherit',
+    }}>
+      <form onSubmit={handleSubmit} style={{
+        background: '#fff',
+        border: '0.5px solid #e8e8e8',
+        borderRadius: 16,
+        padding: '2rem',
+        width: '100%',
+        maxWidth: 360,
+      }}>
+        <h1 style={{ fontSize: 18, fontWeight: 500, margin: '0 0 4px' }}>İçerik Stüdyosu</h1>
+        <p style={{ fontSize: 13, color: '#888', marginTop: 0, marginBottom: '1.5rem' }}>Devam etmek için giriş yap</p>
+
+        <label style={{ fontSize: 12, color: '#888', display: 'block', marginBottom: 4 }}>Kullanıcı adı</label>
+        <input
+          type="text"
+          autoComplete="username"
+          value={username}
+          onChange={e => setUsername(e.target.value)}
+          style={{ width: '100%', fontSize: 14, padding: '9px 12px', borderRadius: 8, border: '0.5px solid #ddd', fontFamily: 'inherit', outline: 'none', boxSizing: 'border-box', marginBottom: 12 }}
+        />
+
+        <label style={{ fontSize: 12, color: '#888', display: 'block', marginBottom: 4 }}>Şifre</label>
+        <input
+          type="password"
+          autoComplete="current-password"
+          value={password}
+          onChange={e => setPassword(e.target.value)}
+          style={{ width: '100%', fontSize: 14, padding: '9px 12px', borderRadius: 8, border: '0.5px solid #ddd', fontFamily: 'inherit', outline: 'none', boxSizing: 'border-box', marginBottom: 16 }}
+        />
+
+        {error && <p style={{ fontSize: 13, color: '#c0392b', marginBottom: 12, marginTop: 0 }}>{error}</p>}
+
+        <button type="submit" disabled={loading} style={{ width: '100%', padding: '10px', background: '#111', color: '#fff', border: 'none', borderRadius: 9, fontSize: 14, fontFamily: 'inherit', cursor: loading ? 'not-allowed' : 'pointer', opacity: loading ? 0.7 : 1 }}>
+          {loading ? 'Kontrol ediliyor...' : 'Giriş yap'}
+        </button>
+      </form>
+    </div>
+  )
+}
 
 // ─── Sabitler ─────────────────────────────────────────────────────────────────
 const PLATFORMS = ['Instagram', 'Google Ads', 'Meta Ads', 'LinkedIn']
@@ -100,6 +178,17 @@ function OutputBox({ text, loading }) {
 
 // ─── Ana bileşen ──────────────────────────────────────────────────────────────
 export default function StudyoPage() {
+  const [authed, setAuthed] = useState(false)
+  const [authChecked, setAuthChecked] = useState(false)
+
+  useEffect(() => {
+    if (sessionStorage.getItem('studyo_auth') === '1') setAuthed(true)
+    setAuthChecked(true)
+  }, [])
+
+  if (!authChecked) return null
+  if (!authed) return <LoginScreen onSuccess={() => setAuthed(true)} />
+
   // Adım 1 state
   const [konu, setKonu] = useState('')
   const [kitle, setKitle] = useState('')
