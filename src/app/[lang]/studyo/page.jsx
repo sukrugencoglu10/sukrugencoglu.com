@@ -1163,6 +1163,7 @@ function ReklamHiyerarsisi() {
   const [dragId, setDragId] = useState(null)
   const [dragOverId, setDragOverId] = useState(null)
   const [searchQuery, setSearchQuery] = useState('')
+  const [focusedId, setFocusedId] = useState(null)
 
   useEffect(() => {
     fetch('/api/reklam-hiyerarsisi')
@@ -1342,8 +1343,11 @@ function ReklamHiyerarsisi() {
       )
     : items
 
+  const focusedItem = items.find(i => i.id === focusedId) ?? null
+  const focusedIdx = items.findIndex(i => i.id === focusedId)
+
   return (
-    <div style={{ maxWidth: 700, margin: '0 auto', padding: '2rem 1rem', fontFamily: 'inherit' }}>
+    <div style={{ maxWidth: focusedId ? 'none' : 700, margin: '0 auto', padding: '2rem 1rem', fontFamily: 'inherit', transition: 'max-width 0.2s ease' }}>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1rem' }}>
         <div>
           <h1 style={{ fontSize: 22, fontWeight: 500, margin: '0 0 4px' }}>Reklam Hiyerarşisi</h1>
@@ -1414,157 +1418,250 @@ function ReklamHiyerarsisi() {
         </div>
       )}
 
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginBottom: '1.5rem' }}>
-        {filteredItems.map((item, idx) => {
-          const isDragging = dragId === item.id
-          const isOver = dragOverId === item.id
-          const titleMatch = q && item.title.toLowerCase().includes(q)
-          const descMatch = q && item.description.toLowerCase().includes(q)
-          return (
-            <div
-              key={item.id}
-              draggable
-              onDragStart={e => handleDragStart(e, item.id)}
-              onDragOver={e => handleDragOver(e, item.id)}
-              onDrop={e => handleDrop(e, item.id)}
-              onDragEnd={handleDragEnd}
-              style={{
-                background: '#fff',
-                border: isOver ? '0.5px solid #111' : '0.5px solid #e8e8e8',
-                borderRadius: 12,
-                overflow: 'hidden',
-                opacity: isDragging ? 0.4 : 1,
-                boxShadow: isOver ? 'inset 3px 0 0 #111' : 'none',
-                transition: 'opacity 0.15s, box-shadow 0.15s, border-color 0.15s',
-              }}
-            >
-              {/* Başlık satırı */}
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 12px' }}>
-                <button
-                  onClick={() => toggleItem(item.id)}
+      {/* Split panel veya tek sütun */}
+      <div style={{
+        display: 'grid',
+        gridTemplateColumns: focusedId ? '290px 1fr' : '1fr',
+        gap: focusedId ? '1.5rem' : 0,
+        alignItems: 'start',
+        transition: 'grid-template-columns 0.2s ease',
+      }}>
+        {/* Sol — öğe listesi */}
+        <div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: focusedId ? 4 : 10, marginBottom: '1.5rem' }}>
+            {filteredItems.map((item, idx) => {
+              const isFocused = item.id === focusedId
+              const isDragging = dragId === item.id
+              const isOver = dragOverId === item.id
+              const titleMatch = q && item.title.toLowerCase().includes(q)
+              const descMatch = q && item.description.toLowerCase().includes(q)
+              return (
+                <div
+                  key={item.id}
+                  draggable
+                  onDragStart={e => handleDragStart(e, item.id)}
+                  onDragOver={e => handleDragOver(e, item.id)}
+                  onDrop={e => handleDrop(e, item.id)}
+                  onDragEnd={handleDragEnd}
                   style={{
-                    flexShrink: 0, width: 22, height: 22,
-                    border: 'none', background: 'transparent',
-                    cursor: 'pointer', fontSize: 13, color: '#888',
-                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    transition: 'transform 0.15s',
-                    transform: item.expanded ? 'rotate(90deg)' : 'rotate(0deg)',
+                    background: '#fff',
+                    border: isFocused ? '0.5px solid #111' : isOver ? '0.5px solid #111' : '0.5px solid #e8e8e8',
+                    borderRadius: focusedId ? 10 : 12,
+                    overflow: 'hidden',
+                    opacity: isDragging ? 0.4 : 1,
+                    boxShadow: isFocused ? 'inset 3px 0 0 #111' : isOver ? 'inset 3px 0 0 #111' : 'none',
+                    transition: 'opacity 0.15s, box-shadow 0.15s, border-color 0.15s',
                   }}
-                  title={item.expanded ? 'Kapat' : 'Aç'}
                 >
-                  ▶
-                </button>
-                <span style={{ fontSize: 11, color: '#ccc', fontWeight: 600, marginRight: 2 }}>
-                  {String(idx + 1).padStart(2, '0')}
-                </span>
-                <input
-                  type="text"
-                  placeholder="Başlık..."
-                  value={item.title}
-                  onChange={e => updateItem(item.id, 'title', e.target.value)}
-                  style={{ ...inputStyle, borderColor: titleMatch ? '#facc15' : undefined }}
-                  draggable={false}
-                />
-                {/* Taşıma handle */}
-                <button
-                  style={{
-                    flexShrink: 0, width: 28, height: 28,
-                    border: '0.5px solid #eee', borderRadius: 7,
-                    background: 'transparent', cursor: 'grab',
-                    fontSize: 15, color: '#ccc',
-                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    userSelect: 'none',
-                  }}
-                  title="Taşı"
-                  onMouseDown={e => e.stopPropagation()}
-                >
-                  ⠿
-                </button>
-                {/* Araya ekle */}
-                <button
-                  onClick={() => addItem(item.id)}
-                  style={{
-                    flexShrink: 0, width: 28, height: 28,
-                    border: '0.5px solid #eee', borderRadius: 7,
-                    background: 'transparent', cursor: 'pointer',
-                    fontSize: 16, color: '#bbb', lineHeight: 1,
-                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    transition: 'all 0.1s',
-                  }}
-                  title="Altına ekle"
-                >
-                  +
-                </button>
-                {/* Sil */}
-                <button
-                  onClick={() => removeItem(item.id)}
-                  style={{
-                    flexShrink: 0, width: 28, height: 28,
-                    border: '0.5px solid #eee', borderRadius: 7,
-                    background: 'transparent', cursor: 'pointer',
-                    fontSize: 14, color: '#bbb',
-                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    transition: 'all 0.1s',
-                  }}
-                  title="Sil"
-                >
-                  ✕
-                </button>
-              </div>
+                  {/* Başlık satırı */}
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 6, padding: focusedId ? '8px 10px' : '10px 12px' }}>
+                    <button
+                      onClick={() => setFocusedId(prev => prev === item.id ? null : item.id)}
+                      style={{
+                        flexShrink: 0, width: 22, height: 22,
+                        border: 'none', background: 'transparent',
+                        cursor: 'pointer', fontSize: 13,
+                        color: isFocused ? '#111' : '#888',
+                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        transition: 'transform 0.15s, color 0.15s',
+                        transform: isFocused ? 'rotate(90deg)' : 'rotate(0deg)',
+                      }}
+                      title={isFocused ? 'Kapat' : 'Aç'}
+                    >
+                      ▶
+                    </button>
+                    <span style={{ fontSize: 11, color: isFocused ? '#888' : '#ccc', fontWeight: 600, flexShrink: 0 }}>
+                      {String(idx + 1).padStart(2, '0')}
+                    </span>
+                    {focusedId && !isFocused ? (
+                      /* Split modunda odaklanmamış öğe: tıklanabilir metin */
+                      <span
+                        onClick={() => setFocusedId(item.id)}
+                        style={{
+                          flex: 1, fontSize: 13, color: '#555', cursor: 'pointer',
+                          lineHeight: 1.35, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+                          borderColor: titleMatch ? '#facc15' : undefined,
+                        }}
+                      >
+                        {highlight(item.title || '—', searchQuery)}
+                      </span>
+                    ) : (
+                      <input
+                        type="text"
+                        placeholder="Başlık..."
+                        value={item.title}
+                        onChange={e => updateItem(item.id, 'title', e.target.value)}
+                        style={{ ...inputStyle, borderColor: titleMatch ? '#facc15' : undefined }}
+                        draggable={false}
+                      />
+                    )}
+                    {/* Taşıma handle */}
+                    <button
+                      style={{
+                        flexShrink: 0, width: 26, height: 26,
+                        border: '0.5px solid #eee', borderRadius: 7,
+                        background: 'transparent', cursor: 'grab',
+                        fontSize: 15, color: '#ccc',
+                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        userSelect: 'none',
+                      }}
+                      title="Taşı"
+                      onMouseDown={e => e.stopPropagation()}
+                    >
+                      ⠿
+                    </button>
+                    {/* Araya ekle */}
+                    <button
+                      onClick={() => addItem(item.id)}
+                      style={{
+                        flexShrink: 0, width: 26, height: 26,
+                        border: '0.5px solid #eee', borderRadius: 7,
+                        background: 'transparent', cursor: 'pointer',
+                        fontSize: 16, color: '#bbb', lineHeight: 1,
+                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        transition: 'all 0.1s',
+                      }}
+                      title="Altına ekle"
+                    >
+                      +
+                    </button>
+                    {/* Sil */}
+                    <button
+                      onClick={() => removeItem(item.id)}
+                      style={{
+                        flexShrink: 0, width: 26, height: 26,
+                        border: '0.5px solid #eee', borderRadius: 7,
+                        background: 'transparent', cursor: 'pointer',
+                        fontSize: 14, color: '#bbb',
+                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        transition: 'all 0.1s',
+                      }}
+                      title="Sil"
+                    >
+                      ✕
+                    </button>
+                  </div>
 
-              {/* Açıklama alanı */}
-              {(item.expanded || descMatch) && (
-                <div style={{ padding: '0 12px 12px', borderTop: '0.5px solid #f0f0f0', paddingTop: 10 }}>
-                  <textarea
-                    placeholder="Açıklama yaz..."
-                    value={item.description}
-                    onChange={e => updateItem(item.id, 'description', e.target.value)}
-                    onPaste={e => handleDescriptionPaste(e, item.id, item.description)}
-                    style={{ ...textareaStyle, borderColor: descMatch ? '#facc15' : undefined }}
-                    draggable={false}
-                  />
-                  {descMatch && (
-                    <div style={{
-                      marginTop: 6, padding: '6px 10px',
-                      background: '#fffde7', borderRadius: 6,
-                      fontSize: 12, color: '#555', lineHeight: 1.6,
-                      whiteSpace: 'pre-wrap',
-                    }}>
-                      {highlight(item.description, searchQuery)}
+                  {/* Açıklama alanı — sadece split mod KAPALI iken göster */}
+                  {!focusedId && (item.expanded || descMatch) && (
+                    <div style={{ padding: '0 12px 12px', borderTop: '0.5px solid #f0f0f0', paddingTop: 10 }}>
+                      <textarea
+                        placeholder="Açıklama yaz..."
+                        value={item.description}
+                        onChange={e => updateItem(item.id, 'description', e.target.value)}
+                        onPaste={e => handleDescriptionPaste(e, item.id, item.description)}
+                        style={{ ...textareaStyle, borderColor: descMatch ? '#facc15' : undefined }}
+                        draggable={false}
+                      />
+                      {descMatch && (
+                        <div style={{
+                          marginTop: 6, padding: '6px 10px',
+                          background: '#fffde7', borderRadius: 6,
+                          fontSize: 12, color: '#555', lineHeight: 1.6,
+                          whiteSpace: 'pre-wrap',
+                        }}>
+                          {highlight(item.description, searchQuery)}
+                        </div>
+                      )}
                     </div>
                   )}
                 </div>
-              )}
-            </div>
-          )
-        })}
-      </div>
+              )
+            })}
+          </div>
 
-      {/* Kaydet */}
-      {items.length > 0 && (
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: 12 }}>
-          {error && <span style={{ fontSize: 13, color: '#c0392b' }}>{error}</span>}
-          {saved && <span style={{ fontSize: 13, color: '#1D9E75' }}>✓ Kaydedildi</span>}
-          <button
-            onClick={handleSave}
-            disabled={saving}
-            style={{
-              padding: '9px 20px',
-              background: saved ? '#1D9E75' : '#111',
-              color: '#fff',
-              border: 'none',
-              borderRadius: 9,
-              fontSize: 14,
-              fontFamily: 'inherit',
-              cursor: saving ? 'not-allowed' : 'pointer',
-              opacity: saving ? 0.7 : 1,
-              transition: 'background 0.2s',
-            }}
-          >
-            {saving ? 'Kaydediliyor...' : saved ? '✓ Kaydedildi' : 'Kaydet'}
-          </button>
+          {/* Kaydet */}
+          {items.length > 0 && (
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: 12 }}>
+              {error && <span style={{ fontSize: 13, color: '#c0392b' }}>{error}</span>}
+              {saved && <span style={{ fontSize: 13, color: '#1D9E75' }}>✓ Kaydedildi</span>}
+              <button
+                onClick={handleSave}
+                disabled={saving}
+                style={{
+                  padding: '9px 20px',
+                  background: saved ? '#1D9E75' : '#111',
+                  color: '#fff',
+                  border: 'none',
+                  borderRadius: 9,
+                  fontSize: 14,
+                  fontFamily: 'inherit',
+                  cursor: saving ? 'not-allowed' : 'pointer',
+                  opacity: saving ? 0.7 : 1,
+                  transition: 'background 0.2s',
+                }}
+              >
+                {saving ? 'Kaydediliyor...' : saved ? '✓ Kaydedildi' : 'Kaydet'}
+              </button>
+            </div>
+          )}
         </div>
-      )}
+
+        {/* Sağ — odaklanmış öğe editörü */}
+        {focusedItem && (
+          <div style={{
+            background: '#fff',
+            border: '0.5px solid #e8e8e8',
+            borderRadius: 16,
+            borderTopLeftRadius: 4,
+            padding: '2rem',
+            boxShadow: 'inset 0 3px 0 #111, 0 2px 16px rgba(0,0,0,0.06)',
+            position: 'sticky',
+            top: 16,
+          }}>
+            {/* Konum göstergesi */}
+            <div style={{
+              fontSize: 11, fontWeight: 700, color: '#bbb',
+              letterSpacing: '0.08em', marginBottom: '1rem',
+            }}>
+              {String(focusedIdx + 1).padStart(2, '0')} / {String(items.length).padStart(2, '0')}
+            </div>
+
+            {/* Başlık input */}
+            <input
+              type="text"
+              placeholder="Başlık..."
+              value={focusedItem.title}
+              onChange={e => updateItem(focusedId, 'title', e.target.value)}
+              style={{
+                width: '100%', boxSizing: 'border-box',
+                fontSize: 20, fontWeight: 700,
+                padding: '0 0 10px',
+                borderRadius: 0,
+                border: 'none',
+                borderBottom: '0.5px solid #eee',
+                fontFamily: 'inherit', outline: 'none',
+                marginBottom: '1.25rem',
+                color: '#111',
+                background: 'transparent',
+              }}
+              draggable={false}
+            />
+
+            {/* Açıklama textarea */}
+            <textarea
+              placeholder="Açıklama yaz..."
+              value={focusedItem.description}
+              onChange={e => updateItem(focusedId, 'description', e.target.value)}
+              onPaste={e => handleDescriptionPaste(e, focusedId, focusedItem.description)}
+              style={{
+                width: '100%', boxSizing: 'border-box',
+                fontSize: 14,
+                padding: 0,
+                borderRadius: 0,
+                border: 'none',
+                fontFamily: 'inherit', outline: 'none',
+                resize: 'vertical',
+                minHeight: 320,
+                lineHeight: 1.8,
+                color: '#444',
+                background: 'transparent',
+              }}
+              draggable={false}
+            />
+          </div>
+        )}
+      </div>
     </div>
   )
 }
