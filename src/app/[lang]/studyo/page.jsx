@@ -1225,6 +1225,50 @@ function ReklamHiyerarsisi() {
     setDragOverId(null)
   }
 
+  // HTML clipboard → düz metin dönüştürücü (Gemini/ChatGPT yapıştırma için)
+  const parseHtmlToText = (html) => {
+    if (typeof document === 'undefined') return ''
+    const div = document.createElement('div')
+    div.innerHTML = html
+
+    // Tabloları sütun | sütun formatına çevir
+    div.querySelectorAll('table').forEach(table => {
+      let rows = ''
+      table.querySelectorAll('tr').forEach(tr => {
+        const cells = [...tr.querySelectorAll('td,th')].map(c => c.textContent.trim())
+        rows += cells.join(' | ') + '\n'
+      })
+      table.replaceWith(document.createTextNode('\n' + rows))
+    })
+
+    // <br> → newline
+    div.querySelectorAll('br').forEach(br => br.replaceWith('\n'))
+
+    // Block elementlerin arkasına satır sonu ekle
+    div.querySelectorAll('p,li,h1,h2,h3,h4,h5,h6,div').forEach(el => {
+      el.after('\n')
+    })
+
+    return div.textContent
+      .replace(/[ \t]+/g, ' ')      // çoklu boşluk → tek
+      .replace(/\n[ \t]+/g, '\n')   // satır başı boşlukları temizle
+      .replace(/\n{3,}/g, '\n\n')   // fazla boş satırları sıkıştır
+      .trim()
+  }
+
+  const handleDescriptionPaste = (e, id, currentVal) => {
+    const html = e.clipboardData?.getData('text/html')
+    if (!html) return
+    const text = parseHtmlToText(html)
+    if (!text) return
+    e.preventDefault()
+    const el = e.target
+    const before = currentVal.slice(0, el.selectionStart)
+    const after  = currentVal.slice(el.selectionEnd)
+    const sep = before.length > 0 && !before.endsWith('\n') ? '\n' : ''
+    updateItem(id, 'description', before + sep + text + after)
+  }
+
   const handleDragEnd = () => {
     setDragId(null)
     setDragOverId(null)
@@ -1475,6 +1519,7 @@ function ReklamHiyerarsisi() {
                     placeholder="Açıklama yaz..."
                     value={item.description}
                     onChange={e => updateItem(item.id, 'description', e.target.value)}
+                    onPaste={e => handleDescriptionPaste(e, item.id, item.description)}
                     style={{ ...textareaStyle, borderColor: descMatch ? '#facc15' : undefined }}
                     draggable={false}
                   />
