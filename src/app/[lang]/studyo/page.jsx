@@ -1171,8 +1171,15 @@ function ReklamHiyerarsisi() {
       .finally(() => setLoading(false))
   }, [])
 
-  const addItem = () => {
-    setItems(prev => [...prev, { id: Date.now(), title: '', description: '', expanded: true }])
+  const addItem = (afterId = null) => {
+    const newItem = { id: Date.now(), title: '', description: '', expanded: true }
+    setItems(prev => {
+      if (!afterId) return [...prev, newItem]
+      const idx = prev.findIndex(i => i.id === afterId)
+      const updated = [...prev]
+      updated.splice(idx + 1, 0, newItem)
+      return updated
+    })
     setSaved(false)
   }
 
@@ -1368,6 +1375,21 @@ function ReklamHiyerarsisi() {
                   onMouseDown={e => e.stopPropagation()}
                 >
                   ⠿
+                </button>
+                {/* Araya ekle */}
+                <button
+                  onClick={() => addItem(item.id)}
+                  style={{
+                    flexShrink: 0, width: 28, height: 28,
+                    border: '0.5px solid #eee', borderRadius: 7,
+                    background: 'transparent', cursor: 'pointer',
+                    fontSize: 16, color: '#bbb', lineHeight: 1,
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    transition: 'all 0.1s',
+                  }}
+                  title="Altına ekle"
+                >
+                  +
                 </button>
                 {/* Sil */}
                 <button
