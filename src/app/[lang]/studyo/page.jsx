@@ -1160,6 +1160,8 @@ function ReklamHiyerarsisi() {
   const [saved, setSaved] = useState(false)
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(true)
+  const [dragId, setDragId] = useState(null)
+  const [dragOverId, setDragOverId] = useState(null)
 
   useEffect(() => {
     fetch('/api/reklam-hiyerarsisi')
@@ -1186,6 +1188,38 @@ function ReklamHiyerarsisi() {
 
   const toggleItem = (id) => {
     setItems(prev => prev.map(i => i.id === id ? { ...i, expanded: !i.expanded } : i))
+  }
+
+  const handleDragStart = (e, id) => {
+    setDragId(id)
+    e.dataTransfer.effectAllowed = 'move'
+  }
+
+  const handleDragOver = (e, id) => {
+    e.preventDefault()
+    e.dataTransfer.dropEffect = 'move'
+    if (id !== dragId) setDragOverId(id)
+  }
+
+  const handleDrop = (e, id) => {
+    e.preventDefault()
+    if (!dragId || dragId === id) { setDragId(null); setDragOverId(null); return }
+    setItems(prev => {
+      const from = prev.findIndex(i => i.id === dragId)
+      const to   = prev.findIndex(i => i.id === id)
+      const updated = [...prev]
+      const [moved] = updated.splice(from, 1)
+      updated.splice(to, 0, moved)
+      return updated
+    })
+    setSaved(false)
+    setDragId(null)
+    setDragOverId(null)
+  }
+
+  const handleDragEnd = () => {
+    setDragId(null)
+    setDragOverId(null)
   }
 
   const handleSave = async () => {
@@ -1272,71 +1306,101 @@ function ReklamHiyerarsisi() {
       )}
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginBottom: '1.5rem' }}>
-        {items.map((item, idx) => (
-          <div
-            key={item.id}
-            style={{
-              background: '#fff',
-              border: '0.5px solid #e8e8e8',
-              borderRadius: 12,
-              overflow: 'hidden',
-            }}
-          >
-            {/* Başlık satırı */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 12px' }}>
-              <button
-                onClick={() => toggleItem(item.id)}
-                style={{
-                  flexShrink: 0, width: 22, height: 22,
-                  border: 'none', background: 'transparent',
-                  cursor: 'pointer', fontSize: 13, color: '#888',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  transition: 'transform 0.15s',
-                  transform: item.expanded ? 'rotate(90deg)' : 'rotate(0deg)',
-                }}
-                title={item.expanded ? 'Kapat' : 'Aç'}
-              >
-                ▶
-              </button>
-              <span style={{ fontSize: 11, color: '#ccc', fontWeight: 600, marginRight: 2 }}>
-                {String(idx + 1).padStart(2, '0')}
-              </span>
-              <input
-                type="text"
-                placeholder="Başlık..."
-                value={item.title}
-                onChange={e => updateItem(item.id, 'title', e.target.value)}
-                style={inputStyle}
-              />
-              <button
-                onClick={() => removeItem(item.id)}
-                style={{
-                  flexShrink: 0, width: 28, height: 28,
-                  border: '0.5px solid #eee', borderRadius: 7,
-                  background: 'transparent', cursor: 'pointer',
-                  fontSize: 14, color: '#bbb',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  transition: 'all 0.1s',
-                }}
-                title="Sil"
-              >
-                ✕
-              </button>
-            </div>
-
-            {/* Açıklama alanı */}
-            {item.expanded && (
-              <div style={{ padding: '0 12px 12px', borderTop: '0.5px solid #f0f0f0', paddingTop: 10 }}>
-                <textarea
-                  placeholder="Açıklama yaz..."
-                  value={item.description}
-                  onChange={e => updateItem(item.id, 'description', e.target.value)}
-                  style={textareaStyle}
+        {items.map((item, idx) => {
+          const isDragging = dragId === item.id
+          const isOver = dragOverId === item.id
+          return (
+            <div
+              key={item.id}
+              draggable
+              onDragStart={e => handleDragStart(e, item.id)}
+              onDragOver={e => handleDragOver(e, item.id)}
+              onDrop={e => handleDrop(e, item.id)}
+              onDragEnd={handleDragEnd}
+              style={{
+                background: '#fff',
+                border: isOver ? '0.5px solid #111' : '0.5px solid #e8e8e8',
+                borderRadius: 12,
+                overflow: 'hidden',
+                opacity: isDragging ? 0.4 : 1,
+                boxShadow: isOver ? 'inset 3px 0 0 #111' : 'none',
+                transition: 'opacity 0.15s, box-shadow 0.15s, border-color 0.15s',
+              }}
+            >
+              {/* Başlık satırı */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 12px' }}>
+                <button
+                  onClick={() => toggleItem(item.id)}
+                  style={{
+                    flexShrink: 0, width: 22, height: 22,
+                    border: 'none', background: 'transparent',
+                    cursor: 'pointer', fontSize: 13, color: '#888',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    transition: 'transform 0.15s',
+                    transform: item.expanded ? 'rotate(90deg)' : 'rotate(0deg)',
+                  }}
+                  title={item.expanded ? 'Kapat' : 'Aç'}
+                >
+                  ▶
+                </button>
+                <span style={{ fontSize: 11, color: '#ccc', fontWeight: 600, marginRight: 2 }}>
+                  {String(idx + 1).padStart(2, '0')}
+                </span>
+                <input
+                  type="text"
+                  placeholder="Başlık..."
+                  value={item.title}
+                  onChange={e => updateItem(item.id, 'title', e.target.value)}
+                  style={inputStyle}
+                  draggable={false}
                 />
+                {/* Taşıma handle */}
+                <button
+                  style={{
+                    flexShrink: 0, width: 28, height: 28,
+                    border: '0.5px solid #eee', borderRadius: 7,
+                    background: 'transparent', cursor: 'grab',
+                    fontSize: 15, color: '#ccc',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    userSelect: 'none',
+                  }}
+                  title="Taşı"
+                  onMouseDown={e => e.stopPropagation()}
+                >
+                  ⠿
+                </button>
+                {/* Sil */}
+                <button
+                  onClick={() => removeItem(item.id)}
+                  style={{
+                    flexShrink: 0, width: 28, height: 28,
+                    border: '0.5px solid #eee', borderRadius: 7,
+                    background: 'transparent', cursor: 'pointer',
+                    fontSize: 14, color: '#bbb',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    transition: 'all 0.1s',
+                  }}
+                  title="Sil"
+                >
+                  ✕
+                </button>
               </div>
-            )}
-          </div>
-        ))}
+
+              {/* Açıklama alanı */}
+              {item.expanded && (
+                <div style={{ padding: '0 12px 12px', borderTop: '0.5px solid #f0f0f0', paddingTop: 10 }}>
+                  <textarea
+                    placeholder="Açıklama yaz..."
+                    value={item.description}
+                    onChange={e => updateItem(item.id, 'description', e.target.value)}
+                    style={textareaStyle}
+                    draggable={false}
+                  />
+                </div>
+              )}
+            </div>
+          )
+        })}
       </div>
 
       {/* Kaydet */}
