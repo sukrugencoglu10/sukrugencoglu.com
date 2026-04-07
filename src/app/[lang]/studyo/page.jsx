@@ -1162,6 +1162,7 @@ function ReklamHiyerarsisi() {
   const [loading, setLoading] = useState(true)
   const [dragId, setDragId] = useState(null)
   const [dragOverId, setDragOverId] = useState(null)
+  const [searchQuery, setSearchQuery] = useState('')
 
   useEffect(() => {
     fetch('/api/reklam-hiyerarsisi')
@@ -1277,15 +1278,35 @@ function ReklamHiyerarsisi() {
     background: '#fff',
   }
 
+  // Arama eşleşmelerini vurgula
+  const highlight = (text, query) => {
+    if (!query.trim() || !text) return text
+    const regex = new RegExp(`(${query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi')
+    const parts = text.split(regex)
+    return parts.map((part, i) =>
+      regex.test(part)
+        ? <mark key={i} style={{ background: '#fff176', borderRadius: 2, padding: '0 1px' }}>{part}</mark>
+        : part
+    )
+  }
+
+  const q = searchQuery.trim().toLowerCase()
+  const filteredItems = q
+    ? items.filter(i =>
+        i.title.toLowerCase().includes(q) ||
+        i.description.toLowerCase().includes(q)
+      )
+    : items
+
   return (
     <div style={{ maxWidth: 700, margin: '0 auto', padding: '2rem 1rem', fontFamily: 'inherit' }}>
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1.75rem' }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1rem' }}>
         <div>
           <h1 style={{ fontSize: 22, fontWeight: 500, margin: '0 0 4px' }}>Reklam Hiyerarşisi</h1>
           <p style={{ fontSize: 13, color: '#888', margin: 0 }}>Hiyerarşi başlıkları ve açıklamalarını düzenle, kaydet</p>
         </div>
         <button
-          onClick={addItem}
+          onClick={() => addItem()}
           style={{
             display: 'flex', alignItems: 'center', gap: 6,
             padding: '8px 14px', borderRadius: 9,
@@ -1297,6 +1318,43 @@ function ReklamHiyerarsisi() {
           <span style={{ fontSize: 16, lineHeight: 1 }}>+</span> Ekle
         </button>
       </div>
+
+      {/* Arama kutusu */}
+      <div style={{ position: 'relative', marginBottom: '1.5rem' }}>
+        <span style={{
+          position: 'absolute', left: 11, top: '50%', transform: 'translateY(-50%)',
+          fontSize: 14, color: '#bbb', pointerEvents: 'none',
+        }}>⌕</span>
+        <input
+          type="text"
+          placeholder="Başlık veya açıklamada ara..."
+          value={searchQuery}
+          onChange={e => setSearchQuery(e.target.value)}
+          style={{
+            width: '100%', boxSizing: 'border-box',
+            fontSize: 13, padding: '9px 36px 9px 30px',
+            borderRadius: 9, border: '0.5px solid #ddd',
+            fontFamily: 'inherit', outline: 'none', background: '#fff',
+          }}
+        />
+        {searchQuery && (
+          <button
+            onClick={() => setSearchQuery('')}
+            style={{
+              position: 'absolute', right: 9, top: '50%', transform: 'translateY(-50%)',
+              background: 'none', border: 'none', cursor: 'pointer',
+              fontSize: 13, color: '#bbb', padding: 2,
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+            }}
+            title="Temizle"
+          >✕</button>
+        )}
+      </div>
+      {q && (
+        <div style={{ fontSize: 12, color: '#aaa', marginBottom: '1rem', marginTop: '-0.75rem' }}>
+          {filteredItems.length} sonuç bulundu
+        </div>
+      )}
 
       {loading && (
         <div style={{ color: '#aaa', fontSize: 13, marginBottom: '1rem' }}>Yükleniyor...</div>
@@ -1313,9 +1371,11 @@ function ReklamHiyerarsisi() {
       )}
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginBottom: '1.5rem' }}>
-        {items.map((item, idx) => {
+        {filteredItems.map((item, idx) => {
           const isDragging = dragId === item.id
           const isOver = dragOverId === item.id
+          const titleMatch = q && item.title.toLowerCase().includes(q)
+          const descMatch = q && item.description.toLowerCase().includes(q)
           return (
             <div
               key={item.id}
@@ -1358,7 +1418,7 @@ function ReklamHiyerarsisi() {
                   placeholder="Başlık..."
                   value={item.title}
                   onChange={e => updateItem(item.id, 'title', e.target.value)}
-                  style={inputStyle}
+                  style={{ ...inputStyle, borderColor: titleMatch ? '#facc15' : undefined }}
                   draggable={false}
                 />
                 {/* Taşıma handle */}
@@ -1409,15 +1469,25 @@ function ReklamHiyerarsisi() {
               </div>
 
               {/* Açıklama alanı */}
-              {item.expanded && (
+              {(item.expanded || descMatch) && (
                 <div style={{ padding: '0 12px 12px', borderTop: '0.5px solid #f0f0f0', paddingTop: 10 }}>
                   <textarea
                     placeholder="Açıklama yaz..."
                     value={item.description}
                     onChange={e => updateItem(item.id, 'description', e.target.value)}
-                    style={textareaStyle}
+                    style={{ ...textareaStyle, borderColor: descMatch ? '#facc15' : undefined }}
                     draggable={false}
                   />
+                  {descMatch && (
+                    <div style={{
+                      marginTop: 6, padding: '6px 10px',
+                      background: '#fffde7', borderRadius: 6,
+                      fontSize: 12, color: '#555', lineHeight: 1.6,
+                      whiteSpace: 'pre-wrap',
+                    }}>
+                      {highlight(item.description, searchQuery)}
+                    </div>
+                  )}
                 </div>
               )}
             </div>
