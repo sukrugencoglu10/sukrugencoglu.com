@@ -1368,7 +1368,7 @@ const TOOLS = [
 ]
 
 // ─── Stüdyo düzeni — hamburger toggle sidebar + içerik alanı ─────────────────
-function StudyoLayout() {
+function StudyoLayout({ onLogout }) {
   const [activeId, setActiveId] = useState(TOOLS[0].id)
   const [sidebarOpen, setSidebarOpen] = useState(true)
   const ActiveTool = TOOLS.find(t => t.id === activeId)?.component ?? null
@@ -1433,7 +1433,7 @@ function StudyoLayout() {
         <div style={{ fontSize: 11, fontWeight: 600, color: '#bbb', letterSpacing: '0.08em', padding: '0 16px', marginBottom: '0.75rem' }}>
           STÜDYO
         </div>
-        <nav>
+        <nav style={{ flex: 1 }}>
           {TOOLS.map(tool => {
             const active = tool.id === activeId
             return (
@@ -1463,6 +1463,35 @@ function StudyoLayout() {
             )
           })}
         </nav>
+
+        {/* Çıkış butonu */}
+        <div style={{ padding: '12px 10px', borderTop: '0.5px solid #e8e8e8' }}>
+          <button
+            onClick={onLogout}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 8,
+              width: '100%',
+              padding: '8px 10px',
+              background: 'transparent',
+              border: 'none',
+              borderRadius: 8,
+              color: '#aaa',
+              fontSize: 13,
+              fontFamily: 'inherit',
+              cursor: 'pointer',
+              textAlign: 'left',
+              transition: 'all 0.1s',
+            }}
+            onMouseEnter={e => { e.currentTarget.style.background = '#fff'; e.currentTarget.style.color = '#555'; }}
+            onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = '#aaa'; }}
+            title="Oturumu kapat"
+          >
+            <span style={{ fontSize: 13 }}>⎋</span>
+            Çıkış yap
+          </button>
+        </div>
       </aside>
 
       {/* İçerik alanı */}
@@ -1489,7 +1518,12 @@ export default function StudyoPage() {
     setAuthChecked(true)
   }, [])
 
+  const handleLogout = () => {
+    sessionStorage.removeItem('studyo_auth')
+    setAuthed(false)
+  }
+
   if (!authChecked) return null
   if (!authed) return <LoginScreen onSuccess={() => setAuthed(true)} />
-  return <StudyoLayout />
+  return <StudyoLayout onLogout={handleLogout} />
 }
