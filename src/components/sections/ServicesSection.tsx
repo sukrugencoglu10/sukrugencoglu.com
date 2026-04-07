@@ -76,7 +76,7 @@ export default function ServicesSection() {
                     key={i}
                     onClick={() => goTo(i)}
                     style={{
-                      borderLeft: `3px solid ${isActive ? COLORS[i] : "transparent"}`,
+                      boxShadow: `inset 3px 0 0 ${isActive ? COLORS[i] : "transparent"}`,
                       background: isActive ? `${COLORS[i]}10` : "transparent",
                       transition: "all 0.2s",
                     }}
@@ -106,12 +106,12 @@ export default function ServicesSection() {
             {/* Content panel */}
             <div
               style={{
-                borderTop: `3px solid ${color}`,
+                boxShadow: `inset 0 3px 0 ${color}, var(--shadow-card)`,
                 opacity: animating ? 0 : 1,
                 transform: animating ? "translateY(8px)" : "translateY(0)",
                 transition: "opacity 0.18s ease, transform 0.18s ease",
               }}
-              className="bg-white rounded-2xl rounded-tl-none p-8 lg:p-10 border border-border shadow-[var(--shadow-card)] flex flex-col justify-between min-h-[320px]"
+              className="bg-white rounded-2xl rounded-tl-none p-8 lg:p-10 border border-border flex flex-col justify-between min-h-[320px]"
             >
               <div>
                 <div
@@ -161,12 +161,12 @@ export default function ServicesSection() {
           >
             <div
               style={{
-                borderTop: `3px solid ${color}`,
+                boxShadow: `inset 0 3px 0 ${color}, var(--shadow-card)`,
                 opacity: animating ? 0 : 1,
                 transform: animating ? "translateX(12px)" : "translateX(0)",
                 transition: "opacity 0.18s ease, transform 0.18s ease",
               }}
-              className="bg-white rounded-2xl p-6 border border-border shadow-[var(--shadow-card)]"
+              className="bg-white rounded-2xl p-6 border border-border"
             >
               <div
                 style={{ background: `${color}15`, color }}
