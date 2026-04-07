@@ -165,6 +165,7 @@ export default function StudyoShowcase() {
                           lineHeight: 1.75,
                           borderTop: "0.5px solid #f0f0f0",
                           paddingTop: 12,
+                          whiteSpace: "pre-wrap",
                         }}
                       >
                         {item.description}
