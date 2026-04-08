@@ -1165,6 +1165,14 @@ function ReklamHiyerarsisi() {
   const [searchQuery, setSearchQuery] = useState('')
   const [focusedId, setFocusedId] = useState(null)
   const [previewMode, setPreviewMode] = useState(false)
+  const [isMobile, setIsMobile] = useState(false)
+
+  useEffect(() => {
+    const check = () => setIsMobile(window.innerWidth < 768)
+    check()
+    window.addEventListener('resize', check)
+    return () => window.removeEventListener('resize', check)
+  }, [])
 
   useEffect(() => {
     fetch('/api/reklam-hiyerarsisi')
@@ -1374,62 +1382,88 @@ function ReklamHiyerarsisi() {
   const focusedItem = items.find(i => i.id === focusedId) ?? null
   const focusedIdx = items.findIndex(i => i.id === focusedId)
 
+  // Mobilde focusedId varsa → sadece sağ panel göster
+  const mobileEditorMode = isMobile && !!focusedId
+
   return (
-    <div style={{ maxWidth: focusedId ? 'none' : 700, margin: '0 auto', padding: '2rem 1rem', fontFamily: 'inherit', transition: 'max-width 0.2s ease' }}>
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1rem' }}>
-        <div>
-          <h1 style={{ fontSize: 22, fontWeight: 500, margin: '0 0 4px' }}>Reklam Hiyerarşisi</h1>
-          <p style={{ fontSize: 13, color: '#888', margin: 0 }}>Hiyerarşi başlıkları ve açıklamalarını düzenle, kaydet</p>
-        </div>
+    <div style={{ maxWidth: (focusedId && !isMobile) ? 'none' : 700, margin: '0 auto', padding: '1.5rem 1rem', fontFamily: 'inherit', transition: 'max-width 0.2s ease' }}>
+
+      {/* Mobil geri butonu */}
+      {mobileEditorMode && (
         <button
-          onClick={() => addItem()}
+          onClick={() => { setFocusedId(null); setPreviewMode(false) }}
           style={{
             display: 'flex', alignItems: 'center', gap: 6,
-            padding: '8px 14px', borderRadius: 9,
-            border: '0.5px solid #d0d0d0', background: '#fff',
-            fontSize: 13, cursor: 'pointer', fontFamily: 'inherit', color: '#333',
-            transition: 'all 0.1s',
+            padding: '10px 0', marginBottom: '1rem',
+            background: 'none', border: 'none', cursor: 'pointer',
+            fontSize: 14, color: '#555', fontFamily: 'inherit',
           }}
         >
-          <span style={{ fontSize: 16, lineHeight: 1 }}>+</span> Ekle
+          ← Geri
         </button>
-      </div>
+      )}
 
-      {/* Arama kutusu */}
-      <div style={{ position: 'relative', marginBottom: '1.5rem' }}>
-        <span style={{
-          position: 'absolute', left: 11, top: '50%', transform: 'translateY(-50%)',
-          fontSize: 14, color: '#bbb', pointerEvents: 'none',
-        }}>⌕</span>
-        <input
-          type="text"
-          placeholder="Başlık veya açıklamada ara..."
-          value={searchQuery}
-          onChange={e => setSearchQuery(e.target.value)}
-          style={{
-            width: '100%', boxSizing: 'border-box',
-            fontSize: 13, padding: '9px 36px 9px 30px',
-            borderRadius: 9, border: '0.5px solid #ddd',
-            fontFamily: 'inherit', outline: 'none', background: '#fff',
-          }}
-        />
-        {searchQuery && (
+      {/* Başlık + ekle — mobil editor modunda gizle */}
+      {!mobileEditorMode && (
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1rem' }}>
+          <div>
+            <h1 style={{ fontSize: isMobile ? 18 : 22, fontWeight: 500, margin: '0 0 4px' }}>Reklam Hiyerarşisi</h1>
+            <p style={{ fontSize: 13, color: '#888', margin: 0 }}>Başlıkları ve açıklamaları düzenle, kaydet</p>
+          </div>
           <button
-            onClick={() => setSearchQuery('')}
+            onClick={() => addItem()}
             style={{
-              position: 'absolute', right: 9, top: '50%', transform: 'translateY(-50%)',
-              background: 'none', border: 'none', cursor: 'pointer',
-              fontSize: 13, color: '#bbb', padding: 2,
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              display: 'flex', alignItems: 'center', gap: 6,
+              padding: '8px 14px', borderRadius: 9,
+              border: '0.5px solid #d0d0d0', background: '#fff',
+              fontSize: 13, cursor: 'pointer', fontFamily: 'inherit', color: '#333',
+              transition: 'all 0.1s',
             }}
-            title="Temizle"
-          >✕</button>
-        )}
-      </div>
-      {q && (
-        <div style={{ fontSize: 12, color: '#aaa', marginBottom: '1rem', marginTop: '-0.75rem' }}>
-          {filteredItems.length} sonuç bulundu
+          >
+            <span style={{ fontSize: 16, lineHeight: 1 }}>+</span> Ekle
+          </button>
         </div>
+      )}
+
+      {/* Arama kutusu — mobil editor modunda gizle */}
+      {!mobileEditorMode && (
+        <>
+          <div style={{ position: 'relative', marginBottom: '1.5rem' }}>
+            <span style={{
+              position: 'absolute', left: 11, top: '50%', transform: 'translateY(-50%)',
+              fontSize: 14, color: '#bbb', pointerEvents: 'none',
+            }}>⌕</span>
+            <input
+              type="text"
+              placeholder="Başlık veya açıklamada ara..."
+              value={searchQuery}
+              onChange={e => setSearchQuery(e.target.value)}
+              style={{
+                width: '100%', boxSizing: 'border-box',
+                fontSize: 13, padding: '9px 36px 9px 30px',
+                borderRadius: 9, border: '0.5px solid #ddd',
+                fontFamily: 'inherit', outline: 'none', background: '#fff',
+              }}
+            />
+            {searchQuery && (
+              <button
+                onClick={() => setSearchQuery('')}
+                style={{
+                  position: 'absolute', right: 9, top: '50%', transform: 'translateY(-50%)',
+                  background: 'none', border: 'none', cursor: 'pointer',
+                  fontSize: 13, color: '#bbb', padding: 2,
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                }}
+                title="Temizle"
+              >✕</button>
+            )}
+          </div>
+          {q && (
+            <div style={{ fontSize: 12, color: '#aaa', marginBottom: '1rem', marginTop: '-0.75rem' }}>
+              {filteredItems.length} sonuç bulundu
+            </div>
+          )}
+        </>
       )}
 
       {loading && (
@@ -1449,13 +1483,13 @@ function ReklamHiyerarsisi() {
       {/* Split panel veya tek sütun */}
       <div style={{
         display: 'grid',
-        gridTemplateColumns: focusedId ? '290px 1fr' : '1fr',
-        gap: focusedId ? '1.5rem' : 0,
+        gridTemplateColumns: (focusedId && !isMobile) ? '290px 1fr' : '1fr',
+        gap: (focusedId && !isMobile) ? '1.5rem' : 0,
         alignItems: 'start',
         transition: 'grid-template-columns 0.2s ease',
       }}>
-        {/* Sol — öğe listesi */}
-        <div>
+        {/* Sol — öğe listesi (mobil editor modunda gizlenir) */}
+        <div style={{ display: mobileEditorMode ? 'none' : 'block' }}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: focusedId ? 4 : 10, marginBottom: '1.5rem' }}>
             {filteredItems.map((item) => {
               const itemIdx = items.findIndex(i => i.id === item.id)
@@ -1483,11 +1517,11 @@ function ReklamHiyerarsisi() {
                   }}
                 >
                   {/* Başlık satırı */}
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 6, padding: focusedId ? '8px 10px' : '10px 12px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 6, padding: (focusedId && !isMobile) ? '8px 10px' : '10px 12px', minHeight: isMobile ? 52 : 'auto' }}>
                     <button
                       onClick={() => setFocusedId(prev => prev === item.id ? null : item.id)}
                       style={{
-                        flexShrink: 0, width: 22, height: 22,
+                        flexShrink: 0, width: isMobile ? 32 : 22, height: isMobile ? 32 : 22,
                         border: 'none', background: 'transparent',
                         cursor: 'pointer', fontSize: 13,
                         color: isFocused ? '#111' : '#888',
@@ -1502,8 +1536,8 @@ function ReklamHiyerarsisi() {
                     <span style={{ fontSize: 11, color: isFocused ? '#888' : '#ccc', fontWeight: 600, flexShrink: 0 }}>
                       {String(itemIdx + 1).padStart(2, '0')}
                     </span>
-                    {focusedId && !isFocused ? (
-                      /* Split modunda odaklanmamış öğe: tıklanabilir metin */
+                    {(focusedId && !isFocused && !isMobile) ? (
+                      /* Desktop split modunda odaklanmamış öğe: tıklanabilir metin */
                       <span
                         onClick={() => setFocusedId(item.id)}
                         style={{
@@ -1520,33 +1554,35 @@ function ReklamHiyerarsisi() {
                         placeholder="Başlık..."
                         value={item.title}
                         onChange={e => updateItem(item.id, 'title', e.target.value)}
-                        style={{ ...inputStyle, borderColor: titleMatch ? '#facc15' : undefined }}
+                        style={{ ...inputStyle, borderColor: titleMatch ? '#facc15' : undefined, fontSize: isMobile ? 14 : 13 }}
                         draggable={false}
                       />
                     )}
-                    {/* Taşıma handle */}
-                    <button
-                      style={{
-                        flexShrink: 0, width: 26, height: 26,
-                        border: '0.5px solid #eee', borderRadius: 7,
-                        background: 'transparent', cursor: 'grab',
-                        fontSize: 15, color: '#ccc',
-                        display: 'flex', alignItems: 'center', justifyContent: 'center',
-                        userSelect: 'none',
-                      }}
-                      title="Taşı"
-                      onMouseDown={e => e.stopPropagation()}
-                    >
-                      ⠿
-                    </button>
+                    {/* Taşıma handle — mobilde gizle */}
+                    {!isMobile && (
+                      <button
+                        style={{
+                          flexShrink: 0, width: 26, height: 26,
+                          border: '0.5px solid #eee', borderRadius: 7,
+                          background: 'transparent', cursor: 'grab',
+                          fontSize: 15, color: '#ccc',
+                          display: 'flex', alignItems: 'center', justifyContent: 'center',
+                          userSelect: 'none',
+                        }}
+                        title="Taşı"
+                        onMouseDown={e => e.stopPropagation()}
+                      >
+                        ⠿
+                      </button>
+                    )}
                     {/* Araya ekle */}
                     <button
                       onClick={() => addItem(item.id)}
                       style={{
-                        flexShrink: 0, width: 26, height: 26,
+                        flexShrink: 0, width: isMobile ? 36 : 26, height: isMobile ? 36 : 26,
                         border: '0.5px solid #eee', borderRadius: 7,
                         background: 'transparent', cursor: 'pointer',
-                        fontSize: 16, color: '#bbb', lineHeight: 1,
+                        fontSize: isMobile ? 18 : 16, color: '#bbb', lineHeight: 1,
                         display: 'flex', alignItems: 'center', justifyContent: 'center',
                         transition: 'all 0.1s',
                       }}
@@ -1558,10 +1594,10 @@ function ReklamHiyerarsisi() {
                     <button
                       onClick={() => removeItem(item.id)}
                       style={{
-                        flexShrink: 0, width: 26, height: 26,
+                        flexShrink: 0, width: isMobile ? 36 : 26, height: isMobile ? 36 : 26,
                         border: '0.5px solid #eee', borderRadius: 7,
                         background: 'transparent', cursor: 'pointer',
-                        fontSize: 14, color: '#bbb',
+                        fontSize: isMobile ? 16 : 14, color: '#bbb',
                         display: 'flex', alignItems: 'center', justifyContent: 'center',
                         transition: 'all 0.1s',
                       }}
