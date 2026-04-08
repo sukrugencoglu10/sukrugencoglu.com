@@ -1164,6 +1164,7 @@ function ReklamHiyerarsisi() {
   const [dragOverId, setDragOverId] = useState(null)
   const [searchQuery, setSearchQuery] = useState('')
   const [focusedId, setFocusedId] = useState(null)
+  const [previewMode, setPreviewMode] = useState(false)
 
   useEffect(() => {
     fetch('/api/reklam-hiyerarsisi')
@@ -1610,56 +1611,95 @@ function ReklamHiyerarsisi() {
             position: 'sticky',
             top: 16,
           }}>
-            {/* Konum göstergesi */}
-            <div style={{
-              fontSize: 11, fontWeight: 700, color: '#bbb',
-              letterSpacing: '0.08em', marginBottom: '1rem',
-            }}>
-              {String(focusedIdx + 1).padStart(2, '0')} / {String(items.length).padStart(2, '0')}
+            {/* Üst bar: konum + toggle */}
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1rem' }}>
+              <div style={{ fontSize: 11, fontWeight: 700, color: '#bbb', letterSpacing: '0.08em' }}>
+                {String(focusedIdx + 1).padStart(2, '0')} / {String(items.length).padStart(2, '0')}
+              </div>
+              <button
+                onClick={() => setPreviewMode(p => !p)}
+                style={{
+                  fontSize: 11, padding: '4px 10px',
+                  borderRadius: 6, border: '0.5px solid #ddd',
+                  background: previewMode ? '#111' : 'transparent',
+                  color: previewMode ? '#fff' : '#888',
+                  cursor: 'pointer', fontFamily: 'inherit',
+                  transition: 'all 0.15s',
+                }}
+              >
+                {previewMode ? '✎ Düzenle' : '👁 Önizle'}
+              </button>
             </div>
 
-            {/* Başlık input */}
-            <input
-              type="text"
-              placeholder="Başlık..."
-              value={focusedItem.title}
-              onChange={e => updateItem(focusedId, 'title', e.target.value)}
-              style={{
-                width: '100%', boxSizing: 'border-box',
+            {/* Başlık */}
+            {previewMode ? (
+              <div style={{
                 fontSize: 20, fontWeight: 700,
-                padding: '0 0 10px',
-                borderRadius: 0,
-                border: 'none',
+                paddingBottom: 10,
                 borderBottom: '0.5px solid #eee',
-                fontFamily: 'inherit', outline: 'none',
                 marginBottom: '1.25rem',
                 color: '#111',
-                background: 'transparent',
-              }}
-              draggable={false}
-            />
+                lineHeight: 1.3,
+              }}>
+                {focusedItem.title || <span style={{ color: '#ccc' }}>Başlık yok</span>}
+              </div>
+            ) : (
+              <input
+                type="text"
+                placeholder="Başlık..."
+                value={focusedItem.title}
+                onChange={e => updateItem(focusedId, 'title', e.target.value)}
+                style={{
+                  width: '100%', boxSizing: 'border-box',
+                  fontSize: 20, fontWeight: 700,
+                  padding: '0 0 10px',
+                  borderRadius: 0, border: 'none',
+                  borderBottom: '0.5px solid #eee',
+                  fontFamily: 'inherit', outline: 'none',
+                  marginBottom: '1.25rem',
+                  color: '#111', background: 'transparent',
+                }}
+                draggable={false}
+              />
+            )}
 
-            {/* Açıklama textarea */}
-            <textarea
-              placeholder="Açıklama yaz..."
-              value={focusedItem.description}
-              onChange={e => updateItem(focusedId, 'description', e.target.value)}
-              onPaste={e => handleDescriptionPaste(e, focusedId, focusedItem.description)}
-              style={{
-                width: '100%', boxSizing: 'border-box',
-                fontSize: 14,
-                padding: 0,
-                borderRadius: 0,
-                border: 'none',
-                fontFamily: 'inherit', outline: 'none',
-                resize: 'vertical',
-                minHeight: 320,
-                lineHeight: 1.8,
-                color: '#444',
-                background: 'transparent',
-              }}
-              draggable={false}
-            />
+            {/* Açıklama */}
+            {previewMode ? (
+              <div style={{
+                fontSize: 14, color: '#444',
+                lineHeight: 1.8, whiteSpace: 'pre-wrap',
+                minHeight: 120,
+              }}>
+                {focusedItem.description
+                  ? focusedItem.description.split(/(https?:\/\/[^\s]+)/gi).map((part, i) =>
+                      /^https?:\/\//i.test(part) ? (
+                        <a key={i} href={part} target="_blank" rel="noopener noreferrer"
+                          style={{ color: '#2563eb', textDecoration: 'underline', wordBreak: 'break-all' }}>
+                          {part}
+                        </a>
+                      ) : part
+                    )
+                  : <span style={{ color: '#ccc', fontStyle: 'italic' }}>Açıklama yok</span>
+                }
+              </div>
+            ) : (
+              <textarea
+                placeholder="Açıklama yaz..."
+                value={focusedItem.description}
+                onChange={e => updateItem(focusedId, 'description', e.target.value)}
+                onPaste={e => handleDescriptionPaste(e, focusedId, focusedItem.description)}
+                style={{
+                  width: '100%', boxSizing: 'border-box',
+                  fontSize: 14, padding: 0,
+                  borderRadius: 0, border: 'none',
+                  fontFamily: 'inherit', outline: 'none',
+                  resize: 'vertical', minHeight: 320,
+                  lineHeight: 1.8, color: '#444',
+                  background: 'transparent',
+                }}
+                draggable={false}
+              />
+            )}
           </div>
         )}
       </div>
