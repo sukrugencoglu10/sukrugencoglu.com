@@ -1956,7 +1956,7 @@ function StudyoLayout({ onLogout }) {
         onClick={() => setSidebarOpen(prev => !prev)}
         style={{
           position: 'fixed',
-          top: 14,
+          top: 92,
           left: sidebarOpen ? 210 : 14,
           zIndex: 200,
           width: 32,
@@ -1997,7 +1997,7 @@ function StudyoLayout({ onLogout }) {
         flexDirection: 'column',
         paddingTop: '1.5rem',
         position: 'fixed',
-        top: 0,
+        top: 78,
         left: 0,
         bottom: 0,
         zIndex: 100,
