@@ -1429,7 +1429,8 @@ function ReklamHiyerarsisi() {
         {/* Sol — öğe listesi */}
         <div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: focusedId ? 4 : 10, marginBottom: '1.5rem' }}>
-            {filteredItems.map((item, idx) => {
+            {filteredItems.map((item) => {
+              const itemIdx = items.findIndex(i => i.id === item.id)
               const isFocused = item.id === focusedId
               const isDragging = dragId === item.id
               const isOver = dragOverId === item.id
@@ -1471,7 +1472,7 @@ function ReklamHiyerarsisi() {
                       ▶
                     </button>
                     <span style={{ fontSize: 11, color: isFocused ? '#888' : '#ccc', fontWeight: 600, flexShrink: 0 }}>
-                      {String(idx + 1).padStart(2, '0')}
+                      {String(itemIdx + 1).padStart(2, '0')}
                     </span>
                     {focusedId && !isFocused ? (
                       /* Split modunda odaklanmamış öğe: tıklanabilir metin */
