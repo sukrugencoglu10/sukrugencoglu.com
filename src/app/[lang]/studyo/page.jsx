@@ -1284,27 +1284,50 @@ function ReklamHiyerarsisi() {
     const div = document.createElement('div')
     div.innerHTML = html
 
-    // Tabloları sütun | sütun formatına çevir
+    // Tabloları sütun | sütun formatına çevir (diğer işlemlerden önce)
     div.querySelectorAll('table').forEach(table => {
       let rows = ''
       table.querySelectorAll('tr').forEach(tr => {
         const cells = [...tr.querySelectorAll('td,th')].map(c => c.textContent.trim())
         rows += cells.join(' | ') + '\n'
       })
-      table.replaceWith(document.createTextNode('\n' + rows))
+      table.replaceWith(document.createTextNode('\n' + rows + '\n'))
     })
+
+    // Sıralı listeler: doğrudan li çocuklarına "1. " numaraları ekle
+    div.querySelectorAll('ol').forEach(ol => {
+      ;[...ol.querySelectorAll(':scope > li')].forEach((li, i) => {
+        li.prepend(document.createTextNode(`${i + 1}. `))
+      })
+    })
+
+    // Sırasız listeler: her li'ye "• " ekle
+    div.querySelectorAll('ul > li').forEach(li => {
+      li.prepend(document.createTextNode('• '))
+    })
+
+    // Başlıklar: önce çift satır sonu, sonra tek satır sonu
+    div.querySelectorAll('h1,h2,h3,h4,h5,h6').forEach(el => {
+      el.before(document.createTextNode('\n\n'))
+      el.after(document.createTextNode('\n'))
+    })
+
+    // Paragraflar: sonrasına çift satır sonu
+    div.querySelectorAll('p').forEach(el => el.after(document.createTextNode('\n\n')))
+
+    // Liste öğeleri: sonrasına satır sonu
+    div.querySelectorAll('li').forEach(el => el.after(document.createTextNode('\n')))
 
     // <br> → newline
-    div.querySelectorAll('br').forEach(br => br.replaceWith('\n'))
+    div.querySelectorAll('br').forEach(br => br.replaceWith(document.createTextNode('\n')))
 
-    // Block elementlerin arkasına satır sonu ekle
-    div.querySelectorAll('p,li,h1,h2,h3,h4,h5,h6,div').forEach(el => {
-      el.after('\n')
-    })
+    // Block div/section elementleri
+    div.querySelectorAll('div,section,article').forEach(el => el.after(document.createTextNode('\n')))
 
     return div.textContent
       .replace(/[ \t]+/g, ' ')      // çoklu boşluk → tek
       .replace(/\n[ \t]+/g, '\n')   // satır başı boşlukları temizle
+      .replace(/[ \t]+\n/g, '\n')   // satır sonu boşluklarını temizle
       .replace(/\n{3,}/g, '\n\n')   // fazla boş satırları sıkıştır
       .trim()
   }
