@@ -1170,8 +1170,15 @@ function ReklamHiyerarsisi() {
 
   const toggleAdminFaq = (faqId) => {
     setOpenAdminFaqIds(prev => {
+      const isOpening = !prev.has(faqId)
       const next = new Set(prev)
-      next.has(faqId) ? next.delete(faqId) : next.add(faqId)
+      isOpening ? next.add(faqId) : next.delete(faqId)
+      if (isOpening) {
+        setTimeout(() => {
+          const el = document.querySelector(`[data-faq-answer="${faqId}"]`)
+          if (el) el.scrollIntoView({ behavior: 'smooth', block: 'nearest' })
+        }, 60)
+      }
       return next
     })
   }
@@ -1866,7 +1873,7 @@ function ReklamHiyerarsisi() {
 
                         {/* Cevap — toggle ile açılır */}
                         {isOpen && (
-                          <div style={{ padding: '0 12px 12px 42px', borderTop: '0.5px solid #f0f0f0', paddingTop: 10 }}>
+                          <div data-faq-answer={faqItem.id} style={{ padding: '0 12px 12px 42px', borderTop: '0.5px solid #f0f0f0', paddingTop: 10 }}>
                             {previewMode ? (
                               <div style={{ fontSize: 13, color: '#555', lineHeight: 1.7, whiteSpace: 'pre-wrap' }}>
                                 {faqItem.answer || <span style={{ color: '#ccc', fontStyle: 'italic' }}>Cevap girilmemiş</span>}
