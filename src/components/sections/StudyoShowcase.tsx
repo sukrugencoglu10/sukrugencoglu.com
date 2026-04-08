@@ -40,6 +40,7 @@ export default function StudyoShowcase() {
   const [activeId, setActiveId] = useState<number | null>(null);
   const [animating, setAnimating] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [openFaqIds, setOpenFaqIds] = useState<Set<number>>(new Set());
 
   useEffect(() => {
     fetch("/api/reklam-hiyerarsisi")
@@ -57,10 +58,19 @@ export default function StudyoShowcase() {
   const goTo = (id: number) => {
     if (id === activeId || animating) return;
     setAnimating(true);
+    setOpenFaqIds(new Set());
     setTimeout(() => {
       setActiveId(id);
       setAnimating(false);
     }, 150);
+  };
+
+  const toggleFaq = (faqId: number) => {
+    setOpenFaqIds(prev => {
+      const next = new Set(prev);
+      next.has(faqId) ? next.delete(faqId) : next.add(faqId);
+      return next;
+    });
   };
 
   if (!loading && items.length === 0) return null;
@@ -227,25 +237,81 @@ export default function StudyoShowcase() {
                       <div style={{ fontSize: 11, fontWeight: 700, color: "#bbb", letterSpacing: "0.08em", marginBottom: "1rem" }}>
                         SSS — SIK SORULAN SORULAR
                       </div>
-                      <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
-                        {activeItem.faq.map((f) => (
-                          <div
-                            key={f.id}
-                            style={{
-                              padding: "14px 16px",
-                              background: "#fafafa",
-                              borderRadius: 12,
-                              border: "0.5px solid #eee",
-                            }}
-                          >
-                            <div style={{ fontWeight: 700, color: "#111", fontSize: 14, marginBottom: 6, lineHeight: 1.4 }}>
-                              {f.question}
+                      <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
+                        {activeItem.faq.map((f) => {
+                          const isOpen = openFaqIds.has(f.id);
+                          return (
+                            <div
+                              key={f.id}
+                              style={{
+                                background: "#fafafa",
+                                borderRadius: 12,
+                                border: isOpen ? "0.5px solid #d0d0d0" : "0.5px solid #eee",
+                                overflow: "hidden",
+                                transition: "border-color 0.15s",
+                              }}
+                            >
+                              {/* Soru satırı — toggle */}
+                              <button
+                                onClick={() => toggleFaq(f.id)}
+                                style={{
+                                  width: "100%",
+                                  display: "flex",
+                                  alignItems: "center",
+                                  gap: 10,
+                                  padding: "13px 16px",
+                                  background: "transparent",
+                                  border: "none",
+                                  cursor: "pointer",
+                                  textAlign: "left",
+                                  fontFamily: "inherit",
+                                }}
+                              >
+                                <span
+                                  style={{
+                                    flexShrink: 0,
+                                    fontSize: 11,
+                                    color: isOpen ? "#111" : "#aaa",
+                                    transition: "transform 0.2s, color 0.15s",
+                                    transform: isOpen ? "rotate(90deg)" : "rotate(0deg)",
+                                    display: "inline-block",
+                                  }}
+                                >
+                                  ▶
+                                </span>
+                                <span
+                                  style={{
+                                    fontWeight: 600,
+                                    color: isOpen ? "#111" : "#333",
+                                    fontSize: 14,
+                                    lineHeight: 1.4,
+                                    flex: 1,
+                                    transition: "color 0.15s",
+                                  }}
+                                >
+                                  {f.question}
+                                </span>
+                              </button>
+
+                              {/* Cevap — conditional render ile sayfa doğal genişler */}
+                              {isOpen && (
+                                <div
+                                  style={{
+                                    padding: "0 16px 14px 37px",
+                                    fontSize: 14,
+                                    color: "#555",
+                                    lineHeight: 1.75,
+                                    whiteSpace: "pre-wrap",
+                                    borderTop: "0.5px solid #eee",
+                                    paddingTop: 12,
+                                  }}
+                                >
+                                  {renderWithLinks(f.answer)}
+                                </div>
+                              )}
                             </div>
-                            <div style={{ fontSize: 14, color: "#555", lineHeight: 1.75, whiteSpace: "pre-wrap" }}>
-                              {renderWithLinks(f.answer)}
-                            </div>
-                          </div>
-                        ))}
+                          );
+                        })}
                       </div>
                     </div>
                   )}
