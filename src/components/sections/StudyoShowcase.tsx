@@ -9,6 +9,25 @@ interface HiyerarsiItem {
   expanded: boolean;
 }
 
+function renderWithLinks(text: string) {
+  const parts = text.split(/(https?:\/\/[^\s]+)/gi)
+  return parts.map((part, i) =>
+    /^https?:\/\//i.test(part) ? (
+      <a
+        key={i}
+        href={part}
+        target="_blank"
+        rel="noopener noreferrer"
+        style={{ color: "#2563eb", textDecoration: "underline", wordBreak: "break-all" }}
+      >
+        {part}
+      </a>
+    ) : (
+      part
+    )
+  )
+}
+
 export default function StudyoShowcase() {
   const [items, setItems] = useState<HiyerarsiItem[]>([]);
   const [activeId, setActiveId] = useState<number | null>(null);
@@ -187,7 +206,7 @@ export default function StudyoShowcase() {
                         whiteSpace: "pre-wrap",
                       }}
                     >
-                      {activeItem.description}
+                      {renderWithLinks(activeItem.description)}
                     </p>
                   ) : (
                     <p style={{ fontSize: 14, color: "#ccc", margin: 0, fontStyle: "italic" }}>
