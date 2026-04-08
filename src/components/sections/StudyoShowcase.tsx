@@ -182,8 +182,10 @@ export default function StudyoShowcase() {
             <div style={{
               background: "#fff",
               border: "0.5px solid #e8e8e8",
-              borderRadius: isMobile ? 12 : 16,
               borderTopLeftRadius: 4,
+              borderTopRightRadius: isMobile ? 12 : 16,
+              borderBottomLeftRadius: isMobile ? 12 : 16,
+              borderBottomRightRadius: isMobile ? 12 : 16,
               padding: isMobile ? "1.25rem" : "2rem",
               minHeight: isMobile ? 0 : 200,
               boxShadow: "inset 0 3px 0 #111, 0 2px 16px rgba(0,0,0,0.06)",
