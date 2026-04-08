@@ -1885,11 +1885,11 @@ function ReklamHiyerarsisi() {
                                 onChange={e => updateFaq(focusedId, faqItem.id, 'answer', e.target.value)}
                                 style={{
                                   width: '100%', boxSizing: 'border-box',
-                                  fontSize: 13, padding: '7px 8px',
-                                  borderRadius: 6, border: '0.5px solid #e0e0e0',
+                                  fontSize: 14, padding: '12px 14px',
+                                  borderRadius: 8, border: '0.5px solid #e0e0e0',
                                   fontFamily: 'inherit', outline: 'none',
-                                  resize: 'vertical', minHeight: 70,
-                                  lineHeight: 1.6, color: '#444', background: '#fff',
+                                  resize: 'vertical', minHeight: 180,
+                                  lineHeight: 1.75, color: '#333', background: '#fff',
                                 }}
                               />
                             )}
