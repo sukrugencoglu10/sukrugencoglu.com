@@ -1332,17 +1332,24 @@ function ReklamHiyerarsisi() {
       .trim()
   }
 
-  const handleDescriptionPaste = (e, id, currentVal) => {
-    const html = e.clipboardData?.getData('text/html')
-    if (!html) return
-    const text = parseHtmlToText(html)
+  // Genel paste handler — herhangi bir textarea için (description, SSS cevap, vs.)
+  // onUpdate: (newValue) => void  -- state güncelleme callback'i
+  const handleSmartPaste = (e, currentVal, onUpdate) => {
+    const html = e.clipboardData?.getData('text/html') || ''
+    const plain = e.clipboardData?.getData('text/plain') || ''
+    let text = html ? parseHtmlToText(html) : ''
+    if (!text) text = plain  // HTML yoksa veya parse boş gelirse düz metni kullan
     if (!text) return
     e.preventDefault()
     const el = e.target
     const before = currentVal.slice(0, el.selectionStart)
     const after  = currentVal.slice(el.selectionEnd)
     const sep = before.length > 0 && !before.endsWith('\n') ? '\n' : ''
-    updateItem(id, 'description', before + sep + text + after)
+    onUpdate(before + sep + text + after)
+  }
+
+  const handleDescriptionPaste = (e, id, currentVal) => {
+    handleSmartPaste(e, currentVal, (v) => updateItem(id, 'description', v))
   }
 
   const handleDragEnd = () => {
@@ -1906,6 +1913,7 @@ function ReklamHiyerarsisi() {
                                 placeholder="Cevap..."
                                 value={faqItem.answer}
                                 onChange={e => updateFaq(focusedId, faqItem.id, 'answer', e.target.value)}
+                                onPaste={e => handleSmartPaste(e, faqItem.answer, (v) => updateFaq(focusedId, faqItem.id, 'answer', v))}
                                 style={{
                                   width: '100%', boxSizing: 'border-box',
                                   fontSize: 14, padding: '12px 14px',
