@@ -36,7 +36,7 @@ export default function Navbar() {
       setActiveSection("services");
       return;
     }
-    if (pathname.endsWith("/nasil-calisiriz") || pathname.endsWith("/how-we-work")) {
+    if (pathname.endsWith("/studyo")) {
       setActiveSection("process");
       return;
     }
