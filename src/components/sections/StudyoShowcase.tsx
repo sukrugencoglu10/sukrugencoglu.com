@@ -2,11 +2,18 @@
 
 import { useState, useEffect } from "react";
 
+interface FaqItem {
+  id: number;
+  question: string;
+  answer: string;
+}
+
 interface HiyerarsiItem {
   id: number;
   title: string;
   description: string;
   expanded: boolean;
+  faq?: FaqItem[];
 }
 
 function renderWithLinks(text: string) {
@@ -212,6 +219,35 @@ export default function StudyoShowcase() {
                     <p style={{ fontSize: 14, color: "#ccc", margin: 0, fontStyle: "italic" }}>
                       Açıklama eklenmemiş.
                     </p>
+                  )}
+
+                  {/* SSS */}
+                  {activeItem.faq && activeItem.faq.length > 0 && (
+                    <div style={{ marginTop: "2rem", borderTop: "0.5px solid #f0f0f0", paddingTop: "1.5rem" }}>
+                      <div style={{ fontSize: 11, fontWeight: 700, color: "#bbb", letterSpacing: "0.08em", marginBottom: "1rem" }}>
+                        SSS — SIK SORULAN SORULAR
+                      </div>
+                      <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
+                        {activeItem.faq.map((f) => (
+                          <div
+                            key={f.id}
+                            style={{
+                              padding: "14px 16px",
+                              background: "#fafafa",
+                              borderRadius: 12,
+                              border: "0.5px solid #eee",
+                            }}
+                          >
+                            <div style={{ fontWeight: 700, color: "#111", fontSize: 14, marginBottom: 6, lineHeight: 1.4 }}>
+                              {f.question}
+                            </div>
+                            <div style={{ fontSize: 14, color: "#555", lineHeight: 1.75, whiteSpace: "pre-wrap" }}>
+                              {renderWithLinks(f.answer)}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
                   )}
                 </>
               ) : null}

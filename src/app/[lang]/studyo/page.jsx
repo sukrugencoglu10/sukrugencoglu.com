@@ -1175,7 +1175,7 @@ function ReklamHiyerarsisi() {
   }, [])
 
   const addItem = (afterId = null) => {
-    const newItem = { id: Date.now(), title: '', description: '', expanded: true }
+    const newItem = { id: Date.now(), title: '', description: '', expanded: true, faq: [] }
     setItems(prev => {
       if (!afterId) return [...prev, newItem]
       const idx = prev.findIndex(i => i.id === afterId)
@@ -1183,6 +1183,33 @@ function ReklamHiyerarsisi() {
       updated.splice(idx + 1, 0, newItem)
       return updated
     })
+    setSaved(false)
+  }
+
+  const addFaq = (itemId) => {
+    setItems(prev => prev.map(i =>
+      i.id === itemId
+        ? { ...i, faq: [...(i.faq || []), { id: Date.now(), question: '', answer: '' }] }
+        : i
+    ))
+    setSaved(false)
+  }
+
+  const updateFaq = (itemId, faqId, field, val) => {
+    setItems(prev => prev.map(i =>
+      i.id === itemId
+        ? { ...i, faq: (i.faq || []).map(f => f.id === faqId ? { ...f, [field]: val } : f) }
+        : i
+    ))
+    setSaved(false)
+  }
+
+  const removeFaq = (itemId, faqId) => {
+    setItems(prev => prev.map(i =>
+      i.id === itemId
+        ? { ...i, faq: (i.faq || []).filter(f => f.id !== faqId) }
+        : i
+    ))
     setSaved(false)
   }
 
@@ -1700,6 +1727,103 @@ function ReklamHiyerarsisi() {
                 draggable={false}
               />
             )}
+
+            {/* ── SSS Bölümü ── */}
+            <div style={{ marginTop: '2rem', borderTop: '0.5px solid #f0f0f0', paddingTop: '1.5rem' }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1rem' }}>
+                <div style={{ fontSize: 11, fontWeight: 700, color: '#bbb', letterSpacing: '0.08em' }}>
+                  SSS — SIK SORULAN SORULAR
+                </div>
+                {!previewMode && (
+                  <button
+                    onClick={() => addFaq(focusedId)}
+                    style={{
+                      display: 'flex', alignItems: 'center', gap: 4,
+                      fontSize: 11, padding: '4px 10px',
+                      borderRadius: 6, border: '0.5px solid #ddd',
+                      background: 'transparent', color: '#555',
+                      cursor: 'pointer', fontFamily: 'inherit',
+                    }}
+                  >
+                    <span style={{ fontSize: 14, lineHeight: 1 }}>+</span> Soru Ekle
+                  </button>
+                )}
+              </div>
+
+              {(focusedItem.faq || []).length === 0 && (
+                <div style={{ fontSize: 13, color: '#ccc', fontStyle: 'italic' }}>
+                  {previewMode ? 'Soru eklenmemiş.' : 'Henüz soru yok. + Soru Ekle ile başla.'}
+                </div>
+              )}
+
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                {(focusedItem.faq || []).map((faqItem, fIdx) =>
+                  previewMode ? (
+                    <div key={faqItem.id} style={{
+                      padding: '12px 14px',
+                      background: '#fafafa',
+                      borderRadius: 10,
+                      border: '0.5px solid #eee',
+                    }}>
+                      <div style={{ fontWeight: 600, color: '#111', fontSize: 14, marginBottom: 6 }}>
+                        {faqItem.question || <span style={{ color: '#ccc' }}>Soru girilmemiş</span>}
+                      </div>
+                      <div style={{ fontSize: 13, color: '#555', lineHeight: 1.7, whiteSpace: 'pre-wrap' }}>
+                        {faqItem.answer || <span style={{ color: '#ccc', fontStyle: 'italic' }}>Cevap girilmemiş</span>}
+                      </div>
+                    </div>
+                  ) : (
+                    <div key={faqItem.id} style={{
+                      padding: '12px 14px',
+                      background: '#fafafa',
+                      borderRadius: 10,
+                      border: '0.5px solid #eee',
+                    }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
+                        <span style={{ fontSize: 11, color: '#bbb', fontWeight: 700, flexShrink: 0 }}>
+                          S{fIdx + 1}
+                        </span>
+                        <input
+                          placeholder={`Soru ${fIdx + 1}...`}
+                          value={faqItem.question}
+                          onChange={e => updateFaq(focusedId, faqItem.id, 'question', e.target.value)}
+                          style={{
+                            flex: 1, fontSize: 13, fontWeight: 600,
+                            padding: '5px 8px', borderRadius: 6,
+                            border: '0.5px solid #e0e0e0',
+                            fontFamily: 'inherit', outline: 'none', background: '#fff',
+                          }}
+                        />
+                        <button
+                          onClick={() => removeFaq(focusedId, faqItem.id)}
+                          style={{
+                            flexShrink: 0, width: 24, height: 24,
+                            border: '0.5px solid #eee', borderRadius: 6,
+                            background: 'transparent', cursor: 'pointer',
+                            fontSize: 12, color: '#bbb',
+                            display: 'flex', alignItems: 'center', justifyContent: 'center',
+                          }}
+                          title="Soruyu sil"
+                        >✕</button>
+                      </div>
+                      <textarea
+                        placeholder="Cevap..."
+                        value={faqItem.answer}
+                        onChange={e => updateFaq(focusedId, faqItem.id, 'answer', e.target.value)}
+                        style={{
+                          width: '100%', boxSizing: 'border-box',
+                          fontSize: 13, padding: '7px 8px',
+                          borderRadius: 6, border: '0.5px solid #e0e0e0',
+                          fontFamily: 'inherit', outline: 'none',
+                          resize: 'vertical', minHeight: 70,
+                          lineHeight: 1.6, color: '#444', background: '#fff',
+                        }}
+                      />
+                    </div>
+                  )
+                )}
+              </div>
+            </div>
           </div>
         )}
       </div>
