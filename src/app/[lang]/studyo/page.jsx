@@ -1888,7 +1888,7 @@ function ReklamHiyerarsisi() {
                                   fontSize: 14, padding: '12px 14px',
                                   borderRadius: 8, border: '0.5px solid #e0e0e0',
                                   fontFamily: 'inherit', outline: 'none',
-                                  resize: 'vertical', minHeight: 180,
+                                  resize: 'vertical', minHeight: 280,
                                   lineHeight: 1.75, color: '#333', background: '#fff',
                                 }}
                               />
