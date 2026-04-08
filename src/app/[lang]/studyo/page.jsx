@@ -1166,6 +1166,15 @@ function ReklamHiyerarsisi() {
   const [focusedId, setFocusedId] = useState(null)
   const [previewMode, setPreviewMode] = useState(false)
   const [isMobile, setIsMobile] = useState(false)
+  const [openAdminFaqIds, setOpenAdminFaqIds] = useState(new Set())
+
+  const toggleAdminFaq = (faqId) => {
+    setOpenAdminFaqIds(prev => {
+      const next = new Set(prev)
+      next.has(faqId) ? next.delete(faqId) : next.add(faqId)
+      return next
+    })
+  }
 
   useEffect(() => {
     const check = () => setIsMobile(window.innerWidth < 768)
@@ -1796,69 +1805,95 @@ function ReklamHiyerarsisi() {
 
               <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                 {(focusedItem.faq || []).map((faqItem, fIdx) =>
-                  previewMode ? (
-                    <div key={faqItem.id} style={{
-                      padding: '12px 14px',
-                      background: '#fafafa',
-                      borderRadius: 10,
-                      border: '0.5px solid #eee',
-                    }}>
-                      <div style={{ fontWeight: 600, color: '#111', fontSize: 14, marginBottom: 6 }}>
-                        {faqItem.question || <span style={{ color: '#ccc' }}>Soru girilmemiş</span>}
+                  (() => {
+                    const isOpen = openAdminFaqIds.has(faqItem.id)
+                    return (
+                      <div key={faqItem.id} style={{
+                        background: '#fafafa',
+                        borderRadius: 10,
+                        border: isOpen ? '0.5px solid #d0d0d0' : '0.5px solid #eee',
+                        overflow: 'hidden',
+                        transition: 'border-color 0.15s',
+                      }}>
+                        {/* Toggle başlık satırı */}
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 12px' }}>
+                          <button
+                            onClick={() => toggleAdminFaq(faqItem.id)}
+                            style={{
+                              flexShrink: 0, width: 22, height: 22,
+                              border: 'none', background: 'transparent',
+                              cursor: 'pointer', fontSize: 11,
+                              color: isOpen ? '#111' : '#aaa',
+                              display: 'flex', alignItems: 'center', justifyContent: 'center',
+                              transition: 'transform 0.15s, color 0.15s',
+                              transform: isOpen ? 'rotate(90deg)' : 'rotate(0deg)',
+                            }}
+                          >▶</button>
+                          <span style={{ fontSize: 11, color: '#bbb', fontWeight: 700, flexShrink: 0 }}>
+                            S{fIdx + 1}
+                          </span>
+                          {previewMode ? (
+                            <span
+                              onClick={() => toggleAdminFaq(faqItem.id)}
+                              style={{ flex: 1, fontSize: 13, fontWeight: 600, color: '#111', cursor: 'pointer', lineHeight: 1.35 }}
+                            >
+                              {faqItem.question || <span style={{ color: '#ccc' }}>Soru girilmemiş</span>}
+                            </span>
+                          ) : (
+                            <input
+                              placeholder={`Soru ${fIdx + 1}...`}
+                              value={faqItem.question}
+                              onChange={e => updateFaq(focusedId, faqItem.id, 'question', e.target.value)}
+                              style={{
+                                flex: 1, fontSize: 13, fontWeight: 600,
+                                padding: '4px 8px', borderRadius: 6,
+                                border: '0.5px solid #e0e0e0',
+                                fontFamily: 'inherit', outline: 'none', background: '#fff',
+                              }}
+                            />
+                          )}
+                          {!previewMode && (
+                            <button
+                              onClick={() => removeFaq(focusedId, faqItem.id)}
+                              style={{
+                                flexShrink: 0, width: 24, height: 24,
+                                border: '0.5px solid #eee', borderRadius: 6,
+                                background: 'transparent', cursor: 'pointer',
+                                fontSize: 12, color: '#bbb',
+                                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                              }}
+                              title="Soruyu sil"
+                            >✕</button>
+                          )}
+                        </div>
+
+                        {/* Cevap — toggle ile açılır */}
+                        {isOpen && (
+                          <div style={{ padding: '0 12px 12px 42px', borderTop: '0.5px solid #f0f0f0', paddingTop: 10 }}>
+                            {previewMode ? (
+                              <div style={{ fontSize: 13, color: '#555', lineHeight: 1.7, whiteSpace: 'pre-wrap' }}>
+                                {faqItem.answer || <span style={{ color: '#ccc', fontStyle: 'italic' }}>Cevap girilmemiş</span>}
+                              </div>
+                            ) : (
+                              <textarea
+                                placeholder="Cevap..."
+                                value={faqItem.answer}
+                                onChange={e => updateFaq(focusedId, faqItem.id, 'answer', e.target.value)}
+                                style={{
+                                  width: '100%', boxSizing: 'border-box',
+                                  fontSize: 13, padding: '7px 8px',
+                                  borderRadius: 6, border: '0.5px solid #e0e0e0',
+                                  fontFamily: 'inherit', outline: 'none',
+                                  resize: 'vertical', minHeight: 70,
+                                  lineHeight: 1.6, color: '#444', background: '#fff',
+                                }}
+                              />
+                            )}
+                          </div>
+                        )}
                       </div>
-                      <div style={{ fontSize: 13, color: '#555', lineHeight: 1.7, whiteSpace: 'pre-wrap' }}>
-                        {faqItem.answer || <span style={{ color: '#ccc', fontStyle: 'italic' }}>Cevap girilmemiş</span>}
-                      </div>
-                    </div>
-                  ) : (
-                    <div key={faqItem.id} style={{
-                      padding: '12px 14px',
-                      background: '#fafafa',
-                      borderRadius: 10,
-                      border: '0.5px solid #eee',
-                    }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
-                        <span style={{ fontSize: 11, color: '#bbb', fontWeight: 700, flexShrink: 0 }}>
-                          S{fIdx + 1}
-                        </span>
-                        <input
-                          placeholder={`Soru ${fIdx + 1}...`}
-                          value={faqItem.question}
-                          onChange={e => updateFaq(focusedId, faqItem.id, 'question', e.target.value)}
-                          style={{
-                            flex: 1, fontSize: 13, fontWeight: 600,
-                            padding: '5px 8px', borderRadius: 6,
-                            border: '0.5px solid #e0e0e0',
-                            fontFamily: 'inherit', outline: 'none', background: '#fff',
-                          }}
-                        />
-                        <button
-                          onClick={() => removeFaq(focusedId, faqItem.id)}
-                          style={{
-                            flexShrink: 0, width: 24, height: 24,
-                            border: '0.5px solid #eee', borderRadius: 6,
-                            background: 'transparent', cursor: 'pointer',
-                            fontSize: 12, color: '#bbb',
-                            display: 'flex', alignItems: 'center', justifyContent: 'center',
-                          }}
-                          title="Soruyu sil"
-                        >✕</button>
-                      </div>
-                      <textarea
-                        placeholder="Cevap..."
-                        value={faqItem.answer}
-                        onChange={e => updateFaq(focusedId, faqItem.id, 'answer', e.target.value)}
-                        style={{
-                          width: '100%', boxSizing: 'border-box',
-                          fontSize: 13, padding: '7px 8px',
-                          borderRadius: 6, border: '0.5px solid #e0e0e0',
-                          fontFamily: 'inherit', outline: 'none',
-                          resize: 'vertical', minHeight: 70,
-                          lineHeight: 1.6, color: '#444', background: '#fff',
-                        }}
-                      />
-                    </div>
-                  )
+                    )
+                  })()
                 )}
               </div>
             </div>
