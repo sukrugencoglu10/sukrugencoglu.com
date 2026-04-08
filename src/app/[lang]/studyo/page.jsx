@@ -1676,10 +1676,7 @@ function ReklamHiyerarsisi() {
           <div style={{
             background: '#fff',
             border: '0.5px solid #e8e8e8',
-            borderTopLeftRadius: 4,
-            borderTopRightRadius: 16,
-            borderBottomLeftRadius: 16,
-            borderBottomRightRadius: 16,
+            borderRadius: '4px 16px 16px 16px',
             padding: '2rem',
             boxShadow: 'inset 0 3px 0 #111, 0 2px 16px rgba(0,0,0,0.06)',
             position: 'sticky',
