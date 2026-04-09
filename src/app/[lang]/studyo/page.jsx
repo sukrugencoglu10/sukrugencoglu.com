@@ -2710,6 +2710,405 @@ function VakaCalismalari() {
   )
 }
 
+// ─── Dijital Anons aracı ──────────────────────────────────────────────────────
+function DijitalAnons() {
+  const [items, setItems] = useState([])
+  const [focusedId, setFocusedId] = useState(null)
+  const [dragId, setDragId] = useState(null)
+  const [dragOverId, setDragOverId] = useState(null)
+  const [saving, setSaving] = useState(false)
+  const [saved, setSaved] = useState(false)
+  const [error, setError] = useState('')
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    fetch('/api/dijital-anons')
+      .then(r => r.json())
+      .then(data => { if (Array.isArray(data)) setItems(data) })
+      .catch(() => {})
+      .finally(() => setLoading(false))
+  }, [])
+
+  const blankAnons = () => ({
+    id: `anons-${Date.now()}`,
+    label: '',
+    text: '',
+    active: false,
+  })
+
+  const addItem = () => setItems(prev => [...prev, blankAnons()])
+
+  const removeItem = (id) => {
+    setItems(prev => {
+      const next = prev.filter(it => it.id !== id)
+      // Silinen aktifse — ilk kalan item'ı aktif yap
+      const deleted = prev.find(it => it.id === id)
+      if (deleted?.active && next.length > 0) {
+        next[0].active = true
+      }
+      return next
+    })
+    if (focusedId === id) setFocusedId(null)
+  }
+
+  const updateField = (id, key, val) =>
+    setItems(prev => prev.map(it => it.id === id ? { ...it, [key]: val } : it))
+
+  const setActive = (id) =>
+    setItems(prev => prev.map(it => ({ ...it, active: it.id === id })))
+
+  // Drag-drop
+  const handleDragStart = (id) => setDragId(id)
+  const handleDragOver = (e, id) => { e.preventDefault(); if (id !== dragId) setDragOverId(id) }
+  const handleDrop = () => {
+    if (!dragId || !dragOverId || dragId === dragOverId) { setDragId(null); setDragOverId(null); return }
+    setItems(prev => {
+      const arr = [...prev]
+      const from = arr.findIndex(i => i.id === dragId)
+      const to   = arr.findIndex(i => i.id === dragOverId)
+      const [moved] = arr.splice(from, 1)
+      arr.splice(to, 0, moved)
+      return arr
+    })
+    setDragId(null)
+    setDragOverId(null)
+  }
+
+  // Smart paste
+  const parseHtmlToText = (html) => {
+    if (typeof document === 'undefined') return ''
+    const div = document.createElement('div')
+    div.innerHTML = html
+    div.querySelectorAll('table').forEach(table => {
+      let rows = ''
+      table.querySelectorAll('tr').forEach(tr => {
+        const cells = [...tr.querySelectorAll('td,th')].map(c => c.textContent.trim())
+        rows += cells.join(' | ') + '\n'
+      })
+      table.replaceWith(document.createTextNode('\n' + rows + '\n'))
+    })
+    div.querySelectorAll('ol').forEach(ol => {
+      ;[...ol.querySelectorAll(':scope > li')].forEach((li, i) => {
+        li.prepend(document.createTextNode(`${i + 1}. `))
+      })
+    })
+    div.querySelectorAll('ul > li').forEach(li => li.prepend(document.createTextNode('• ')))
+    div.querySelectorAll('h1,h2,h3,h4,h5,h6').forEach(el => {
+      el.before(document.createTextNode('\n\n'))
+      el.after(document.createTextNode('\n'))
+    })
+    div.querySelectorAll('p').forEach(el => el.after(document.createTextNode('\n\n')))
+    div.querySelectorAll('li').forEach(el => el.after(document.createTextNode('\n')))
+    div.querySelectorAll('br').forEach(br => br.replaceWith(document.createTextNode('\n')))
+    div.querySelectorAll('div,section,article').forEach(el => el.after(document.createTextNode('\n')))
+    return div.textContent
+      .replace(/[ \t]+/g, ' ')
+      .replace(/\n[ \t]+/g, '\n')
+      .replace(/[ \t]+\n/g, '\n')
+      .replace(/\n{3,}/g, '\n\n')
+      .trim()
+  }
+
+  const handleSmartPaste = (e, currentVal, onUpdate) => {
+    const html = e.clipboardData?.getData('text/html') || ''
+    const plain = e.clipboardData?.getData('text/plain') || ''
+    let text = html ? parseHtmlToText(html) : ''
+    if (!text) text = plain
+    if (!text) return
+    e.preventDefault()
+    const el = e.target
+    const before = currentVal.slice(0, el.selectionStart)
+    const after  = currentVal.slice(el.selectionEnd)
+    const next = before + text + after
+    onUpdate(next)
+    requestAnimationFrame(() => {
+      const pos = before.length + text.length
+      el.selectionStart = el.selectionEnd = pos
+    })
+  }
+
+  const handleSave = async () => {
+    setSaving(true)
+    setError('')
+    setSaved(false)
+    try {
+      const res = await fetch('/api/dijital-anons', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(items),
+      })
+      const data = await res.json()
+      if (data.ok) {
+        setSaved(true)
+        setTimeout(() => setSaved(false), 2500)
+      } else {
+        setError(data.error || 'Kayıt başarısız')
+      }
+    } catch {
+      setError('Bağlantı hatası')
+    }
+    setSaving(false)
+  }
+
+  const focused = items.find(it => it.id === focusedId) || null
+
+  const inputStyle = {
+    width: '100%',
+    padding: '8px 12px',
+    border: '1px solid #e5e5e5',
+    borderRadius: 6,
+    fontSize: 13,
+    fontFamily: 'inherit',
+    background: '#fff',
+    color: '#111',
+    outline: 'none',
+    boxSizing: 'border-box',
+  }
+  const labelStyle = { fontSize: 10, fontWeight: 700, letterSpacing: 1, color: '#999', textTransform: 'uppercase', display: 'block', marginBottom: 4 }
+
+  if (loading) return <div style={{ padding: 40, textAlign: 'center', color: '#999', fontSize: 13 }}>Yükleniyor…</div>
+
+  return (
+    <div style={{ padding: '0 0 40px' }}>
+      {/* Header */}
+      <div style={{ marginBottom: 20, paddingBottom: 16, borderBottom: '1px solid #f0f0f0' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+          <div>
+            <div style={{ fontSize: 15, fontWeight: 700, color: '#111', marginBottom: 2 }}>Dijital Anons</div>
+            <div style={{ fontSize: 12, color: '#999' }}>Ana sayfadaki kayan metni düzenle; aktif anons yayına girer</div>
+          </div>
+          <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+            {error && <span style={{ fontSize: 12, color: '#c33' }}>{error}</span>}
+            <button
+              onClick={addItem}
+              style={{
+                padding: '8px 14px', background: '#fff', color: '#111',
+                border: '1px solid #111', borderRadius: 8, fontSize: 13,
+                fontFamily: 'inherit', cursor: 'pointer', fontWeight: 600,
+              }}
+            >
+              + Yeni Anons
+            </button>
+            {items.length > 0 && (
+              <button
+                onClick={handleSave}
+                disabled={saving}
+                style={{
+                  padding: '8px 18px',
+                  background: saved ? '#1D9E75' : '#111',
+                  color: '#fff', border: 'none', borderRadius: 8,
+                  fontSize: 13, fontFamily: 'inherit',
+                  cursor: saving ? 'not-allowed' : 'pointer',
+                  opacity: saving ? 0.7 : 1,
+                  transition: 'background 0.2s',
+                }}
+              >
+                {saving ? 'Kaydediliyor...' : saved ? '✓ Kaydedildi' : 'Kaydet'}
+              </button>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {items.length === 0 && (
+        <div style={{
+          padding: 40, textAlign: 'center', color: '#888',
+          background: '#fafafa', border: '1px dashed #ddd',
+          borderRadius: 8, fontSize: 14,
+        }}>
+          ▶ Henüz anons yok.{' '}
+          <strong style={{ color: '#111', cursor: 'pointer' }} onClick={addItem}>+ Yeni Anons</strong>{' '}
+          ile başla.
+        </div>
+      )}
+
+      {/* Split layout */}
+      {items.length > 0 && (
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: focused ? '280px 1fr' : '1fr',
+          gap: 16,
+          alignItems: 'start',
+        }}>
+          {/* Sol — liste */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+            {items.map(it => {
+              const isDragOver = dragOverId === it.id && dragId !== it.id
+              const isFocused = focusedId === it.id
+              return (
+                <div
+                  key={it.id}
+                  draggable
+                  onDragStart={() => handleDragStart(it.id)}
+                  onDragOver={(e) => handleDragOver(e, it.id)}
+                  onDrop={handleDrop}
+                  onDragEnd={() => { setDragId(null); setDragOverId(null) }}
+                  onClick={() => setFocusedId(isFocused ? null : it.id)}
+                  style={{
+                    border: `1px solid ${isDragOver ? '#e879a0' : isFocused ? '#111' : '#e5e5e5'}`,
+                    borderLeft: `4px solid ${it.active ? '#e879a0' : '#e5e5e5'}`,
+                    borderRadius: 8,
+                    padding: '10px 12px',
+                    background: isFocused ? '#fafafa' : '#fff',
+                    cursor: 'pointer',
+                    opacity: dragId === it.id ? 0.4 : 1,
+                    transition: 'border-color 0.15s',
+                  }}
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
+                    <span
+                      style={{ cursor: 'grab', color: '#ccc', fontSize: 14, lineHeight: 1, flexShrink: 0 }}
+                      onMouseDown={e => e.stopPropagation()}
+                    >⠿</span>
+                    <span style={{
+                      flex: 1, fontSize: 13, fontWeight: 600, color: '#111',
+                      overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+                    }}>
+                      {it.label || <span style={{ color: '#bbb', fontWeight: 400 }}>İsimsiz anons</span>}
+                    </span>
+                    <button
+                      onClick={(e) => { e.stopPropagation(); removeItem(it.id) }}
+                      style={{
+                        background: 'none', border: 'none', color: '#ccc',
+                        cursor: 'pointer', fontSize: 13, padding: 2, flexShrink: 0,
+                      }}
+                    >✕</button>
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <span style={{
+                      fontSize: 11, fontWeight: 600,
+                      color: it.active ? '#e879a0' : '#bbb',
+                      letterSpacing: 0.5,
+                    }}>
+                      {it.active ? '● Yayında' : '○ Pasif'}
+                    </span>
+                    {!it.active && (
+                      <button
+                        onClick={(e) => { e.stopPropagation(); setActive(it.id) }}
+                        style={{
+                          fontSize: 11, padding: '2px 8px',
+                          background: '#fff', border: '1px solid #e879a0',
+                          borderRadius: 4, color: '#e879a0',
+                          cursor: 'pointer', fontFamily: 'inherit',
+                        }}
+                      >
+                        Aktif Yap
+                      </button>
+                    )}
+                  </div>
+                  {it.text && (
+                    <div style={{
+                      marginTop: 6, fontSize: 11, color: '#aaa',
+                      overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+                    }}>
+                      {it.text.slice(0, 80)}{it.text.length > 80 ? '…' : ''}
+                    </div>
+                  )}
+                </div>
+              )
+            })}
+          </div>
+
+          {/* Sağ — odaklı düzenleyici */}
+          {focused && (
+            <div style={{
+              border: '1px solid #e5e5e5',
+              borderRadius: 10,
+              padding: 20,
+              background: '#fff',
+              position: 'sticky',
+              top: 16,
+            }}>
+              {/* Panel header */}
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
+                <span style={{ fontSize: 12, color: '#999' }}>
+                  {items.findIndex(i => i.id === focused.id) + 1} / {items.length}
+                </span>
+                <button
+                  onClick={() => setFocusedId(null)}
+                  style={{
+                    background: 'none', border: '1px solid #e5e5e5', borderRadius: 6,
+                    fontSize: 12, color: '#999', cursor: 'pointer', padding: '4px 10px',
+                    fontFamily: 'inherit',
+                  }}
+                >
+                  × Kapat
+                </button>
+              </div>
+
+              {/* Label */}
+              <div style={{ marginBottom: 14 }}>
+                <label style={labelStyle}>Anons Etiketi (sadece adminde görünür)</label>
+                <input
+                  type="text"
+                  value={focused.label}
+                  onChange={e => updateField(focused.id, 'label', e.target.value)}
+                  placeholder="örn. Q2 2025 Kampanya"
+                  style={inputStyle}
+                />
+              </div>
+
+              {/* Aktif toggle */}
+              <div style={{ marginBottom: 16 }}>
+                {focused.active ? (
+                  <div style={{
+                    padding: '10px 16px', background: '#f0faf6',
+                    border: '1px solid #1D9E75', borderRadius: 8,
+                    fontSize: 13, fontWeight: 600, color: '#1D9E75',
+                    display: 'flex', alignItems: 'center', gap: 8,
+                  }}>
+                    <span>✓</span> Yayında — Bu anons şu an ana sayfada gösteriliyor
+                  </div>
+                ) : (
+                  <button
+                    onClick={() => setActive(focused.id)}
+                    style={{
+                      width: '100%', padding: '10px 16px',
+                      background: '#fff', border: '2px solid #e879a0',
+                      borderRadius: 8, fontSize: 13, fontWeight: 700,
+                      color: '#e879a0', cursor: 'pointer', fontFamily: 'inherit',
+                      transition: 'background 0.15s',
+                    }}
+                    onMouseEnter={e => { e.currentTarget.style.background = '#fff0f6' }}
+                    onMouseLeave={e => { e.currentTarget.style.background = '#fff' }}
+                  >
+                    ● Aktif Yap — Ana sayfada bu metni göster
+                  </button>
+                )}
+              </div>
+
+              {/* Metin */}
+              <div style={{ position: 'relative' }}>
+                <label style={labelStyle}>Kayan Metin</label>
+                <textarea
+                  value={focused.text}
+                  onChange={e => updateField(focused.id, 'text', e.target.value)}
+                  onPaste={e => handleSmartPaste(e, focused.text, val => updateField(focused.id, 'text', val))}
+                  placeholder="Ana sayfada kayan metin içeriği..."
+                  style={{
+                    ...inputStyle,
+                    minHeight: 360,
+                    resize: 'vertical',
+                    lineHeight: 1.8,
+                    fontSize: 14,
+                    padding: '12px 14px',
+                  }}
+                />
+                <div style={{
+                  textAlign: 'right', fontSize: 11, color: '#bbb',
+                  marginTop: 4,
+                }}>
+                  {(focused.text || '').length} karakter
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  )
+}
+
 // ─── SSS aracı — ReklamHiyerarsisi'nin SSS varyantı ──────────────────────────
 function SSS() {
   return (
@@ -2766,6 +3165,12 @@ const TOOLS = [
     label: 'YZ Haritası',
     icon: '◉',
     component: YzHaritasi,
+  },
+  {
+    id: 'dijital-anons',
+    label: 'Dijital Anons',
+    icon: '▶',
+    component: DijitalAnons,
   },
   {
     id: 'sss',

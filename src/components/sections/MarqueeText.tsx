@@ -1,13 +1,41 @@
-export default function MarqueeText() {
-  const text =
-    `Modern ticaret dünyasında müşteri alışkanlıklarının kökten değiştiğini ve fiziksel etkileşimin yerini artık tamamen dijital platformların aldığını bizzat gözlemliyorum. İşletmenizin sadece ayakta kalması değil, rekabette öne geçmesi için geleneksel yöntemleri bir kenara bırakıp teknolojiye tam uyum sağlamanız gerektiğine inanıyorum. Benim stratejimde hedef kitleye ulaşmanın yolu, artık sadece "orada olmak" değil, sanal dünyada güçlü ve akıllı bir varlık göstermekten geçiyor. Yeni tüketiciler kazanmanız ve pazar payınızı artırmanız için dijitalleşme stratejilerini bir an önce iş süreçlerinize entegre etmenizi sağlıyorum. Özetle; ticaretin geleceğinin tamamen internet ekosisteminde olduğunu biliyor ve başarınızı bu dijital dönüşümün hızı ve kalitesi üzerine inşa ediyorum.`;
+import { createClient } from '@supabase/supabase-js'
+
+interface AnonsItem {
+  id: string
+  label: string
+  text: string
+  active: boolean
+}
+
+const FALLBACK_TEXT =
+  `Modern ticaret dünyasında müşteri alışkanlıklarının kökten değiştiğini ve fiziksel etkileşimin yerini artık tamamen dijital platformların aldığını bizzat gözlemliyorum. İşletmenizin sadece ayakta kalması değil, rekabette öne geçmesi için geleneksel yöntemleri bir kenara bırakıp teknolojiye tam uyum sağlamanız gerektiğine inanıyorum. Benim stratejimde hedef kitleye ulaşmanın yolu, artık sadece "orada olmak" değil, sanal dünyada güçlü ve akıllı bir varlık göstermekten geçiyor. Yeni tüketiciler kazanmanız ve pazar payınızı artırmanız için dijitalleşme stratejilerini bir an önce iş süreçlerinize entegre etmenizi sağlıyorum. Özetle; ticaretin geleceğinin tamamen internet ekosisteminde olduğunu biliyor ve başarınızı bu dijital dönüşümün hızı ve kalitesi üzerine inşa ediyorum.`
+
+export default async function MarqueeText() {
+  let activeText = FALLBACK_TEXT
+
+  try {
+    const supabase = createClient(
+      process.env.SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!
+    )
+    const { data } = await supabase
+      .from('dijital_anons')
+      .select('items')
+      .eq('id', 1)
+      .single()
+
+    const active = (data?.items as AnonsItem[] | null)?.find(i => i.active)
+    if (active?.text) activeText = active.text
+  } catch {
+    // Tablo henüz yoksa veya bağlantı hatası → fallback metin göster
+  }
 
   const segment = (
     <span className="inline-flex items-center whitespace-nowrap">
       <span className="mx-8 text-[#e879a0] opacity-50 select-none">{"// >"}</span>
-      {text}
+      {activeText}
     </span>
-  );
+  )
 
   return (
     <div className="relative w-full bg-white border-y border-[#e879a0]/40 py-[10px] select-none overflow-visible">
@@ -35,5 +63,5 @@ export default function MarqueeText() {
         </div>
       </div>
     </div>
-  );
+  )
 }
