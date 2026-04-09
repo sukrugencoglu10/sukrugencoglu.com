@@ -39,14 +39,14 @@ const socialLinks = [
   },
 ];
 
-export default function ContactSection({ pinnedAnons }: { pinnedAnons?: ReactNode }) {
+export default function ContactSection({ pinnedAnons, mobileFirstRight }: { pinnedAnons?: ReactNode; mobileFirstRight?: boolean }) {
   const { t, lang } = useLanguage();
 
   return (
     <section id={lang === "tr" ? "iletisim" : "contact"} className="section-padding bg-surface-secondary">
       <div className="container-site">
         <div className="grid lg:grid-cols-2 gap-12 lg:gap-20 items-start">
-        <div className="flex flex-col gap-6">
+        <div className={`flex flex-col gap-6 ${mobileFirstRight ? "order-2 lg:order-1" : ""}`}>
           <Badge color="purple">{t.contact.badge}</Badge>
           <h2 className="text-3xl sm:text-4xl font-extrabold text-ink tracking-tight">
             {t.contact.title}{" "}
@@ -85,7 +85,7 @@ export default function ContactSection({ pinnedAnons }: { pinnedAnons?: ReactNod
         </div>
         {/* Sağ kolon — masaüstünde sağda, mobilde formun altında */}
         {pinnedAnons && (
-          <div className="lg:sticky lg:top-24">
+          <div className={`lg:sticky lg:top-24 ${mobileFirstRight ? "order-1 lg:order-2" : ""}`}>
             {pinnedAnons}
           </div>
         )}
