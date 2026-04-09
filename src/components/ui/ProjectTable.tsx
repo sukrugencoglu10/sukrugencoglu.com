@@ -1,8 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useLanguage } from "@/context/LanguageContext";
-import { projects } from "@/lib/projects";
+import type { Project } from "@/lib/projects";
 
 // Basic chevron icon component
 const ChevronDown = ({ className }: { className?: string }) => (
@@ -24,8 +24,20 @@ const ChevronDown = ({ className }: { className?: string }) => (
 
 export default function ProjectTable() {
   const { lang } = useLanguage();
+  const [projects, setProjects] = useState<Project[]>([]);
+  const [loading, setLoading] = useState(true);
   const [openId, setOpenId] = useState<string | null>(null);
   const [lightbox, setLightbox] = useState<string | null>(null);
+
+  useEffect(() => {
+    fetch("/api/vaka-calismalari")
+      .then((r) => r.json())
+      .then((data) => {
+        if (Array.isArray(data)) setProjects(data);
+      })
+      .catch(() => {})
+      .finally(() => setLoading(false));
+  }, []);
 
   const toggle = (id: string) => {
     setOpenId(openId === id ? null : id);
@@ -79,6 +91,16 @@ export default function ProjectTable() {
 
       {/* Table Body */}
       <div className="flex flex-col">
+        {loading && (
+          <div className="p-6 text-center text-ink-muted text-sm">
+            {lang === "tr" ? "Yükleniyor..." : "Loading..."}
+          </div>
+        )}
+        {!loading && projects.length === 0 && (
+          <div className="p-6 text-center text-ink-muted text-sm">
+            {lang === "tr" ? "Henüz vaka çalışması yok." : "No case studies yet."}
+          </div>
+        )}
         {projects.map((project, index) => {
           const isOpen = openId === project.id;
           const title = lang === "tr" ? project.titleTR : project.titleEN;

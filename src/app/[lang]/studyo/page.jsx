@@ -1957,6 +1957,679 @@ function ReklamHiyerarsisi({
   )
 }
 
+// ─── Vaka Çalışmaları aracı — ana sayfa proje tablosunu yönetir ─────────────
+function VakaCalismalari() {
+  const [items, setItems] = useState([])
+  const [focusedId, setFocusedId] = useState(null)
+  const [searchQuery, setSearchQuery] = useState('')
+  const [dragId, setDragId] = useState(null)
+  const [dragOverId, setDragOverId] = useState(null)
+  const [saving, setSaving] = useState(false)
+  const [saved, setSaved] = useState(false)
+  const [error, setError] = useState('')
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    fetch('/api/vaka-calismalari')
+      .then(r => r.json())
+      .then(data => { if (Array.isArray(data)) setItems(data) })
+      .catch(() => {})
+      .finally(() => setLoading(false))
+  }, [])
+
+  // HTML clipboard → düz metin (SSS'deki parseHtmlToText'in birebir kopyası)
+  const parseHtmlToText = (html) => {
+    if (typeof document === 'undefined') return ''
+    const div = document.createElement('div')
+    div.innerHTML = html
+
+    div.querySelectorAll('table').forEach(table => {
+      let rows = ''
+      table.querySelectorAll('tr').forEach(tr => {
+        const cells = [...tr.querySelectorAll('td,th')].map(c => c.textContent.trim())
+        rows += cells.join(' | ') + '\n'
+      })
+      table.replaceWith(document.createTextNode('\n' + rows + '\n'))
+    })
+
+    div.querySelectorAll('ol').forEach(ol => {
+      ;[...ol.querySelectorAll(':scope > li')].forEach((li, i) => {
+        li.prepend(document.createTextNode(`${i + 1}. `))
+      })
+    })
+
+    div.querySelectorAll('ul > li').forEach(li => {
+      li.prepend(document.createTextNode('• '))
+    })
+
+    div.querySelectorAll('h1,h2,h3,h4,h5,h6').forEach(el => {
+      el.before(document.createTextNode('\n\n'))
+      el.after(document.createTextNode('\n'))
+    })
+
+    div.querySelectorAll('p').forEach(el => el.after(document.createTextNode('\n\n')))
+    div.querySelectorAll('li').forEach(el => el.after(document.createTextNode('\n')))
+    div.querySelectorAll('br').forEach(br => br.replaceWith(document.createTextNode('\n')))
+    div.querySelectorAll('div,section,article').forEach(el => el.after(document.createTextNode('\n')))
+
+    return div.textContent
+      .replace(/[ \t]+/g, ' ')
+      .replace(/\n[ \t]+/g, '\n')
+      .replace(/[ \t]+\n/g, '\n')
+      .replace(/\n{3,}/g, '\n\n')
+      .trim()
+  }
+
+  const handleSmartPaste = (e, currentVal, onUpdate) => {
+    const html = e.clipboardData?.getData('text/html') || ''
+    const plain = e.clipboardData?.getData('text/plain') || ''
+    let text = html ? parseHtmlToText(html) : ''
+    if (!text) text = plain
+    if (!text) return
+    e.preventDefault()
+    const el = e.target
+    const before = currentVal.slice(0, el.selectionStart)
+    const after  = currentVal.slice(el.selectionEnd)
+    const next = before + text + after
+    onUpdate(next)
+    requestAnimationFrame(() => {
+      const pos = before.length + text.length
+      el.selectionStart = el.selectionEnd = pos
+    })
+  }
+
+  const blankProject = () => ({
+    id: `vaka-${Date.now()}`,
+    titleTR: '',
+    titleEN: '',
+    company: '',
+    logo: '',
+    categoryTR: '',
+    categoryEN: '',
+    resultTR: '',
+    resultEN: '',
+    tags: [],
+    imageSeed: Math.floor(Math.random() * 100),
+    problemTR: '',
+    problemEN: '',
+    solutionTR: '',
+    solutionEN: '',
+    metrics: [],
+  })
+
+  const addItem = (afterId = null) => {
+    const newItem = blankProject()
+    setItems(prev => {
+      if (!afterId) return [...prev, newItem]
+      const idx = prev.findIndex(i => i.id === afterId)
+      if (idx === -1) return [...prev, newItem]
+      const next = [...prev]
+      next.splice(idx + 1, 0, newItem)
+      return next
+    })
+    setFocusedId(newItem.id)
+  }
+
+  const removeItem = (id) => {
+    if (!confirm('Bu vaka çalışmasını silmek istediğinden emin misin?')) return
+    setItems(prev => prev.filter(i => i.id !== id))
+    if (focusedId === id) setFocusedId(null)
+  }
+
+  const updateField = (id, key, val) => {
+    setItems(prev => prev.map(i => i.id === id ? { ...i, [key]: val } : i))
+  }
+
+  const updateMetric = (itemId, metricIdx, key, val) => {
+    setItems(prev => prev.map(i => {
+      if (i.id !== itemId) return i
+      const metrics = [...(i.metrics || [])]
+      metrics[metricIdx] = { ...metrics[metricIdx], [key]: val }
+      return { ...i, metrics }
+    }))
+  }
+
+  const addMetric = (itemId) => {
+    setItems(prev => prev.map(i => {
+      if (i.id !== itemId) return i
+      return { ...i, metrics: [...(i.metrics || []), { value: '', labelTR: '', labelEN: '' }] }
+    }))
+  }
+
+  const removeMetric = (itemId, metricIdx) => {
+    setItems(prev => prev.map(i => {
+      if (i.id !== itemId) return i
+      const metrics = [...(i.metrics || [])]
+      metrics.splice(metricIdx, 1)
+      return { ...i, metrics }
+    }))
+  }
+
+  const handleDragStart = (id) => setDragId(id)
+  const handleDragOver = (e, id) => {
+    e.preventDefault()
+    setDragOverId(id)
+  }
+  const handleDrop = (e, targetId) => {
+    e.preventDefault()
+    if (!dragId || dragId === targetId) {
+      setDragId(null)
+      setDragOverId(null)
+      return
+    }
+    setItems(prev => {
+      const fromIdx = prev.findIndex(i => i.id === dragId)
+      const toIdx = prev.findIndex(i => i.id === targetId)
+      if (fromIdx === -1 || toIdx === -1) return prev
+      const next = [...prev]
+      const [moved] = next.splice(fromIdx, 1)
+      next.splice(toIdx, 0, moved)
+      return next
+    })
+    setDragId(null)
+    setDragOverId(null)
+  }
+
+  const handleSave = async () => {
+    setSaving(true)
+    setError('')
+    setSaved(false)
+    try {
+      const res = await fetch('/api/vaka-calismalari', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(items),
+      })
+      const data = await res.json()
+      if (data.ok) {
+        setSaved(true)
+        setTimeout(() => setSaved(false), 2500)
+      } else {
+        setError(data.error || 'Kayıt başarısız')
+      }
+    } catch {
+      setError('Bağlantı hatası')
+    }
+    setSaving(false)
+  }
+
+  const filtered = items.filter(it => {
+    if (!searchQuery) return true
+    const q = searchQuery.toLowerCase()
+    return (
+      (it.company || '').toLowerCase().includes(q) ||
+      (it.titleTR || '').toLowerCase().includes(q) ||
+      (it.titleEN || '').toLowerCase().includes(q) ||
+      (it.categoryTR || '').toLowerCase().includes(q)
+    )
+  })
+
+  const focused = focusedId ? items.find(i => i.id === focusedId) : null
+
+  // ─── Stiller ─────────────────────────────────────────────────────────────
+  const inputStyle = {
+    width: '100%',
+    padding: '8px 10px',
+    border: '1px solid #e5e5e5',
+    borderRadius: 6,
+    fontSize: 13,
+    fontFamily: 'inherit',
+    background: '#fff',
+    outline: 'none',
+  }
+  const labelStyle = {
+    display: 'block',
+    fontSize: 11,
+    color: '#888',
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+    marginBottom: 4,
+    fontWeight: 600,
+  }
+  const sectionStyle = {
+    background: '#fafafa',
+    border: '1px solid #eee',
+    borderRadius: 8,
+    padding: 14,
+    marginBottom: 12,
+  }
+  const sectionTitleStyle = {
+    fontSize: 12,
+    fontWeight: 700,
+    color: '#111',
+    textTransform: 'uppercase',
+    letterSpacing: 0.6,
+    marginBottom: 10,
+  }
+
+  if (loading) {
+    return (
+      <div style={{ padding: 40, textAlign: 'center', color: '#888', fontSize: 14 }}>
+        Yükleniyor...
+      </div>
+    )
+  }
+
+  return (
+    <div style={{ padding: '24px 28px', maxWidth: 1400, margin: '0 auto' }}>
+      {/* Header */}
+      <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 18, gap: 12, flexWrap: 'wrap' }}>
+        <div>
+          <h2 style={{ fontSize: 22, fontWeight: 700, margin: 0, color: '#111' }}>Vaka Çalışmaları</h2>
+          <p style={{ fontSize: 13, color: '#888', margin: '4px 0 0' }}>Ana sayfada görünen projeleri ekle, düzenle, sırala</p>
+        </div>
+        <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+          <button
+            onClick={() => addItem()}
+            style={{
+              padding: '8px 14px',
+              background: '#fff',
+              color: '#111',
+              border: '1px solid #111',
+              borderRadius: 9,
+              fontSize: 13,
+              fontFamily: 'inherit',
+              cursor: 'pointer',
+              fontWeight: 600,
+            }}
+          >
+            + Ekle
+          </button>
+          {items.length > 0 && (
+            <button
+              onClick={handleSave}
+              disabled={saving}
+              style={{
+                padding: '8px 18px',
+                background: saved ? '#1D9E75' : '#111',
+                color: '#fff',
+                border: 'none',
+                borderRadius: 9,
+                fontSize: 13,
+                fontFamily: 'inherit',
+                cursor: saving ? 'not-allowed' : 'pointer',
+                opacity: saving ? 0.7 : 1,
+                transition: 'background 0.2s',
+                fontWeight: 600,
+              }}
+            >
+              {saving ? 'Kaydediliyor...' : saved ? '✓ Kaydedildi' : 'Kaydet'}
+            </button>
+          )}
+        </div>
+      </div>
+
+      {error && (
+        <div style={{ padding: 10, background: '#fee', color: '#c33', borderRadius: 6, fontSize: 13, marginBottom: 12 }}>
+          {error}
+        </div>
+      )}
+
+      {/* Search */}
+      {items.length > 0 && (
+        <input
+          type="text"
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          placeholder="Şirket, başlık veya kategori ara..."
+          style={{
+            ...inputStyle,
+            marginBottom: 14,
+            padding: '10px 14px',
+            fontSize: 13,
+          }}
+        />
+      )}
+
+      {items.length === 0 && (
+        <div style={{
+          padding: 40,
+          textAlign: 'center',
+          color: '#888',
+          background: '#fafafa',
+          border: '1px dashed #ddd',
+          borderRadius: 8,
+          fontSize: 14,
+        }}>
+          ◆ Henüz vaka çalışması yok. <strong style={{ color: '#111', cursor: 'pointer' }} onClick={() => addItem()}>+ Ekle</strong> ile başla.
+        </div>
+      )}
+
+      {/* Split layout */}
+      <div style={{
+        display: 'grid',
+        gridTemplateColumns: focused ? '320px 1fr' : '1fr',
+        gap: 16,
+        alignItems: 'start',
+      }}>
+        {/* Sol — liste */}
+        {items.length > 0 && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+            {filtered.map((it, idx) => {
+              const isDragOver = dragOverId === it.id && dragId !== it.id
+              const isFocused = focusedId === it.id
+              return (
+                <div
+                  key={it.id}
+                  draggable
+                  onDragStart={() => handleDragStart(it.id)}
+                  onDragOver={(e) => handleDragOver(e, it.id)}
+                  onDrop={(e) => handleDrop(e, it.id)}
+                  onDragEnd={() => { setDragId(null); setDragOverId(null) }}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 8,
+                    padding: '10px 12px',
+                    background: isFocused ? '#fff' : '#fafafa',
+                    border: isFocused ? '1px solid #111' : '1px solid #eee',
+                    borderTop: isDragOver ? '2px solid #111' : (isFocused ? '1px solid #111' : '1px solid #eee'),
+                    borderRadius: 8,
+                    cursor: 'pointer',
+                    transition: 'all 0.15s',
+                  }}
+                  onClick={() => setFocusedId(it.id)}
+                >
+                  <span style={{ color: '#bbb', fontSize: 14, cursor: 'grab' }}>⠿</span>
+                  <span style={{ color: '#bbb', fontSize: 11, minWidth: 18 }}>{String(idx + 1).padStart(2, '0')}</span>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontSize: 13, fontWeight: 600, color: '#111', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                      {it.company || 'İsimsiz'}
+                    </div>
+                    <div style={{ fontSize: 11, color: '#888', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                      {it.titleTR || '(başlık yok)'}
+                    </div>
+                  </div>
+                  <button
+                    onClick={(e) => { e.stopPropagation(); addItem(it.id) }}
+                    title="Bu vakanın altına ekle"
+                    style={{ background: 'none', border: 'none', color: '#888', cursor: 'pointer', fontSize: 14, padding: 4 }}
+                  >
+                    +
+                  </button>
+                  <button
+                    onClick={(e) => { e.stopPropagation(); removeItem(it.id) }}
+                    title="Sil"
+                    style={{ background: 'none', border: 'none', color: '#c33', cursor: 'pointer', fontSize: 12, padding: 4 }}
+                  >
+                    ✕
+                  </button>
+                </div>
+              )
+            })}
+          </div>
+        )}
+
+        {/* Sağ — odaklı düzenleyici */}
+        {focused && (
+          <div style={{ background: '#fff', border: '1px solid #eee', borderRadius: 10, padding: 18 }}>
+            {/* Üst bar */}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14, paddingBottom: 12, borderBottom: '1px solid #eee' }}>
+              <span style={{ fontSize: 11, color: '#888', textTransform: 'uppercase', letterSpacing: 0.6, fontWeight: 600 }}>
+                {String(items.findIndex(i => i.id === focused.id) + 1).padStart(2, '0')} / {String(items.length).padStart(2, '0')}
+              </span>
+              <button
+                onClick={() => setFocusedId(null)}
+                style={{ background: 'none', border: 'none', color: '#888', cursor: 'pointer', fontSize: 13 }}
+              >
+                ✕ Kapat
+              </button>
+            </div>
+
+            {/* Kimlik */}
+            <div style={sectionStyle}>
+              <div style={sectionTitleStyle}>Kimlik</div>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 10 }}>
+                <div>
+                  <label style={labelStyle}>ID (slug)</label>
+                  <input
+                    type="text"
+                    value={focused.id}
+                    onChange={(e) => updateField(focused.id, 'id', e.target.value)}
+                    style={inputStyle}
+                  />
+                </div>
+                <div>
+                  <label style={labelStyle}>Şirket</label>
+                  <input
+                    type="text"
+                    value={focused.company || ''}
+                    onChange={(e) => updateField(focused.id, 'company', e.target.value)}
+                    style={inputStyle}
+                  />
+                </div>
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: 10 }}>
+                <div>
+                  <label style={labelStyle}>Logo (URL veya /pek.svg)</label>
+                  <input
+                    type="text"
+                    value={focused.logo || ''}
+                    onChange={(e) => updateField(focused.id, 'logo', e.target.value)}
+                    placeholder="/logo.svg"
+                    style={inputStyle}
+                  />
+                </div>
+                <div>
+                  <label style={labelStyle}>Image Seed</label>
+                  <input
+                    type="number"
+                    value={focused.imageSeed ?? 0}
+                    onChange={(e) => updateField(focused.id, 'imageSeed', Number(e.target.value) || 0)}
+                    style={inputStyle}
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Başlık */}
+            <div style={sectionStyle}>
+              <div style={sectionTitleStyle}>Başlık</div>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+                <div>
+                  <label style={labelStyle}>TR</label>
+                  <input
+                    type="text"
+                    value={focused.titleTR || ''}
+                    onChange={(e) => updateField(focused.id, 'titleTR', e.target.value)}
+                    style={inputStyle}
+                  />
+                </div>
+                <div>
+                  <label style={labelStyle}>EN</label>
+                  <input
+                    type="text"
+                    value={focused.titleEN || ''}
+                    onChange={(e) => updateField(focused.id, 'titleEN', e.target.value)}
+                    style={inputStyle}
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Kategori */}
+            <div style={sectionStyle}>
+              <div style={sectionTitleStyle}>Kategori</div>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+                <div>
+                  <label style={labelStyle}>TR</label>
+                  <input
+                    type="text"
+                    value={focused.categoryTR || ''}
+                    onChange={(e) => updateField(focused.id, 'categoryTR', e.target.value)}
+                    style={inputStyle}
+                  />
+                </div>
+                <div>
+                  <label style={labelStyle}>EN</label>
+                  <input
+                    type="text"
+                    value={focused.categoryEN || ''}
+                    onChange={(e) => updateField(focused.id, 'categoryEN', e.target.value)}
+                    style={inputStyle}
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Sonuç */}
+            <div style={sectionStyle}>
+              <div style={sectionTitleStyle}>Ana Sonuç</div>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+                <div>
+                  <label style={labelStyle}>TR</label>
+                  <input
+                    type="text"
+                    value={focused.resultTR || ''}
+                    onChange={(e) => updateField(focused.id, 'resultTR', e.target.value)}
+                    placeholder="%92 Dönüşüm Artışı"
+                    style={inputStyle}
+                  />
+                </div>
+                <div>
+                  <label style={labelStyle}>EN</label>
+                  <input
+                    type="text"
+                    value={focused.resultEN || ''}
+                    onChange={(e) => updateField(focused.id, 'resultEN', e.target.value)}
+                    placeholder="+92% Conversion"
+                    style={inputStyle}
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Problem */}
+            <div style={sectionStyle}>
+              <div style={sectionTitleStyle}>Problem</div>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+                <div>
+                  <label style={labelStyle}>TR</label>
+                  <textarea
+                    value={focused.problemTR || ''}
+                    onChange={(e) => updateField(focused.id, 'problemTR', e.target.value)}
+                    onPaste={(e) => handleSmartPaste(e, focused.problemTR || '', (v) => updateField(focused.id, 'problemTR', v))}
+                    style={{ ...inputStyle, minHeight: 100, resize: 'vertical', fontFamily: 'inherit', lineHeight: 1.6 }}
+                  />
+                </div>
+                <div>
+                  <label style={labelStyle}>EN</label>
+                  <textarea
+                    value={focused.problemEN || ''}
+                    onChange={(e) => updateField(focused.id, 'problemEN', e.target.value)}
+                    onPaste={(e) => handleSmartPaste(e, focused.problemEN || '', (v) => updateField(focused.id, 'problemEN', v))}
+                    style={{ ...inputStyle, minHeight: 100, resize: 'vertical', fontFamily: 'inherit', lineHeight: 1.6 }}
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Çözüm */}
+            <div style={sectionStyle}>
+              <div style={sectionTitleStyle}>Çözüm</div>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+                <div>
+                  <label style={labelStyle}>TR</label>
+                  <textarea
+                    value={focused.solutionTR || ''}
+                    onChange={(e) => updateField(focused.id, 'solutionTR', e.target.value)}
+                    onPaste={(e) => handleSmartPaste(e, focused.solutionTR || '', (v) => updateField(focused.id, 'solutionTR', v))}
+                    style={{ ...inputStyle, minHeight: 100, resize: 'vertical', fontFamily: 'inherit', lineHeight: 1.6 }}
+                  />
+                </div>
+                <div>
+                  <label style={labelStyle}>EN</label>
+                  <textarea
+                    value={focused.solutionEN || ''}
+                    onChange={(e) => updateField(focused.id, 'solutionEN', e.target.value)}
+                    onPaste={(e) => handleSmartPaste(e, focused.solutionEN || '', (v) => updateField(focused.id, 'solutionEN', v))}
+                    style={{ ...inputStyle, minHeight: 100, resize: 'vertical', fontFamily: 'inherit', lineHeight: 1.6 }}
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Etiketler */}
+            <div style={sectionStyle}>
+              <div style={sectionTitleStyle}>Etiketler (virgülle ayır)</div>
+              <input
+                type="text"
+                value={(focused.tags || []).join(', ')}
+                onChange={(e) => {
+                  const arr = e.target.value.split(',').map(s => s.trim()).filter(Boolean)
+                  updateField(focused.id, 'tags', arr)
+                }}
+                placeholder="Landing Pages, GTM, CRO, Meta Ads"
+                style={inputStyle}
+              />
+            </div>
+
+            {/* Metrikler */}
+            <div style={sectionStyle}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
+                <div style={{ ...sectionTitleStyle, marginBottom: 0 }}>Metrikler</div>
+                <button
+                  onClick={() => addMetric(focused.id)}
+                  style={{
+                    padding: '6px 10px',
+                    background: '#fff',
+                    color: '#111',
+                    border: '1px solid #111',
+                    borderRadius: 6,
+                    fontSize: 11,
+                    fontFamily: 'inherit',
+                    cursor: 'pointer',
+                    fontWeight: 600,
+                  }}
+                >
+                  + Metrik Ekle
+                </button>
+              </div>
+              {(focused.metrics || []).length === 0 && (
+                <div style={{ fontSize: 12, color: '#aaa', textAlign: 'center', padding: 8 }}>
+                  Henüz metrik yok.
+                </div>
+              )}
+              {(focused.metrics || []).map((m, mi) => (
+                <div key={mi} style={{ display: 'grid', gridTemplateColumns: '100px 1fr 1fr 30px', gap: 8, marginBottom: 8 }}>
+                  <input
+                    type="text"
+                    value={m.value || ''}
+                    onChange={(e) => updateMetric(focused.id, mi, 'value', e.target.value)}
+                    placeholder="+92%"
+                    style={inputStyle}
+                  />
+                  <input
+                    type="text"
+                    value={m.labelTR || ''}
+                    onChange={(e) => updateMetric(focused.id, mi, 'labelTR', e.target.value)}
+                    placeholder="Etiket TR"
+                    style={inputStyle}
+                  />
+                  <input
+                    type="text"
+                    value={m.labelEN || ''}
+                    onChange={(e) => updateMetric(focused.id, mi, 'labelEN', e.target.value)}
+                    placeholder="Label EN"
+                    style={inputStyle}
+                  />
+                  <button
+                    onClick={() => removeMetric(focused.id, mi)}
+                    title="Sil"
+                    style={{ background: 'none', border: '1px solid #eee', borderRadius: 6, color: '#c33', cursor: 'pointer', fontSize: 12 }}
+                  >
+                    ✕
+                  </button>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  )
+}
+
 // ─── SSS aracı — ReklamHiyerarsisi'nin SSS varyantı ──────────────────────────
 function SSS() {
   return (
@@ -2019,6 +2692,12 @@ const TOOLS = [
     label: 'SSS',
     icon: '?',
     component: SSS,
+  },
+  {
+    id: 'vaka-calismalari',
+    label: 'Vaka Çalışmaları',
+    icon: '◆',
+    component: VakaCalismalari,
   },
 ]
 

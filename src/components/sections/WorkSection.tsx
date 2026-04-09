@@ -3,7 +3,6 @@
 import { useLanguage } from "@/context/LanguageContext";
 import Badge from "@/components/ui/Badge";
 import ProjectTable from "@/components/ui/ProjectTable";
-import { projects } from "@/lib/projects";
 
 export default function WorkSection() {
   const { t, lang } = useLanguage();
