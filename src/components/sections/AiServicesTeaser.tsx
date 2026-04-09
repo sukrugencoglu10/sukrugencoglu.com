@@ -53,7 +53,7 @@ export default function AiServicesTeaser() {
           {/* Buton */}
           <Link
             href={`/${lang}/${getSlug(lang, "services")}`}
-            className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-ink text-white text-sm font-semibold hover:bg-ink/85 transition-colors duration-200"
+            className="inline-flex items-center gap-2 px-6 py-3 rounded-xl border border-border bg-white text-ink text-sm font-semibold hover:border-orange hover:text-orange transition-colors duration-200"
           >
             <span className="text-orange font-bold">+</span>
             {t.hero.cta_secondary}
