@@ -94,7 +94,7 @@ export default function StudyoShowcase() {
         fontFamily: "inherit",
       }}
     >
-      <div style={{ maxWidth: 1100, margin: "0 auto", padding: isMobile ? "2rem 1rem" : "4rem 1.5rem" }}>
+      <div style={{ maxWidth: 1100, margin: "0 auto", padding: isMobile ? "2rem 1rem" : "4rem 1.5rem", overflow: "hidden" }}>
 
         {/* Üst başlık */}
         <div style={{ marginBottom: isMobile ? "1.25rem" : "2rem" }}>
@@ -124,6 +124,7 @@ export default function StudyoShowcase() {
               paddingBottom: isMobile ? 4 : 0,
               WebkitOverflowScrolling: "touch" as const,
               scrollbarWidth: "none" as const,
+              minWidth: 0,
             }}>
               {items.map((item) => {
                 const isActive = item.id === activeId;
