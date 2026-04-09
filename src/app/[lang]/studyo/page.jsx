@@ -1166,6 +1166,8 @@ function ReklamHiyerarsisi({
   titleFallback = 'Başlık yok',
   descFallback = 'Açıklama yok',
   showNestedFaq = true,
+  addToTop = false,
+  descMinHeight = 80,
 } = {}) {
   const [items, setItems] = useState([])
   const [saving, setSaving] = useState(false)
@@ -1213,7 +1215,7 @@ function ReklamHiyerarsisi({
   const addItem = (afterId = null) => {
     const newItem = { id: Date.now(), title: '', description: '', expanded: true, faq: [] }
     setItems(prev => {
-      if (!afterId) return [...prev, newItem]
+      if (!afterId) return addToTop ? [newItem, ...prev] : [...prev, newItem]
       const idx = prev.findIndex(i => i.id === afterId)
       const updated = [...prev]
       updated.splice(idx + 1, 0, newItem)
@@ -1411,7 +1413,7 @@ function ReklamHiyerarsisi({
     fontFamily: 'inherit',
     outline: 'none',
     resize: 'vertical',
-    minHeight: 80,
+    minHeight: descMinHeight,
     lineHeight: 1.6,
     boxSizing: 'border-box',
     background: '#fff',
@@ -1968,6 +1970,8 @@ function SSS() {
       titleFallback="Soru yok"
       descFallback="Cevap yok"
       showNestedFaq={false}
+      addToTop={true}
+      descMinHeight={200}
     />
   )
 }
