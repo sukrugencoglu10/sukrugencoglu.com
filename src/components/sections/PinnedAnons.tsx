@@ -36,7 +36,7 @@ export default async function PinnedAnons() {
       <div
         style={{
           position: 'relative',
-          padding: '48px 36px 40px',
+          padding: 'clamp(20px, 5vw, 48px) clamp(14px, 4vw, 36px) clamp(18px, 4vw, 40px)',
           background: 'linear-gradient(145deg, #f3eeff 0%, #ede6fc 100%)',
           borderRadius: 20,
           boxShadow: 'inset 0 2px 12px rgba(168,85,247,0.07), inset 0 -1px 4px rgba(168,85,247,0.04)',
@@ -69,7 +69,7 @@ export default async function PinnedAnons() {
           style={{
             background: '#fff',
             borderRadius: 3,
-            padding: '32px 24px 24px',
+            padding: 'clamp(28px, 5vw, 32px) clamp(14px, 3.5vw, 24px) clamp(18px, 4vw, 24px)',
             transform: 'rotate(-1.4deg)',
             boxShadow:
               '0 6px 24px rgba(0,0,0,0.11), 0 2px 6px rgba(0,0,0,0.07), 0 -1px 0 rgba(0,0,0,0.04)',

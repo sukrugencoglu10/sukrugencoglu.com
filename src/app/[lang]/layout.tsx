@@ -53,7 +53,7 @@ export default async function LangLayout({
       <Navbar />
       <main>{children}</main>
       {/* Mobilde footer üstü — masaüstünde ContactSection sağ kolonunda gösteriliyor */}
-      <div className="lg:hidden bg-surface-secondary border-t border-border px-4 py-10 flex justify-center">
+      <div className="lg:hidden bg-surface-secondary border-t border-border px-2 py-10 flex justify-center">
         <PinnedAnons />
       </div>
       <Footer />
