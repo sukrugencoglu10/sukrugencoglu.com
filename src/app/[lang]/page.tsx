@@ -54,11 +54,8 @@ export default function HomePage() {
       <MantikhHaritasiSection />
       <ContactSection pinnedAnons={
         <div className="flex flex-col gap-10">
+          <PinnedAnons />
           <AiServicesTeaser inline />
-          {/* Masaüstünde sağ kolonda göster; mobilde layout.tsx footer üstünde */}
-          <div className="hidden lg:block">
-            <PinnedAnons />
-          </div>
         </div>
       } />
     </>
