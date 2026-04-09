@@ -23,8 +23,8 @@ export default function MantikhHaritasiSection() {
 
         {/* Content: 2 columns */}
         <div className="grid grid-cols-1 lg:grid-cols-5 gap-8 lg:gap-12">
-          {/* Left: Numbered steps (3/5) */}
-          <div className="lg:col-span-3 flex flex-col gap-3">
+          {/* Left: Numbered steps (3/5) — mobilde ikinci sıraya */}
+          <div className="lg:col-span-3 flex flex-col gap-3 order-2 lg:order-1">
             {mh.items.map((item, index) => {
               const isHighlight = index === 1;
               return (
@@ -81,8 +81,8 @@ export default function MantikhHaritasiSection() {
             })}
           </div>
 
-          {/* Right: Growth Dashboard (2/5) */}
-          <div className="lg:col-span-2">
+          {/* Right: Growth Dashboard (2/5) — mobilde birinci sıraya */}
+          <div className="lg:col-span-2 order-1 lg:order-2">
             <div className="sticky top-24">
               <GrowthDashboard />
             </div>
