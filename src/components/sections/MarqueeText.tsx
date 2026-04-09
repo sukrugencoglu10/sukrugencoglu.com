@@ -32,7 +32,7 @@ export default async function MarqueeText() {
 
   const segment = (
     <span className="inline-flex items-center whitespace-nowrap">
-      <span className="mx-8 text-[#e879a0] opacity-50 select-none">{"// >"}</span>
+      <span className="mx-8 text-[#b5125a] opacity-40 select-none">{"// >"}</span>
       {activeText}
     </span>
   )

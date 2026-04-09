@@ -51,6 +51,7 @@
   to   { transform: translateX(-50%); }
 }
 
+/* marquee-contrast-v2 */
 .marquee-track {
   display: flex;
   flex-wrap: nowrap;
@@ -59,8 +60,9 @@
   animation: marquee 150s linear infinite;
   font-family: 'Courier New', Courier, monospace;
   font-size: 0.92rem;
+  font-weight: 500;
   letter-spacing: 0.03em;
-  color: #e879a0 !important;
+  color: #b5125a !important;
   line-height: 1.5;
 }
 
