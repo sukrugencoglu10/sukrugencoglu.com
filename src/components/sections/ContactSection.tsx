@@ -46,7 +46,7 @@ export default function ContactSection({ pinnedAnons }: { pinnedAnons?: ReactNod
     <section id={lang === "tr" ? "iletisim" : "contact"} className="section-padding bg-surface-secondary">
       <div className="container-site">
         <div className="grid lg:grid-cols-2 gap-12 lg:gap-20 items-start">
-        <div className="flex flex-col gap-6 order-2 lg:order-1">
+        <div className="flex flex-col gap-6">
           <Badge color="purple">{t.contact.badge}</Badge>
           <h2 className="text-3xl sm:text-4xl font-extrabold text-ink tracking-tight">
             {t.contact.title}{" "}
@@ -83,9 +83,9 @@ export default function ContactSection({ pinnedAnons }: { pinnedAnons?: ReactNod
             ))}
           </div>
         </div>
-        {/* Sağ kolon — masaüstünde sağda, mobilde formun üstünde */}
+        {/* Sağ kolon — masaüstünde sağda, mobilde formun altında */}
         {pinnedAnons && (
-          <div className="order-1 lg:order-2 lg:sticky lg:top-24">
+          <div className="lg:sticky lg:top-24">
             {pinnedAnons}
           </div>
         )}
