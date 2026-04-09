@@ -25,7 +25,7 @@ export const en = {
   },
   services: {
     badge: "Services",
-    title: "Building AI-Powered",
+    title: "Building AI-Powered Custom",
     title_accent: "Software Infrastructures",
     items: [
       {

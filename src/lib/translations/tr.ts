@@ -27,7 +27,7 @@ export const tr: Translations = {
   },
   services: {
     badge: "Hizmetlerimiz",
-    title: "Aİ Destekli Yazılım Altyapıları",
+    title: "Aİ Destekli İhtiyaca Uygun Yazılım Altyapıları",
     title_accent: "Kuruyoruz",
     items: [
       {
