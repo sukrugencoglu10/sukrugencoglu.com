@@ -45,9 +45,20 @@ export default function AiServicesTeaser() {
           </div>
 
           {/* Başlık */}
-          <h2 className="text-3xl sm:text-4xl font-extrabold text-ink tracking-tight leading-tight">
-            {t.services.title}<br />
-            <span className="text-orange">{t.services.title_accent}</span>
+          <h2 className="text-3xl sm:text-4xl font-extrabold text-ink tracking-tight leading-snug">
+            {lang === "tr" ? (
+              <>
+                İhtiyaca Uygun<br />
+                Aİ Destekli Yazılım Altyapıları<br />
+                <span className="text-orange">Kuruyoruz</span>
+              </>
+            ) : (
+              <>
+                Custom<br />
+                AI-Powered Software Infrastructures<br />
+                <span className="text-orange">We Build</span>
+              </>
+            )}
           </h2>
 
           {/* Buton */}
