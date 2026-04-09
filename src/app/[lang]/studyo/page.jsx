@@ -1154,7 +1154,19 @@ function YzHaritasi() {
 }
 
 // ─── Reklam Hiyerarşisi aracı ─────────────────────────────────────────────────
-function ReklamHiyerarsisi() {
+function ReklamHiyerarsisi({
+  apiPath = '/api/reklam-hiyerarsisi',
+  headerText = 'Reklam Hiyerarşisi',
+  headerSubtext = 'Başlıkları ve açıklamaları düzenle, kaydet',
+  emptyText = 'Henüz hiyerarşi öğesi yok.',
+  emptyIcon = '◐',
+  titlePlaceholder = 'Başlık...',
+  descPlaceholder = 'Açıklama yaz...',
+  searchPlaceholder = 'Başlık veya açıklamada ara...',
+  titleFallback = 'Başlık yok',
+  descFallback = 'Açıklama yok',
+  showNestedFaq = true,
+} = {}) {
   const [items, setItems] = useState([])
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
@@ -1191,12 +1203,12 @@ function ReklamHiyerarsisi() {
   }, [])
 
   useEffect(() => {
-    fetch('/api/reklam-hiyerarsisi')
+    fetch(apiPath)
       .then(r => r.json())
       .then(data => { if (Array.isArray(data)) setItems(data) })
       .catch(() => {})
       .finally(() => setLoading(false))
-  }, [])
+  }, [apiPath])
 
   const addItem = (afterId = null) => {
     const newItem = { id: Date.now(), title: '', description: '', expanded: true, faq: [] }
@@ -1362,7 +1374,7 @@ function ReklamHiyerarsisi() {
     setError('')
     setSaved(false)
     try {
-      const res = await fetch('/api/reklam-hiyerarsisi', {
+      const res = await fetch(apiPath, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(items),
@@ -1453,8 +1465,8 @@ function ReklamHiyerarsisi() {
       {!mobileEditorMode && (
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1rem' }}>
           <div>
-            <h1 style={{ fontSize: isMobile ? 18 : 22, fontWeight: 500, margin: '0 0 4px' }}>Reklam Hiyerarşisi</h1>
-            <p style={{ fontSize: 13, color: '#888', margin: 0 }}>Başlıkları ve açıklamaları düzenle, kaydet</p>
+            <h1 style={{ fontSize: isMobile ? 18 : 22, fontWeight: 500, margin: '0 0 4px' }}>{headerText}</h1>
+            <p style={{ fontSize: 13, color: '#888', margin: 0 }}>{headerSubtext}</p>
           </div>
           <button
             onClick={() => addItem()}
@@ -1481,7 +1493,7 @@ function ReklamHiyerarsisi() {
             }}>⌕</span>
             <input
               type="text"
-              placeholder="Başlık veya açıklamada ara..."
+              placeholder={searchPlaceholder}
               value={searchQuery}
               onChange={e => setSearchQuery(e.target.value)}
               style={{
@@ -1521,8 +1533,8 @@ function ReklamHiyerarsisi() {
           border: '0.5px dashed #d0d0d0', borderRadius: 12,
           padding: '2.5rem', textAlign: 'center', color: '#aaa', marginBottom: '1rem',
         }}>
-          <div style={{ fontSize: 24, marginBottom: 8 }}>◐</div>
-          <div style={{ fontSize: 13 }}>Henüz hiyerarşi öğesi yok.<br />Sağ üstten ekleyin.</div>
+          <div style={{ fontSize: 24, marginBottom: 8 }}>{emptyIcon}</div>
+          <div style={{ fontSize: 13 }}>{emptyText}<br />Sağ üstten ekleyin.</div>
         </div>
       )}
 
@@ -1597,7 +1609,7 @@ function ReklamHiyerarsisi() {
                     ) : (
                       <input
                         type="text"
-                        placeholder="Başlık..."
+                        placeholder={titlePlaceholder}
                         value={item.title}
                         onChange={e => updateItem(item.id, 'title', e.target.value)}
                         style={{ ...inputStyle, borderColor: titleMatch ? '#facc15' : undefined, fontSize: isMobile ? 14 : 13 }}
@@ -1657,7 +1669,7 @@ function ReklamHiyerarsisi() {
                   {!focusedId && (item.expanded || descMatch) && (
                     <div style={{ padding: '0 12px 12px', borderTop: '0.5px solid #f0f0f0', paddingTop: 10 }}>
                       <textarea
-                        placeholder="Açıklama yaz..."
+                        placeholder={descPlaceholder}
                         value={item.description}
                         onChange={e => updateItem(item.id, 'description', e.target.value)}
                         onPaste={e => handleDescriptionPaste(e, item.id, item.description)}
@@ -1749,12 +1761,12 @@ function ReklamHiyerarsisi() {
                 color: '#111',
                 lineHeight: 1.3,
               }}>
-                {focusedItem.title || <span style={{ color: '#ccc' }}>Başlık yok</span>}
+                {focusedItem.title || <span style={{ color: '#ccc' }}>{titleFallback}</span>}
               </div>
             ) : (
               <input
                 type="text"
-                placeholder="Başlık..."
+                placeholder={titlePlaceholder}
                 value={focusedItem.title}
                 onChange={e => updateItem(focusedId, 'title', e.target.value)}
                 style={{
@@ -1787,12 +1799,12 @@ function ReklamHiyerarsisi() {
                         </a>
                       ) : part
                     )
-                  : <span style={{ color: '#ccc', fontStyle: 'italic' }}>Açıklama yok</span>
+                  : <span style={{ color: '#ccc', fontStyle: 'italic' }}>{descFallback}</span>
                 }
               </div>
             ) : (
               <textarea
-                placeholder="Açıklama yaz..."
+                placeholder={descPlaceholder}
                 value={focusedItem.description}
                 onChange={e => updateItem(focusedId, 'description', e.target.value)}
                 onPaste={e => handleDescriptionPaste(e, focusedId, focusedItem.description)}
@@ -1810,6 +1822,7 @@ function ReklamHiyerarsisi() {
             )}
 
             {/* ── SSS Bölümü ── */}
+            {showNestedFaq && (
             <div style={{ marginTop: '2rem', borderTop: '0.5px solid #f0f0f0', paddingTop: '1.5rem' }}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1rem' }}>
                 <div style={{ fontSize: 11, fontWeight: 700, color: '#bbb', letterSpacing: '0.08em' }}>
@@ -1932,10 +1945,30 @@ function ReklamHiyerarsisi() {
                 )}
               </div>
             </div>
+            )}
           </div>
         )}
       </div>
     </div>
+  )
+}
+
+// ─── SSS aracı — ReklamHiyerarsisi'nin SSS varyantı ──────────────────────────
+function SSS() {
+  return (
+    <ReklamHiyerarsisi
+      apiPath="/api/sss"
+      headerText="Sık Sorulan Sorular"
+      headerSubtext="Soru ve cevapları düzenle, kaydet"
+      emptyText="Henüz soru yok."
+      emptyIcon="?"
+      titlePlaceholder="Soru..."
+      descPlaceholder="Cevap yaz..."
+      searchPlaceholder="Soru veya cevapta ara..."
+      titleFallback="Soru yok"
+      descFallback="Cevap yok"
+      showNestedFaq={false}
+    />
   )
 }
 
@@ -1970,6 +2003,12 @@ const TOOLS = [
     label: 'YZ Haritası',
     icon: '◉',
     component: YzHaritasi,
+  },
+  {
+    id: 'sss',
+    label: 'SSS',
+    icon: '?',
+    component: SSS,
   },
 ]
 
