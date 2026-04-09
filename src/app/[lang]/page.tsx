@@ -4,6 +4,7 @@ import MarqueeText from "@/components/sections/MarqueeText";
 import WorkSection from "@/components/sections/WorkSection";
 import MantikhHaritasiSection from "@/components/sections/MantikhHaritasiSection";
 import ContactSection from "@/components/sections/ContactSection";
+import PinnedAnons from "@/components/sections/PinnedAnons";
 
 const baseUrl = "https://www.sukrugencoglu.com";
 
@@ -50,7 +51,7 @@ export default function HomePage() {
       </div>
       <WorkSection />
       <MantikhHaritasiSection />
-      <ContactSection />
+      <ContactSection pinnedAnons={<PinnedAnons />} />
     </>
   );
 }
