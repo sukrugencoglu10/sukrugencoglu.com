@@ -2401,14 +2401,94 @@ function VakaCalismalari() {
               </div>
               <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: 10 }}>
                 <div>
-                  <label style={labelStyle}>Logo (URL veya /pek.svg)</label>
-                  <input
-                    type="text"
-                    value={focused.logo || ''}
-                    onChange={(e) => updateField(focused.id, 'logo', e.target.value)}
-                    placeholder="/logo.svg"
-                    style={inputStyle}
-                  />
+                  <label style={labelStyle}>Logo (URL, /pek.svg veya yükle)</label>
+                  <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                    {focused.logo && (
+                      <div
+                        style={{
+                          width: 36,
+                          height: 36,
+                          border: '1px solid #e5e5e5',
+                          borderRadius: 6,
+                          background: '#fff',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          flexShrink: 0,
+                          overflow: 'hidden',
+                        }}
+                      >
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img
+                          src={focused.logo}
+                          alt="Logo önizleme"
+                          style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain', padding: 2 }}
+                        />
+                      </div>
+                    )}
+                    <input
+                      type="text"
+                      value={focused.logo || ''}
+                      onChange={(e) => updateField(focused.id, 'logo', e.target.value)}
+                      placeholder="/logo.svg"
+                      style={{ ...inputStyle, flex: 1 }}
+                    />
+                    <label
+                      style={{
+                        padding: '8px 10px',
+                        background: '#fff',
+                        color: '#111',
+                        border: '1px solid #111',
+                        borderRadius: 6,
+                        fontSize: 11,
+                        fontFamily: 'inherit',
+                        cursor: 'pointer',
+                        fontWeight: 600,
+                        whiteSpace: 'nowrap',
+                        flexShrink: 0,
+                      }}
+                    >
+                      ↑ Yükle
+                      <input
+                        type="file"
+                        accept="image/*"
+                        style={{ display: 'none' }}
+                        onChange={(e) => {
+                          const file = e.target.files?.[0]
+                          if (!file) return
+                          if (file.size > 500 * 1024) {
+                            alert('Logo dosyası 500 KB\'dan büyük olamaz. SVG veya küçük PNG kullan.')
+                            e.target.value = ''
+                            return
+                          }
+                          const reader = new FileReader()
+                          reader.onload = () => {
+                            updateField(focused.id, 'logo', reader.result)
+                          }
+                          reader.readAsDataURL(file)
+                          e.target.value = ''
+                        }}
+                      />
+                    </label>
+                    {focused.logo && (
+                      <button
+                        onClick={() => updateField(focused.id, 'logo', '')}
+                        title="Logoyu kaldır"
+                        style={{
+                          padding: '8px 10px',
+                          background: 'none',
+                          border: '1px solid #eee',
+                          borderRadius: 6,
+                          color: '#c33',
+                          fontSize: 11,
+                          cursor: 'pointer',
+                          flexShrink: 0,
+                        }}
+                      >
+                        ✕
+                      </button>
+                    )}
+                  </div>
                 </div>
                 <div>
                   <label style={labelStyle}>Image Seed</label>
