@@ -5,6 +5,7 @@ import WorkSection from "@/components/sections/WorkSection";
 import MantikhHaritasiSection from "@/components/sections/MantikhHaritasiSection";
 import ContactSection from "@/components/sections/ContactSection";
 import PinnedAnons from "@/components/sections/PinnedAnons";
+import AiServicesTeaser from "@/components/sections/AiServicesTeaser";
 
 const baseUrl = "https://www.sukrugencoglu.com";
 
@@ -51,6 +52,7 @@ export default function HomePage() {
       </div>
       <WorkSection />
       <MantikhHaritasiSection />
+      <AiServicesTeaser />
       <ContactSection pinnedAnons={<PinnedAnons />} />
     </>
   );
