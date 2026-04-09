@@ -31,7 +31,7 @@ export default async function PinnedAnons() {
   }
 
   return (
-    <div className="hidden lg:flex items-start justify-center pt-2">
+    <div className="flex items-start justify-center pt-2">
       {/* Pano zemin */}
       <div
         style={{

@@ -83,9 +83,9 @@ export default function ContactSection({ pinnedAnons }: { pinnedAnons?: ReactNod
             ))}
           </div>
         </div>
-        {/* Sağ kolon — pano */}
+        {/* Sağ kolon — pano (sadece masaüstünde; mobilde layout.tsx footer üstünde gösteriliyor) */}
         {pinnedAnons && (
-          <div className="lg:sticky lg:top-24">
+          <div className="hidden lg:block lg:sticky lg:top-24">
             {pinnedAnons}
           </div>
         )}
