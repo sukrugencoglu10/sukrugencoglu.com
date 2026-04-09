@@ -52,12 +52,8 @@ export default function HomePage() {
       </div>
       <WorkSection />
       <MantikhHaritasiSection />
-      <ContactSection pinnedAnons={
-        <div className="flex flex-col gap-10">
-          <AiServicesTeaser inline />
-          <PinnedAnons />
-        </div>
-      } />
+      <AiServicesTeaser />
+      <ContactSection pinnedAnons={<PinnedAnons />} />
     </>
   );
 }
