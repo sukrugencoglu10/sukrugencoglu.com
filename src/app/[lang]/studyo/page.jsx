@@ -1168,6 +1168,10 @@ function ReklamHiyerarsisi({
   showNestedFaq = true,
   addToTop = false,
   descMinHeight = 80,
+  focusedLeftWidth = 290,
+  focusedDescMinHeight = 320,
+  focusedDescFontSize = 14,
+  focusedDescLineHeight = 1.8,
 } = {}) {
   const [items, setItems] = useState([])
   const [saving, setSaving] = useState(false)
@@ -1566,7 +1570,7 @@ function ReklamHiyerarsisi({
       {/* Split panel veya tek sütun */}
       <div style={{
         display: 'grid',
-        gridTemplateColumns: (focusedId && !isMobile) ? '290px 1fr' : '1fr',
+        gridTemplateColumns: (focusedId && !isMobile) ? `${focusedLeftWidth}px 1fr` : '1fr',
         gap: (focusedId && !isMobile) ? '1.5rem' : 0,
         alignItems: 'start',
         transition: 'grid-template-columns 0.2s ease',
@@ -1786,8 +1790,8 @@ function ReklamHiyerarsisi({
             {/* Açıklama */}
             {previewMode ? (
               <div style={{
-                fontSize: 14, color: '#444',
-                lineHeight: 1.8, whiteSpace: 'pre-wrap',
+                fontSize: focusedDescFontSize, color: '#444',
+                lineHeight: focusedDescLineHeight, whiteSpace: 'pre-wrap',
                 minHeight: 120,
               }}>
                 {focusedItem.description
@@ -1810,11 +1814,11 @@ function ReklamHiyerarsisi({
                 onPaste={e => handleDescriptionPaste(e, focusedId, focusedItem.description)}
                 style={{
                   width: '100%', boxSizing: 'border-box',
-                  fontSize: 14, padding: 0,
+                  fontSize: focusedDescFontSize, padding: 0,
                   borderRadius: 0, border: 'none',
                   fontFamily: 'inherit', outline: 'none',
-                  resize: 'vertical', minHeight: 320,
-                  lineHeight: 1.8, color: '#444',
+                  resize: 'vertical', minHeight: focusedDescMinHeight,
+                  lineHeight: focusedDescLineHeight, color: '#444',
                   background: 'transparent',
                 }}
                 draggable={false}
@@ -1970,6 +1974,10 @@ function SSS() {
       showNestedFaq={false}
       addToTop={true}
       descMinHeight={200}
+      focusedLeftWidth={220}
+      focusedDescMinHeight={520}
+      focusedDescFontSize={15}
+      focusedDescLineHeight={1.9}
     />
   )
 }
