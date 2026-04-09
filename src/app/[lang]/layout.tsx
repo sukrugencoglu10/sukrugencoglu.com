@@ -5,6 +5,7 @@ import type { Lang } from "@/context/LanguageContext";
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
 import FloatingWhatsApp from "@/components/ui/FloatingWhatsApp";
+import PinnedAnons from "@/components/sections/PinnedAnons";
 
 const validLangs: Lang[] = ["tr", "en"];
 const baseUrl = "https://www.sukrugencoglu.com";
@@ -51,6 +52,9 @@ export default async function LangLayout({
     <LanguageProvider initialLang={lang as Lang}>
       <Navbar />
       <main>{children}</main>
+      <div className="lg:hidden bg-surface-secondary border-t border-border px-2 py-10 flex justify-center">
+        <PinnedAnons />
+      </div>
       <Footer />
       <FloatingWhatsApp />
     </LanguageProvider>

@@ -55,7 +55,10 @@ export default function HomePage() {
       <ContactSection pinnedAnons={
         <div className="flex flex-col gap-10">
           <AiServicesTeaser inline />
-          <PinnedAnons />
+          {/* Masaüstünde sağ kolonda göster; mobilde layout.tsx footer üstünde */}
+          <div className="hidden lg:block">
+            <PinnedAnons />
+          </div>
         </div>
       } />
     </>
