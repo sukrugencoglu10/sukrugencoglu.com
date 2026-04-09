@@ -1463,25 +1463,48 @@ function ReklamHiyerarsisi({
         </button>
       )}
 
-      {/* Başlık + ekle — mobil editor modunda gizle */}
+      {/* Başlık + ekle + kaydet — mobil editor modunda gizle */}
       {!mobileEditorMode && (
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1rem' }}>
-          <div>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1rem', gap: 12 }}>
+          <div style={{ minWidth: 0, flex: 1 }}>
             <h1 style={{ fontSize: isMobile ? 18 : 22, fontWeight: 500, margin: '0 0 4px' }}>{headerText}</h1>
             <p style={{ fontSize: 13, color: '#888', margin: 0 }}>{headerSubtext}</p>
           </div>
-          <button
-            onClick={() => addItem()}
-            style={{
-              display: 'flex', alignItems: 'center', gap: 6,
-              padding: '8px 14px', borderRadius: 9,
-              border: '0.5px solid #d0d0d0', background: '#fff',
-              fontSize: 13, cursor: 'pointer', fontFamily: 'inherit', color: '#333',
-              transition: 'all 0.1s',
-            }}
-          >
-            <span style={{ fontSize: 16, lineHeight: 1 }}>+</span> Ekle
-          </button>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
+            {error && <span style={{ fontSize: 12, color: '#c0392b' }}>{error}</span>}
+            <button
+              onClick={() => addItem()}
+              style={{
+                display: 'flex', alignItems: 'center', gap: 6,
+                padding: '8px 14px', borderRadius: 9,
+                border: '0.5px solid #d0d0d0', background: '#fff',
+                fontSize: 13, cursor: 'pointer', fontFamily: 'inherit', color: '#333',
+                transition: 'all 0.1s',
+              }}
+            >
+              <span style={{ fontSize: 16, lineHeight: 1 }}>+</span> Ekle
+            </button>
+            {items.length > 0 && (
+              <button
+                onClick={handleSave}
+                disabled={saving}
+                style={{
+                  padding: '8px 18px',
+                  background: saved ? '#1D9E75' : '#111',
+                  color: '#fff',
+                  border: 'none',
+                  borderRadius: 9,
+                  fontSize: 13,
+                  fontFamily: 'inherit',
+                  cursor: saving ? 'not-allowed' : 'pointer',
+                  opacity: saving ? 0.7 : 1,
+                  transition: 'background 0.2s',
+                }}
+              >
+                {saving ? 'Kaydediliyor...' : saved ? '✓ Kaydedildi' : 'Kaydet'}
+              </button>
+            )}
+          </div>
         </div>
       )}
 
@@ -1695,31 +1718,6 @@ function ReklamHiyerarsisi({
             })}
           </div>
 
-          {/* Kaydet */}
-          {items.length > 0 && (
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: 12 }}>
-              {error && <span style={{ fontSize: 13, color: '#c0392b' }}>{error}</span>}
-              {saved && <span style={{ fontSize: 13, color: '#1D9E75' }}>✓ Kaydedildi</span>}
-              <button
-                onClick={handleSave}
-                disabled={saving}
-                style={{
-                  padding: '9px 20px',
-                  background: saved ? '#1D9E75' : '#111',
-                  color: '#fff',
-                  border: 'none',
-                  borderRadius: 9,
-                  fontSize: 14,
-                  fontFamily: 'inherit',
-                  cursor: saving ? 'not-allowed' : 'pointer',
-                  opacity: saving ? 0.7 : 1,
-                  transition: 'background 0.2s',
-                }}
-              >
-                {saving ? 'Kaydediliyor...' : saved ? '✓ Kaydedildi' : 'Kaydet'}
-              </button>
-            </div>
-          )}
         </div>
 
         {/* Sağ — odaklanmış öğe editörü */}
