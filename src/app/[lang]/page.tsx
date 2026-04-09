@@ -51,15 +51,8 @@ export default function HomePage() {
         <MarqueeText />
       </div>
       <WorkSection />
-      {/* Mobilde vaka çalışmalarının hemen altında */}
-      <div className="lg:hidden">
-        <AiServicesTeaser />
-      </div>
+      <AiServicesTeaser />
       <MantikhHaritasiSection />
-      {/* Masaüstünde mantık haritasının altında */}
-      <div className="hidden lg:block">
-        <AiServicesTeaser />
-      </div>
       <ContactSection pinnedAnons={<PinnedAnons />} />
     </>
   );
