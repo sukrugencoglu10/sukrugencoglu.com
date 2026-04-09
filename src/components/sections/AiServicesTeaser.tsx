@@ -46,7 +46,7 @@ export default function AiServicesTeaser() {
 
           {/* Başlık */}
           <h2 className="text-3xl sm:text-4xl font-extrabold text-ink tracking-tight leading-tight">
-            {t.services.title}{" "}
+            {t.services.title}<br />
             <span className="text-orange">{t.services.title_accent}</span>
           </h2>
 
