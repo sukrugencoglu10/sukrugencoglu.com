@@ -2031,13 +2031,13 @@ function StudyoLayout({ onLogout }) {
   return (
     <div style={{ display: 'flex', minHeight: '100vh', fontFamily: 'inherit', position: 'relative' }}>
 
-      {/* Hamburger butonu */}
+      {/* Hamburger butonu — açıkken sidebar'ın iç sağ kenarında, kapalıyken sol üstte */}
       <button
         onClick={() => setSidebarOpen(prev => !prev)}
         style={{
           position: 'fixed',
           top: 92,
-          left: sidebarOpen ? 210 : 14,
+          left: sidebarOpen ? 158 : 14,
           zIndex: 200,
           width: 32,
           height: 32,
