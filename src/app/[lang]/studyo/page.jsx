@@ -1381,6 +1381,10 @@ function ReklamHiyerarsisi({
     if (!text) text = plain  // HTML yoksa veya parse boş gelirse düz metni kullan
     if (!text) return
     e.preventDefault()
+
+    // Güvenlik katmanı: Düz metinden gelse dahi çift/gereksiz boşlukları temizle
+    text = text.replace(/\r\n/g, '\n').replace(/\n{2,}/g, '\n')
+
     const el = e.target
     const before = currentVal.slice(0, el.selectionStart)
     const after  = currentVal.slice(el.selectionEnd)
@@ -2025,11 +2029,11 @@ function VakaCalismalari() {
     })
 
     div.querySelectorAll('h1,h2,h3,h4,h5,h6').forEach(el => {
-      el.before(document.createTextNode('\n\n'))
+      el.before(document.createTextNode('\n'))
       el.after(document.createTextNode('\n'))
     })
 
-    div.querySelectorAll('p').forEach(el => el.after(document.createTextNode('\n\n')))
+    div.querySelectorAll('p').forEach(el => el.after(document.createTextNode('\n')))
     div.querySelectorAll('li').forEach(el => el.after(document.createTextNode('\n')))
     div.querySelectorAll('br').forEach(br => br.replaceWith(document.createTextNode('\n')))
     div.querySelectorAll('div,section,article').forEach(el => el.after(document.createTextNode('\n')))
@@ -2038,7 +2042,7 @@ function VakaCalismalari() {
       .replace(/[ \t]+/g, ' ')
       .replace(/\n[ \t]+/g, '\n')
       .replace(/[ \t]+\n/g, '\n')
-      .replace(/\n{3,}/g, '\n\n')
+      .replace(/\n{2,}/g, '\n')
       .trim()
   }
 
@@ -2049,6 +2053,9 @@ function VakaCalismalari() {
     if (!text) text = plain
     if (!text) return
     e.preventDefault()
+
+    text = text.replace(/\r\n/g, '\n').replace(/\n{2,}/g, '\n')
+
     const el = e.target
     const before = currentVal.slice(0, el.selectionStart)
     const after  = currentVal.slice(el.selectionEnd)
@@ -2816,10 +2823,10 @@ function DijitalAnons() {
     })
     div.querySelectorAll('ul > li').forEach(li => li.prepend(document.createTextNode('• ')))
     div.querySelectorAll('h1,h2,h3,h4,h5,h6').forEach(el => {
-      el.before(document.createTextNode('\n\n'))
+      el.before(document.createTextNode('\n'))
       el.after(document.createTextNode('\n'))
     })
-    div.querySelectorAll('p').forEach(el => el.after(document.createTextNode('\n\n')))
+    div.querySelectorAll('p').forEach(el => el.after(document.createTextNode('\n')))
     div.querySelectorAll('li').forEach(el => el.after(document.createTextNode('\n')))
     div.querySelectorAll('br').forEach(br => br.replaceWith(document.createTextNode('\n')))
     div.querySelectorAll('div,section,article').forEach(el => el.after(document.createTextNode('\n')))
@@ -2827,7 +2834,7 @@ function DijitalAnons() {
       .replace(/[ \t]+/g, ' ')
       .replace(/\n[ \t]+/g, '\n')
       .replace(/[ \t]+\n/g, '\n')
-      .replace(/\n{3,}/g, '\n\n')
+      .replace(/\n{2,}/g, '\n')
       .trim()
   }
 
@@ -2838,6 +2845,9 @@ function DijitalAnons() {
     if (!text) text = plain
     if (!text) return
     e.preventDefault()
+    
+    text = text.replace(/\r\n/g, '\n').replace(/\n{2,}/g, '\n')
+
     const el = e.target
     const before = currentVal.slice(0, el.selectionStart)
     const after  = currentVal.slice(el.selectionEnd)
