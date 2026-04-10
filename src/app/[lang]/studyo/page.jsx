@@ -991,8 +991,35 @@ function edgePoint(from, to) {
 
 function MantiKHaritasi() {
   const [hovered, setHovered] = useState(null)
+  const [terms, setTerms] = useState(AD_TERMS)
+  const [dragging, setDragging] = useState(null)
 
-  const termMap = Object.fromEntries(AD_TERMS.map(t => [t.id, t]))
+  useEffect(() => {
+    const handleMouseMove = (e) => {
+      if (!dragging) return
+      const dx = e.clientX - dragging.startMouseX
+      const dy = e.clientY - dragging.startMouseY
+      setTerms(prev => prev.map(t => {
+        if (t.id === dragging.id) {
+          return { ...t, x: dragging.startNodeX + dx, y: dragging.startNodeY + dy }
+        }
+        return t
+      }))
+    }
+    
+    const handleMouseUp = () => setDragging(null)
+
+    if (dragging) {
+      window.addEventListener('mousemove', handleMouseMove)
+      window.addEventListener('mouseup', handleMouseUp)
+    }
+    return () => {
+      window.removeEventListener('mousemove', handleMouseMove)
+      window.removeEventListener('mouseup', handleMouseUp)
+    }
+  }, [dragging])
+
+  const termMap = Object.fromEntries(terms.map(t => [t.id, t]))
 
   const connectedIds = hovered ? new Set([
     hovered,
@@ -1069,6 +1096,16 @@ function MantiKHaritasi() {
                 key={t.id}
                 onMouseEnter={() => setHovered(t.id)}
                 onMouseLeave={() => setHovered(null)}
+                onMouseDown={(e) => {
+                  if (e.button !== 0) return
+                  setDragging({
+                    id: t.id,
+                    startMouseX: e.clientX,
+                    startMouseY: e.clientY,
+                    startNodeX: t.x,
+                    startNodeY: t.y
+                  })
+                }}
                 style={{
                   position: 'absolute',
                   left: t.x - NODE_W / 2,
@@ -1086,7 +1123,7 @@ function MantiKHaritasi() {
                   transition: 'all 0.15s',
                   zIndex: isHovered ? 2 : 1,
                   display: 'flex', flexDirection: 'column', justifyContent: 'center',
-                  userSelect: 'none', cursor: 'default',
+                  userSelect: 'none', cursor: 'grab',
                 }}
               >
                 <div style={{ fontSize: 15, fontWeight: 700, color: colors.stripe, lineHeight: 1, marginBottom: 3 }}>{t.abbr}</div>
@@ -1097,7 +1134,7 @@ function MantiKHaritasi() {
           })()}
 
           {/* Diğer node'lar */}
-          {AD_TERMS.filter(t => t.id !== 'kpi').map(term => {
+          {terms.filter(t => t.id !== 'kpi').map(term => {
             const colors = CAT_COLORS[term.cat]
             const isHovered = hovered === term.id
             const isDimmed = connectedIds && !connectedIds.has(term.id)
@@ -1106,6 +1143,16 @@ function MantiKHaritasi() {
                 key={term.id}
                 onMouseEnter={() => setHovered(term.id)}
                 onMouseLeave={() => setHovered(null)}
+                onMouseDown={(e) => {
+                  if (e.button !== 0) return
+                  setDragging({
+                    id: term.id,
+                    startMouseX: e.clientX,
+                    startMouseY: e.clientY,
+                    startNodeX: term.x,
+                    startNodeY: term.y
+                  })
+                }}
                 style={{
                   position: 'absolute',
                   left: term.x - NODE_W / 2,
@@ -1119,11 +1166,11 @@ function MantiKHaritasi() {
                     : `inset 3px 0 0 ${colors.stripe}, 0 1px 4px rgba(0,0,0,0.07)`,
                   borderRadius: 8,
                   padding: '7px 10px 7px 12px',
-                  opacity: isDimmed ? 0.25 : 1,
-                  transition: 'all 0.15s',
-                  zIndex: isHovered ? 2 : 1,
+                  opacity: isDimmed && dragging?.id !== term.id ? 0.25 : 1,
+                  transition: dragging?.id === term.id ? 'none' : 'all 0.15s',
+                  zIndex: dragging?.id === term.id ? 4 : isHovered ? 2 : 1,
                   display: 'flex', flexDirection: 'column', justifyContent: 'center',
-                  userSelect: 'none', cursor: 'default',
+                  userSelect: 'none', cursor: dragging?.id === term.id ? 'grabbing' : 'grab',
                 }}
               >
                 <div style={{ fontSize: 15, fontWeight: 700, color: colors.stripe, lineHeight: 1, marginBottom: 3 }}>{term.abbr}</div>
