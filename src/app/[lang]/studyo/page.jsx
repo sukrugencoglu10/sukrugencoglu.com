@@ -1346,14 +1346,14 @@ function ReklamHiyerarsisi({
       li.prepend(document.createTextNode('• '))
     })
 
-    // Başlıklar: önce çift satır sonu, sonra tek satır sonu
+    // Başlıklar: önce satır sonu, sonra tek satır sonu
     div.querySelectorAll('h1,h2,h3,h4,h5,h6').forEach(el => {
-      el.before(document.createTextNode('\n\n'))
+      el.before(document.createTextNode('\n'))
       el.after(document.createTextNode('\n'))
     })
 
-    // Paragraflar: sonrasına çift satır sonu
-    div.querySelectorAll('p').forEach(el => el.after(document.createTextNode('\n\n')))
+    // Paragraflar: sonrasına tek satır sonu (önceden \n\n idi, boşlukları çok açıyordu)
+    div.querySelectorAll('p').forEach(el => el.after(document.createTextNode('\n')))
 
     // Liste öğeleri: sonrasına satır sonu
     div.querySelectorAll('li').forEach(el => el.after(document.createTextNode('\n')))
@@ -1368,7 +1368,7 @@ function ReklamHiyerarsisi({
       .replace(/[ \t]+/g, ' ')      // çoklu boşluk → tek
       .replace(/\n[ \t]+/g, '\n')   // satır başı boşlukları temizle
       .replace(/[ \t]+\n/g, '\n')   // satır sonu boşluklarını temizle
-      .replace(/\n{3,}/g, '\n\n')   // fazla boş satırları sıkıştır
+      .replace(/\n{2,}/g, '\n')     // art arda 2 veya daha fazla boş satırı TEK satıra indir
       .trim()
   }
 
