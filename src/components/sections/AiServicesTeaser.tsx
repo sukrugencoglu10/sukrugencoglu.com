@@ -25,7 +25,7 @@ export default function AiServicesTeaser({ inline = false, showCta = true }: { i
       <h2 className={`font-extrabold text-ink tracking-tight leading-snug ${inline ? "text-2xl sm:text-3xl" : "text-3xl sm:text-4xl"}`}>
         {lang === "tr" ? (
           <>
-            İşletmenizin İhtiyacına Özel,<br />
+            İşletmenizin İhtiyacına Özel<br />
             Yapay Zeka Tabanlı Yazılım Altyapıları<br />
             <span className="text-orange">Kuruyoruz</span>
           </>
