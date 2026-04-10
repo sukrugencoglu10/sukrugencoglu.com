@@ -755,6 +755,8 @@ function GtmZihinHaritasi() {
   const [editId, setEditId] = useState(null)
   const [saving, setSaving] = useState(false)
   const [lastSaved, setLastSaved] = useState(null)
+  const [connDir, setConnDir] = useState('to') // 'to' (A->B) or 'from' (A<-B)
+
 
   // Veriyi ilk yüklemede çek
   useEffect(() => {
@@ -845,9 +847,12 @@ function GtmZihinHaritasi() {
 
   const handleAddConnection = (targetId) => {
     if (!selected || !targetId || selected === targetId) return
-    if (connections.find(c => c.from === selected && c.to === targetId)) return
-    setConnections([...connections, { from: selected, to: targetId }])
+    const from = connDir === 'to' ? selected : targetId
+    const to = connDir === 'to' ? targetId : selected
+    if (connections.find(c => c.from === from && c.to === to)) return
+    setConnections([...connections, { from, to }])
   }
+
 
   const handleRemoveConnection = (targetId) => {
     setConnections(connections.filter(c => !(c.from === selected && c.to === targetId)))
@@ -1078,6 +1083,31 @@ function GtmZihinHaritasi() {
                   
                   {/* Yeni bağlantı ekle */}
                   <div style={{ display: 'flex', gap: 10, alignItems: 'center', marginBottom: 16 }}>
+                    <div style={{ display: 'flex', border: '0.5px solid #ccc', borderRadius: 6, overflow: 'hidden', background: '#fff' }}>
+                      <button
+                        onClick={() => setConnDir('to')}
+                        title="Seçiliden Hedefe (A → B)"
+                        style={{
+                          padding: '6px 10px', fontSize: 13, border: 'none', cursor: 'pointer',
+                          background: connDir === 'to' ? '#f0f0f0' : '#fff',
+                          color: connDir === 'to' ? '#111' : '#aaa',
+                          borderRight: '0.5px solid #eee'
+                        }}
+                      >
+                        A → B
+                      </button>
+                      <button
+                        onClick={() => setConnDir('from')}
+                        title="Hedeften Seçiliye (A ← B)"
+                        style={{
+                          padding: '6px 10px', fontSize: 13, border: 'none', cursor: 'pointer',
+                          background: connDir === 'from' ? '#f0f0f0' : '#fff',
+                          color: connDir === 'from' ? '#111' : '#aaa'
+                        }}
+                      >
+                        A ← B
+                      </button>
+                    </div>
                     <select
                       id="target-node-select"
                       style={{ flex: 1, padding: '6px 10px', fontSize: 12, border: '0.5px solid #ccc', borderRadius: 6, outline: 'none', background: '#fff' }}
@@ -1232,6 +1262,8 @@ function MantiKHaritasi() {
   const [editId, setEditId] = useState(null)
   const [saving, setSaving] = useState(false)
   const [lastSaved, setLastSaved] = useState(null)
+  const [connDir, setConnDir] = useState('to') // 'to' or 'from'
+
 
   // Veriyi ilk yüklemede çek
   useEffect(() => {
@@ -1321,9 +1353,12 @@ function MantiKHaritasi() {
 
   const handleAddConnection = (targetId) => {
     if (!selected || !targetId || selected === targetId) return
-    if (connections.find(c => c.from === selected && c.to === targetId)) return
-    setConnections([...connections, { from: selected, to: targetId }])
+    const from = connDir === 'to' ? selected : targetId
+    const to = connDir === 'to' ? targetId : selected
+    if (connections.find(c => c.from === from && c.to === to)) return
+    setConnections([...connections, { from, to }])
   }
+
 
   const handleRemoveConnection = (targetId) => {
     setConnections(connections.filter(c => !(c.from === selected && c.to === targetId)))
@@ -1576,6 +1611,31 @@ function MantiKHaritasi() {
                   
                   {/* Yeni bağlantı ekle */}
                   <div style={{ display: 'flex', gap: 10, alignItems: 'center', marginBottom: 16 }}>
+                    <div style={{ display: 'flex', border: '0.5px solid #ccc', borderRadius: 6, overflow: 'hidden', background: '#fff' }}>
+                      <button
+                        onClick={() => setConnDir('to')}
+                        title="Seçiliden Hedefe (A → B)"
+                        style={{
+                          padding: '6px 10px', fontSize: 13, border: 'none', cursor: 'pointer',
+                          background: connDir === 'to' ? '#f0f0f0' : '#fff',
+                          color: connDir === 'to' ? '#111' : '#aaa',
+                          borderRight: '0.5px solid #eee'
+                        }}
+                      >
+                        A → B
+                      </button>
+                      <button
+                        onClick={() => setConnDir('from')}
+                        title="Hedeften Seçiliye (A ← B)"
+                        style={{
+                          padding: '6px 10px', fontSize: 13, border: 'none', cursor: 'pointer',
+                          background: connDir === 'from' ? '#f0f0f0' : '#fff',
+                          color: connDir === 'from' ? '#111' : '#aaa'
+                        }}
+                      >
+                        A ← B
+                      </button>
+                    </div>
                     <select
                       id="reklam-target-select"
                       style={{ flex: 1, padding: '6px 10px', fontSize: 12, border: '0.5px solid #ccc', borderRadius: 6, outline: 'none', background: '#fff' }}
@@ -1785,6 +1845,8 @@ function YzHaritasi() {
   const [editId, setEditId] = useState(null)
   const [saving, setSaving] = useState(false)
   const [lastSaved, setLastSaved] = useState(null)
+  const [connDir, setConnDir] = useState('to') // 'to' or 'from'
+
 
   // Veriyi ilk yüklemede çek
   useEffect(() => {
@@ -1873,9 +1935,12 @@ function YzHaritasi() {
 
   const handleAddConnection = (targetId) => {
     if (!selected || !targetId || selected === targetId) return
-    if (connections.find(c => c.from === selected && c.to === targetId)) return
-    setConnections([...connections, { from: selected, to: targetId }])
+    const from = connDir === 'to' ? selected : targetId
+    const to = connDir === 'to' ? targetId : selected
+    if (connections.find(c => c.from === from && c.to === to)) return
+    setConnections([...connections, { from, to }])
   }
+
 
   const handleRemoveConnection = (targetId) => {
     setConnections(connections.filter(c => !(c.from === selected && c.to === targetId)))
@@ -2105,6 +2170,31 @@ function YzHaritasi() {
                   <div style={{ borderTop: '0.5px solid #eee', paddingTop: 12 }}>
                     <label style={{ fontSize: 11, color: '#888', display: 'block', marginBottom: 8, fontWeight: 600 }}>BAĞLANTI YÖNETİMİ</label>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                      <div style={{ display: 'flex', border: '0.5px solid #ccc', borderRadius: 6, overflow: 'hidden', background: '#fff' }}>
+                        <button
+                          onClick={() => setConnDir('to')}
+                          title="Seçiliden Hedefe (A → B)"
+                          style={{
+                            flex: 1, padding: '6px 10px', fontSize: 12, border: 'none', cursor: 'pointer',
+                            background: connDir === 'to' ? '#f0f0f0' : '#fff',
+                            color: connDir === 'to' ? '#111' : '#aaa',
+                            borderRight: '0.5px solid #eee'
+                          }}
+                        >
+                          A → B
+                        </button>
+                        <button
+                          onClick={() => setConnDir('from')}
+                          title="Hedeften Seçiliye (A ← B)"
+                          style={{
+                            flex: 1, padding: '6px 10px', fontSize: 12, border: 'none', cursor: 'pointer',
+                            background: connDir === 'from' ? '#f0f0f0' : '#fff',
+                            color: connDir === 'from' ? '#111' : '#aaa'
+                          }}
+                        >
+                          A ← B
+                        </button>
+                      </div>
                       <select
                         id="ai-target-select"
                         style={{ width: '100%', padding: '6px 10px', fontSize: 12, border: '0.5px solid #ccc', borderRadius: 6, outline: 'none', background: '#fff' }}
