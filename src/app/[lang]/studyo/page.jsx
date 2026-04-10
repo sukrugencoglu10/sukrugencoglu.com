@@ -709,15 +709,15 @@ const GTM_TERMS = [
     desc: 'Üçüncü parti platformlara veri gönderen kod parçacığı. Google Ads dönüşüm kodu, GA4 olay etiketi, Facebook Pixel gibi. Tetikleyici koşulu sağlandığında GTM bu etiketi çalıştırır ve veriyi ilgili platforma iletir.',
   },
   {
-    id: 'googleads', abbr: 'Google Ads', sub: 'Dönüşüm Takibi', cat: 'hedef', x: 150, y: 440,
+    id: 'googleads', abbr: 'Google Ads', sub: 'Dönüşüm Takibi', cat: 'hedef', x: 540, y: 430,
     desc: 'Google Ads dönüşüm etiketi — reklam tıklamalarından gelen kullanıcıların sitede gerçekleştirdiği değerli eylemleri (satın alma, form doldurma, arama) takip eder. "Conversion Linker" ve "Google Ads Conversion Tracking" etiketleri GTM üzerinden kurulur.',
   },
   {
-    id: 'ga4', abbr: 'GA4', sub: 'Google Analytics 4', cat: 'hedef', x: 400, y: 440,
+    id: 'ga4', abbr: 'GA4', sub: 'Google Analytics 4', cat: 'hedef', x: 720, y: 430,
     desc: 'Google Analytics 4 — olay tabanlı (event-based) yeni nesil analitik platformu. Sayfa görüntüleme, tıklama, kaydırma gibi etkileşimleri ölçer. GTM üzerinden "GA4 Configuration" ve "GA4 Event" etiketleri ile kurulur.',
   },
   {
-    id: 'fbcapi', abbr: 'FB Pixel\n& CAPI', sub: 'Facebook / Meta', cat: 'hedef', x: 650, y: 440,
+    id: 'fbcapi', abbr: 'FB Pixel\n& CAPI', sub: 'Facebook / Meta', cat: 'hedef', x: 900, y: 430,
     desc: 'Facebook Pixel (tarayıcı taraflı) ve Conversions API (sunucu taraflı) — Meta reklamlarının dönüşüm verilerini almasını sağlar. iOS 14+ kısıtlamaları nedeniyle Pixel tek başına yeterli değildir; CAPI ile sunucu üzerinden de veri gönderilerek veri kaybı minimuma indirilir.',
   },
 ]
@@ -759,7 +759,7 @@ function GtmZihinHaritasi() {
     ...GTM_CONNECTIONS.filter(c => c.from === activeId).map(c => c.to),
   ]) : null
 
-  const CANVAS_W = 800
+  const CANVAS_W = 1000
   const CANVAS_H = 500
 
   return (
