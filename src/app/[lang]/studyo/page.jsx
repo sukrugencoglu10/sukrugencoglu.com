@@ -940,6 +940,23 @@ function GtmZihinHaritasi() {
               <textarea
                 value={selectedTerm.desc}
                 onChange={e => setTerms(prev => prev.map(t => t.id === selectedTerm.id ? { ...t, desc: e.target.value } : t))}
+                onPaste={(e) => {
+                  e.preventDefault()
+                  const text = e.clipboardData.getData('text/plain')
+                  const cleanText = text.replace(/\r/g, '').replace(/\n\s*\n/g, '\n')
+                  
+                  const target = e.target
+                  const start = target.selectionStart
+                  const end = target.selectionEnd
+                  const current = target.value
+                  const newValue = current.substring(0, start) + cleanText + current.substring(end)
+                  
+                  setTerms(prev => prev.map(t => t.id === selectedTerm.id ? { ...t, desc: newValue } : t))
+                  
+                  setTimeout(() => {
+                    target.selectionStart = target.selectionEnd = start + cleanText.length
+                  }, 0)
+                }}
                 style={{
                   width: '100%', minHeight: 120, padding: 12, fontSize: 14, lineHeight: 1.8,
                   color: '#333', border: '0.5px solid #ccc', borderRadius: 8,
