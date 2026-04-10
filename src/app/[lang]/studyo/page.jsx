@@ -888,6 +888,28 @@ function MantiKHaritasi() {
           <div key={label} style={{ position: 'relative', width: 160, flexShrink: 0, textAlign: 'center' }}>{label}</div>
         ))}
       </div>
+
+      <div style={{ marginTop: '4rem', paddingTop: '2rem', borderTop: '1px solid #eee' }}>
+        <ReklamHiyerarsisi
+          apiPath="/api/kavramlar"
+          headerText="Bilişimsel Kavramlar"
+          headerSubtext="Bilişim dünyasındaki önemli kavramları ve açıklamalarını yönet"
+          emptyText="Henüz kavram yok."
+          emptyIcon="📚"
+          titlePlaceholder="Kavram adı..."
+          descPlaceholder="Açıklama yaz..."
+          searchPlaceholder="Kavram veya açıklamada ara..."
+          titleFallback="Kavram yok"
+          descFallback="Açıklama yok"
+          showNestedFaq={false}
+          addToTop={true}
+          descMinHeight={150}
+          focusedLeftWidth={220}
+          focusedDescMinHeight={300}
+          focusedDescFontSize={15}
+          focusedDescLineHeight={1.8}
+        />
+      </div>
     </div>
   )
 }
