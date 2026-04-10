@@ -137,6 +137,25 @@ export const en = {
       { title: "Reporting", subs: [] },
     ],
   },
+  plusServices: {
+    badge: "+Plus Services",
+    title: "Which system do you need?",
+    subtitle: "Select the closest match — we'll contact you via WhatsApp.",
+    categories: [
+      "Appointment & Reservation System",
+      "Workflow & Process Automation",
+      "Invoice & Payment Management",
+      "Customer Management (CRM)",
+      "Inventory & Warehouse Tracking",
+      "Reporting & Analytics Dashboard",
+      "Other",
+    ],
+    other_placeholder: "Briefly describe your need...",
+    whatsapp_cta: "Continue on WhatsApp",
+    whatsapp_message_prefix: "Hello Şükrü, I'm interested in the +Plus service:",
+    whatsapp_other_prefix: "Hello Şükrü, I have a custom software need:",
+    back: "← Back",
+  },
 };
 
 export interface Translations {
@@ -238,5 +257,16 @@ export interface Translations {
       title: string;
       subs: string[];
     }[];
+  };
+  plusServices: {
+    badge: string;
+    title: string;
+    subtitle: string;
+    categories: string[];
+    other_placeholder: string;
+    whatsapp_cta: string;
+    whatsapp_message_prefix: string;
+    whatsapp_other_prefix: string;
+    back: string;
   };
 }

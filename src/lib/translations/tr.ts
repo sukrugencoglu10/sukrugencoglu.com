@@ -139,4 +139,23 @@ export const tr: Translations = {
       { title: "Raporlama", subs: [] },
     ],
   },
+  plusServices: {
+    badge: "+Plus Hizmetlerimiz",
+    title: "Hangi sisteme ihtiyacınız var?",
+    subtitle: "En yakın seçeneği seçin — WhatsApp üzerinden iletişime geçelim.",
+    categories: [
+      "Randevu & Rezervasyon Sistemi",
+      "İş Akışı & Süreç Otomasyonu",
+      "Fatura & Ödeme Yönetimi",
+      "Müşteri Yönetimi (CRM)",
+      "Stok & Depo Takibi",
+      "Raporlama & Analitik Paneli",
+      "Diğer",
+    ],
+    other_placeholder: "İhtiyacınızı kısaca açıklayın...",
+    whatsapp_cta: "WhatsApp'ta Devam Et",
+    whatsapp_message_prefix: "Merhaba Şükrü Bey, +Plus hizmetinizle ilgili bilgi almak istiyorum:",
+    whatsapp_other_prefix: "Merhaba Şükrü Bey, özel bir yazılım ihtiyacım var:",
+    back: "← Geri Dön",
+  },
 };
