@@ -140,7 +140,7 @@ export const en = {
   plusServices: {
     badge: "+Plus Services",
     title: "Which system do you need?",
-    subtitle: "Select the closest match — we'll contact you via WhatsApp.",
+    subtitle: "Select the closest match — we'll get back to you shortly.",
     categories: [
       "Appointment & Reservation System",
       "Workflow & Process Automation",
@@ -150,10 +150,24 @@ export const en = {
       "Reporting & Analytics Dashboard",
       "Other",
     ],
-    other_placeholder: "Briefly describe your need...",
+    step2_title: "Description",
+    step2_subtitle: "Tell us briefly about your needs for the selected service.",
+    description_placeholder: "Briefly describe your need...",
+    next: "Continue →",
+    step3_title: "Contact Information",
+    step3_subtitle: "Enter your details so we can get back to you.",
+    name_placeholder: "First name",
+    surname_placeholder: "Last name",
+    phone_placeholder: "Phone number",
+    email_placeholder: "Email address",
+    submit: "Submit",
+    sending: "Sending...",
+    success_title: "Message sent!",
+    success_desc: "We'll get back to you as soon as possible.",
+    error_generic: "An error occurred. Please try again.",
+    error_invalid_email: "Please enter a valid email address.",
     whatsapp_cta: "Continue on WhatsApp",
     whatsapp_message_prefix: "Hello Şükrü, I'm interested in the +Plus service:",
-    whatsapp_other_prefix: "Hello Şükrü, I have a custom software need:",
     back: "← Back",
   },
 };
@@ -263,10 +277,24 @@ export interface Translations {
     title: string;
     subtitle: string;
     categories: string[];
-    other_placeholder: string;
+    step2_title: string;
+    step2_subtitle: string;
+    description_placeholder: string;
+    next: string;
+    step3_title: string;
+    step3_subtitle: string;
+    name_placeholder: string;
+    surname_placeholder: string;
+    phone_placeholder: string;
+    email_placeholder: string;
+    submit: string;
+    sending: string;
+    success_title: string;
+    success_desc: string;
+    error_generic: string;
+    error_invalid_email: string;
     whatsapp_cta: string;
     whatsapp_message_prefix: string;
-    whatsapp_other_prefix: string;
     back: string;
   };
 }

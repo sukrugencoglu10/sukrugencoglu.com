@@ -5,174 +5,294 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useLanguage } from "@/context/LanguageContext";
 import Badge from "@/components/ui/Badge";
 
+const WA_ICON = (
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+    <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z" />
+  </svg>
+);
+
 export default function PlusServicesWizard({ showContactButton = false }: { showContactButton?: boolean }) {
   const { t } = useLanguage();
   const ps = t.plusServices;
 
-  const [step, setStep] = useState<1 | 2>(1);
-  const [selected, setSelected] = useState("");
-  const [otherText, setOtherText] = useState("");
-
-  const isOther = selected === ps.categories[ps.categories.length - 1];
-
-  const buildUrl = () => {
-    const msg = isOther
-      ? `${ps.whatsapp_other_prefix} ${otherText}`
-      : `${ps.whatsapp_message_prefix} ${selected}`;
-    return `https://wa.me/905324072694?text=${encodeURIComponent(msg)}`;
-  };
-
-  const handleSelect = (cat: string) => {
-    setSelected(cat);
-    setStep(2);
-  };
-
-  const handleBack = () => {
-    setStep(1);
-    setSelected("");
-    setOtherText("");
-  };
+  const [step, setStep] = useState<1 | 2 | 3>(1);
+  const [selected, setSelected]       = useState("");
+  const [description, setDescription] = useState("");
+  const [name, setName]               = useState("");
+  const [surname, setSurname]         = useState("");
+  const [phone, setPhone]             = useState("");
+  const [email, setEmail]             = useState("");
+  const [isLoading, setIsLoading]     = useState(false);
+  const [sent, setSent]               = useState(false);
+  const [error, setError]             = useState<string | null>(null);
 
   const namedCategories = ps.categories.slice(0, -1);
-  const otherLabel = ps.categories[ps.categories.length - 1];
-  const ctaDisabled = isOther && !otherText.trim();
+  const otherLabel      = ps.categories[ps.categories.length - 1];
+
+  /* ── handlers ── */
+  const handleSelect = (cat: string) => { setSelected(cat); setStep(2); };
+
+  const handleBack = (toStep: 1 | 2) => {
+    setStep(toStep);
+    setError(null);
+  };
+
+  const handleSubmit = async () => {
+    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      setError(ps.error_invalid_email);
+      return;
+    }
+    setIsLoading(true);
+    setError(null);
+    try {
+      const res = await fetch("/api/contact", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: `${name} ${surname}`.trim() || "Müşteri",
+          email,
+          message: [
+            `+Plus Hizmet Talebi`,
+            `Hizmet: ${selected}`,
+            description ? `Açıklama: ${description}` : null,
+            phone ? `Telefon: ${phone}` : null,
+          ].filter(Boolean).join("\n"),
+        }),
+      });
+      const data = await res.json();
+      if (res.ok) { setSent(true); }
+      else         { setError(data.error || ps.error_generic); }
+    } catch {
+      setError(ps.error_generic);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  /* ── success state ── */
+  if (sent) {
+    return (
+      <>
+        <div className="bg-white rounded-2xl border border-border p-8 shadow-[var(--shadow-card)] flex flex-col items-center text-center gap-4">
+          <motion.div
+            initial={{ scale: 0 }}
+            animate={{ scale: 1 }}
+            transition={{ type: "spring", stiffness: 200, damping: 15 }}
+            className="w-16 h-16 rounded-full bg-green-50 border border-green-200 flex items-center justify-center"
+          >
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#22c55e" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <polyline points="20 6 9 17 4 12" />
+            </svg>
+          </motion.div>
+          <h3 className="text-lg font-bold text-ink">{ps.success_title}</h3>
+          <p className="text-sm text-ink-muted">{ps.success_desc}</p>
+        </div>
+        {showContactButton && <WhatsAppButton t={t} />}
+      </>
+    );
+  }
 
   return (
     <>
-    <div className="bg-white rounded-2xl border border-border p-6 sm:p-8 shadow-[var(--shadow-card)]">
+      <div className="bg-white rounded-2xl border border-border p-6 sm:p-8 shadow-[var(--shadow-card)]">
 
-      {/* Badge + başlık */}
-      <div className="flex flex-col gap-2 mb-6">
-        <Badge color="orange">{ps.badge}</Badge>
-        <h2 className="text-xl font-semibold text-ink">{ps.title}</h2>
-        <p className="text-sm text-ink-muted">{ps.subtitle}</p>
-      </div>
+        {/* Badge + başlık */}
+        <div className="flex flex-col gap-2 mb-6">
+          <Badge color="orange">{ps.badge}</Badge>
+          <h2 className="text-xl font-semibold text-ink">{ps.title}</h2>
+          <p className="text-sm text-ink-muted">{ps.subtitle}</p>
+        </div>
 
-      {/* Progress bar (2 segment) */}
-      <div className="flex gap-2 mb-8">
-        {[1, 2].map((n) => (
-          <div key={n} className="flex flex-col items-center gap-2 flex-1">
-            <div
-              className="h-1 w-full rounded-full transition-all duration-500"
-              style={
-                step >= n
-                  ? { backgroundColor: "#ff6b00", boxShadow: "0 0 8px rgba(255,107,0,0.4)" }
-                  : { backgroundColor: "var(--color-border)" }
-              }
-            />
-            <span
-              className="text-[10px] uppercase tracking-widest transition-colors"
-              style={{ color: step === n ? "#ff6b00" : "var(--color-ink-subtle)" }}
-            >
-              0{n}
-            </span>
-          </div>
-        ))}
-      </div>
-
-      {/* Adım içeriği */}
-      <AnimatePresence mode="wait">
-        <motion.div
-          key={step}
-          initial={{ x: 20, opacity: 0 }}
-          animate={{ x: 0, opacity: 1 }}
-          exit={{ x: -20, opacity: 0 }}
-          transition={{ duration: 0.25 }}
-        >
-          {step === 1 && (
-            <>
-              {/* 6 kategori — 2 sütun */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mb-3">
-                {namedCategories.map((cat) => (
-                  <button
-                    key={cat}
-                    onClick={() => handleSelect(cat)}
-                    className="p-3.5 rounded-xl border text-left text-sm font-medium transition-all
-                      border-border bg-surface text-ink
-                      hover:border-orange/30 hover:bg-orange/5 hover:text-orange"
-                  >
-                    {cat}
-                  </button>
-                ))}
-              </div>
-
-              {/* "Diğer" — tam genişlik, dashed */}
-              <button
-                onClick={() => handleSelect(otherLabel)}
-                className="w-full p-3.5 rounded-xl border border-dashed text-left text-sm transition-all
-                  border-border text-ink-muted
-                  hover:border-orange/40 hover:text-orange"
+        {/* Progress bar (3 segment) */}
+        <div className="flex gap-2 mb-8">
+          {[1, 2, 3].map((n) => (
+            <div key={n} className="flex flex-col items-center gap-2 flex-1">
+              <div
+                className="h-1 w-full rounded-full transition-all duration-500"
+                style={
+                  step >= n
+                    ? { backgroundColor: "#ff6b00", boxShadow: "0 0 8px rgba(255,107,0,0.4)" }
+                    : { backgroundColor: "var(--color-border)" }
+                }
+              />
+              <span
+                className="text-[10px] uppercase tracking-widest transition-colors"
+                style={{ color: step === n ? "#ff6b00" : "var(--color-ink-subtle)" }}
               >
-                + {otherLabel}
-              </button>
-            </>
-          )}
+                0{n}
+              </span>
+            </div>
+          ))}
+        </div>
 
-          {step === 2 && (
-            <>
-              {/* Seçilen kategori chip (sadece named) */}
-              {!isOther && (
-                <div className="mb-5 px-4 py-3 rounded-xl bg-orange/10 border border-orange/30 text-orange text-sm font-medium">
+        {/* Adım içeriği */}
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={step}
+            initial={{ x: 20, opacity: 0 }}
+            animate={{ x: 0, opacity: 1 }}
+            exit={{ x: -20, opacity: 0 }}
+            transition={{ duration: 0.25 }}
+          >
+
+            {/* ── ADIM 1: Kategori seçimi ── */}
+            {step === 1 && (
+              <>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mb-3">
+                  {namedCategories.map((cat) => (
+                    <button
+                      key={cat}
+                      onClick={() => handleSelect(cat)}
+                      className="p-3.5 rounded-xl border text-left text-sm font-medium transition-all
+                        border-border bg-surface text-ink
+                        hover:border-orange/30 hover:bg-orange/5 hover:text-orange"
+                    >
+                      {cat}
+                    </button>
+                  ))}
+                </div>
+                <button
+                  onClick={() => handleSelect(otherLabel)}
+                  className="w-full p-3.5 rounded-xl border border-dashed text-left text-sm transition-all
+                    border-border text-ink-muted hover:border-orange/40 hover:text-orange"
+                >
+                  + {otherLabel}
+                </button>
+              </>
+            )}
+
+            {/* ── ADIM 2: Açıklama ── */}
+            {step === 2 && (
+              <>
+                <h3 className="text-base font-semibold text-ink mb-1">{ps.step2_title}</h3>
+                <p className="text-sm text-ink-muted mb-4">{ps.step2_subtitle}</p>
+
+                {/* Seçilen kategori chip */}
+                <div className="mb-4 px-4 py-2.5 rounded-xl bg-orange/10 border border-orange/30 text-orange text-sm font-medium">
                   {selected}
                 </div>
-              )}
 
-              {/* "Diğer" textarea */}
-              {isOther && (
+                {/* Açıklama textarea */}
                 <textarea
-                  rows={3}
-                  placeholder={ps.other_placeholder}
-                  value={otherText}
-                  onChange={(e) => setOtherText(e.target.value)}
+                  rows={4}
+                  placeholder={ps.description_placeholder}
+                  value={description}
+                  onChange={(e) => setDescription(e.target.value)}
                   className="w-full p-3.5 rounded-xl border border-border bg-surface text-ink
                     placeholder:text-ink-subtle text-sm resize-none mb-5
                     focus:outline-none focus:ring-2 focus:ring-[#ff6b00]/40 focus:border-[#ff6b00] transition-all"
                 />
-              )}
 
-              {/* WhatsApp CTA */}
-              <a
-                href={buildUrl()}
-                target="_blank"
-                rel="noopener noreferrer"
-                onClick={(e) => { if (ctaDisabled) e.preventDefault(); }}
-                className={`w-full flex items-center justify-center gap-2 py-3.5 rounded-xl
-                  text-white font-medium text-sm transition-all
-                  ${ctaDisabled
-                    ? "pointer-events-none opacity-50 bg-[#ff6b00]"
-                    : "bg-[#ff6b00] hover:bg-[#e56000] shadow-[0_4px_16px_rgba(255,107,0,0.35)] hover:shadow-[0_4px_20px_rgba(255,107,0,0.45)]"
-                  }`}
-              >
-                {/* WhatsApp icon */}
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
-                  <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
-                </svg>
-                {ps.whatsapp_cta}
-              </a>
+                <button
+                  onClick={() => setStep(3)}
+                  className="w-full py-3.5 rounded-xl bg-[#ff6b00] hover:bg-[#e56000] text-white
+                    font-medium text-sm transition-all
+                    shadow-[0_4px_16px_rgba(255,107,0,0.35)] hover:shadow-[0_4px_20px_rgba(255,107,0,0.45)]"
+                >
+                  {ps.next}
+                </button>
 
-              {/* Geri dön */}
-              <button
-                onClick={handleBack}
-                className="text-xs text-ink-subtle hover:text-ink-muted transition-colors text-center mt-3 w-full"
-              >
-                {ps.back}
-              </button>
-            </>
-          )}
-        </motion.div>
-      </AnimatePresence>
-    </div>
+                <button
+                  onClick={() => handleBack(1)}
+                  className="text-xs text-ink-subtle hover:text-ink-muted transition-colors text-center mt-3 w-full"
+                >
+                  {ps.back}
+                </button>
+              </>
+            )}
 
-    {showContactButton && (
-      <a
-        href={`https://wa.me/905324072694?text=${encodeURIComponent(t.contact.whatsapp_message)}`}
-        target="_blank"
-        rel="noopener noreferrer"
-        className="flex items-center justify-center gap-2 px-6 py-3 rounded-xl border border-orange bg-white text-ink text-sm font-semibold hover:text-orange transition-colors duration-200"
-      >
-        {t.services.cta}
-      </a>
-    )}
-  </>
+            {/* ── ADIM 3: İletişim bilgileri ── */}
+            {step === 3 && (
+              <>
+                <h3 className="text-base font-semibold text-ink mb-1">{ps.step3_title}</h3>
+                <p className="text-sm text-ink-muted mb-4">{ps.step3_subtitle}</p>
+
+                <div className="flex gap-3 mb-3">
+                  <input
+                    type="text"
+                    placeholder={ps.name_placeholder}
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    className="flex-1 p-3 rounded-xl border border-border bg-surface text-ink text-sm
+                      placeholder:text-ink-subtle
+                      focus:outline-none focus:ring-2 focus:ring-[#ff6b00]/40 focus:border-[#ff6b00] transition-all"
+                  />
+                  <input
+                    type="text"
+                    placeholder={ps.surname_placeholder}
+                    value={surname}
+                    onChange={(e) => setSurname(e.target.value)}
+                    className="flex-1 p-3 rounded-xl border border-border bg-surface text-ink text-sm
+                      placeholder:text-ink-subtle
+                      focus:outline-none focus:ring-2 focus:ring-[#ff6b00]/40 focus:border-[#ff6b00] transition-all"
+                  />
+                </div>
+
+                <input
+                  type="tel"
+                  placeholder={ps.phone_placeholder}
+                  value={phone}
+                  onChange={(e) => setPhone(e.target.value)}
+                  className="w-full p-3 rounded-xl border border-border bg-surface text-ink text-sm
+                    placeholder:text-ink-subtle mb-3
+                    focus:outline-none focus:ring-2 focus:ring-[#ff6b00]/40 focus:border-[#ff6b00] transition-all"
+                />
+
+                <input
+                  type="email"
+                  placeholder={ps.email_placeholder}
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="w-full p-3 rounded-xl border border-border bg-surface text-ink text-sm
+                    placeholder:text-ink-subtle mb-5
+                    focus:outline-none focus:ring-2 focus:ring-[#ff6b00]/40 focus:border-[#ff6b00] transition-all"
+                />
+
+                {error && (
+                  <p className="text-red-500 text-xs mb-3">{error}</p>
+                )}
+
+                <button
+                  onClick={handleSubmit}
+                  disabled={isLoading}
+                  className="w-full py-3.5 rounded-xl bg-[#ff6b00] hover:bg-[#e56000] text-white
+                    font-medium text-sm transition-all disabled:opacity-60 disabled:cursor-not-allowed
+                    shadow-[0_4px_16px_rgba(255,107,0,0.35)] hover:shadow-[0_4px_20px_rgba(255,107,0,0.45)]"
+                >
+                  {isLoading ? ps.sending : ps.submit}
+                </button>
+
+                <button
+                  onClick={() => handleBack(2)}
+                  className="text-xs text-ink-subtle hover:text-ink-muted transition-colors text-center mt-3 w-full"
+                >
+                  {ps.back}
+                </button>
+              </>
+            )}
+
+          </motion.div>
+        </AnimatePresence>
+      </div>
+
+      {showContactButton && <WhatsAppButton t={t} />}
+    </>
+  );
+}
+
+function WhatsAppButton({ t }: { t: ReturnType<typeof import("@/context/LanguageContext").useLanguage>["t"] }) {
+  const ps = t.plusServices;
+  return (
+    <a
+      href={`https://wa.me/905324072694?text=${encodeURIComponent(t.contact.whatsapp_message)}`}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="flex items-center justify-center gap-2 w-full py-3.5 rounded-xl
+        bg-[#ff6b00] hover:bg-[#e56000] text-white font-medium text-sm transition-all
+        shadow-[0_4px_16px_rgba(255,107,0,0.35)] hover:shadow-[0_4px_20px_rgba(255,107,0,0.45)]"
+    >
+      {WA_ICON}
+      {ps.whatsapp_cta}
+    </a>
   );
 }
