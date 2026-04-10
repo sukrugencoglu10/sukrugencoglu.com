@@ -965,7 +965,7 @@ function GtmZihinHaritasi() {
                 }}
               />
             ) : (
-              <div style={{ fontSize: 14, color: '#333', lineHeight: 1.8, whiteSpace: 'pre-line' }}>{selectedTerm.desc}</div>
+              <div style={{ fontSize: 14, color: '#333', lineHeight: 1.8, whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>{selectedTerm.desc}</div>
             )}
           </>
         ) : (
