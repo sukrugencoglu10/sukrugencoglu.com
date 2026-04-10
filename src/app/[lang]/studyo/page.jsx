@@ -749,8 +749,35 @@ function gtmEdgePoint(from, to) {
 function GtmZihinHaritasi() {
   const [selected, setSelected] = useState(null)
   const [hovered, setHovered] = useState(null)
+  const [terms, setTerms] = useState(GTM_TERMS)
+  const [dragging, setDragging] = useState(null)
 
-  const termMap = Object.fromEntries(GTM_TERMS.map(t => [t.id, t]))
+  useEffect(() => {
+    const handleMouseMove = (e) => {
+      if (!dragging) return
+      const dx = e.clientX - dragging.startMouseX
+      const dy = e.clientY - dragging.startMouseY
+      setTerms(prev => prev.map(t => {
+        if (t.id === dragging.id) {
+          return { ...t, x: dragging.startNodeX + dx, y: dragging.startNodeY + dy }
+        }
+        return t
+      }))
+    }
+    
+    const handleMouseUp = () => setDragging(null)
+
+    if (dragging) {
+      window.addEventListener('mousemove', handleMouseMove)
+      window.addEventListener('mouseup', handleMouseUp)
+    }
+    return () => {
+      window.removeEventListener('mousemove', handleMouseMove)
+      window.removeEventListener('mouseup', handleMouseUp)
+    }
+  }, [dragging])
+
+  const termMap = Object.fromEntries(terms.map(t => [t.id, t]))
   const selectedTerm = selected ? termMap[selected] : null
 
   const activeId = hovered || selected
@@ -767,7 +794,7 @@ function GtmZihinHaritasi() {
       <div style={{ marginBottom: '1.25rem' }}>
         <h2 style={{ fontSize: 20, fontWeight: 500, margin: 0 }}>GTM Ekosistemi</h2>
         <p style={{ fontSize: 13, color: '#888', marginTop: 4 }}>
-          Data Layer → GTM → Etiket akışı · kutucuğa tıkla, açıklamayı oku
+          Data Layer → GTM → Etiket akışı · kutucuğu tutup sürükle, tıklayarak açıklamayı oku
         </p>
       </div>
 
@@ -818,17 +845,35 @@ function GtmZihinHaritasi() {
           </svg>
 
           {/* Node'lar */}
-          {GTM_TERMS.map(term => {
+          {terms.map(term => {
             const colors = GTM_CAT_COLORS[term.cat]
             const isSelected = selected === term.id
             const isHov = hovered === term.id
             const isDimmed = connectedIds && !connectedIds.has(term.id)
+            const isDragging = dragging?.id === term.id
+            
             return (
               <div
                 key={term.id}
-                onClick={() => setSelected(prev => prev === term.id ? null : term.id)}
+                onClick={(e) => {
+                  // Eğer çok sürüklendiyse onClick'i yoksay
+                  if (dragging && (Math.abs(e.clientX - dragging.startMouseX) > 5 || Math.abs(e.clientY - dragging.startMouseY) > 5)) {
+                    return
+                  }
+                  setSelected(prev => prev === term.id ? null : term.id)
+                }}
                 onMouseEnter={() => setHovered(term.id)}
                 onMouseLeave={() => setHovered(null)}
+                onMouseDown={(e) => {
+                  if (e.button !== 0) return
+                  setDragging({
+                    id: term.id,
+                    startMouseX: e.clientX,
+                    startMouseY: e.clientY,
+                    startNodeX: term.x,
+                    startNodeY: term.y
+                  })
+                }}
                 style={{
                   position: 'absolute',
                   left: term.x - GTM_NW / 2,
@@ -844,11 +889,12 @@ function GtmZihinHaritasi() {
                     : `inset 3px 0 0 ${colors.stripe}, 0 1px 3px rgba(0,0,0,0.06)`,
                   borderRadius: 8,
                   padding: '6px 10px 6px 12px',
-                  opacity: isDimmed ? 0.25 : 1,
-                  transition: 'all 0.15s',
-                  zIndex: isSelected ? 3 : isHov ? 2 : 1,
+                  opacity: isDimmed && !isDragging ? 0.25 : 1,
+                  transition: isDragging ? 'none' : 'all 0.15s',
+                  zIndex: isDragging ? 4 : isSelected ? 3 : isHov ? 2 : 1,
                   display: 'flex', flexDirection: 'column', justifyContent: 'center',
-                  cursor: 'pointer', userSelect: 'none',
+                  cursor: isDragging ? 'grabbing' : 'grab',
+                  userSelect: 'none',
                 }}
               >
                 <div style={{ fontSize: 14, fontWeight: 700, color: colors.stripe, lineHeight: 1.2, marginBottom: 2, whiteSpace: 'pre-line' }}>{term.abbr}</div>
