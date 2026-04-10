@@ -25,15 +25,15 @@ export default function AiServicesTeaser({ inline = false }: { inline?: boolean 
       <h2 className={`font-extrabold text-ink tracking-tight leading-snug ${inline ? "text-2xl sm:text-3xl" : "text-3xl sm:text-4xl"}`}>
         {lang === "tr" ? (
           <>
-            İhtiyaca Uygun<br />
-            Aİ Destekli Yazılım Altyapıları<br />
+            İşletmenizin İhtiyaçlarına Özel,<br />
+            Yapay Zeka Tabanlı Yazılım Altyapıları<br />
             <span className="text-orange">Kuruyoruz</span>
           </>
         ) : (
           <>
-            Custom<br />
-            AI-Powered Software Infrastructures<br />
-            <span className="text-orange">We Build</span>
+            Custom AI-Powered Software<br />
+            Infrastructures Built<br />
+            <span className="text-orange">for Your Business</span>
           </>
         )}
       </h2>
