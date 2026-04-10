@@ -30,7 +30,7 @@ export const en = {
     title_accent: "Software Infrastructures",
     items: [
       {
-        title: "High-Performance Web Development",
+        title: "High-Performance Websites",
         desc: "I know that speed is conversion. Using Next.js, React, and Tailwind CSS, I build ultra-fast web experiences that pass Google Core Web Vitals, are SEO-friendly, and persuade users to convert."
       },
       {
@@ -89,6 +89,9 @@ export const en = {
     goals: ["Ranking on Google", "WhatsApp & Phone Calls", "Contact Form Submissions", "Other"],
     industries: ["E-Commerce", "Construction & Real Estate", "Health & Beauty", "Legal & Consulting", "Education", "Other"],
     budgets: ["$500 – $1,000", "$1,000 – $2,500", "$2,500 – $7,500+", "Prefer Not to Say"],
+    name_placeholder: "First name",
+    surname_placeholder: "Last name",
+    phone_placeholder: "Phone number",
     email_placeholder: "Your Email Address",
     submit: "Start Analysis",
     sending: "Sending...",
@@ -245,6 +248,9 @@ export interface Translations {
     goals: string[];
     industries: string[];
     budgets: string[];
+    name_placeholder: string;
+    surname_placeholder: string;
+    phone_placeholder: string;
     email_placeholder: string;
     submit: string;
     sending: string;

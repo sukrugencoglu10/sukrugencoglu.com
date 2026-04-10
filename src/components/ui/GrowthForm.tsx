@@ -9,7 +9,7 @@ export default function GrowthForm() {
   const gf = t.growthForm;
 
   const [currentStep, setCurrentStep] = useState(1);
-  const [formData, setFormData] = useState({ goal: "", industry: "", budget: "", email: "" });
+  const [formData, setFormData] = useState({ goal: "", industry: "", budget: "", name: "", surname: "", phone: "", email: "" });
   const [isLoading, setIsLoading] = useState(false);
   const [sent, setSent] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -28,9 +28,14 @@ export default function GrowthForm() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          name: "B2B Lead",
+          name: `${formData.name} ${formData.surname}`.trim() || "B2B Lead",
           email: formData.email,
-          message: `Goal: ${formData.goal}\nIndustry: ${formData.industry}\nMonthly Ad Budget: ${formData.budget}`,
+          message: [
+            `Hedef: ${formData.goal}`,
+            `Sektör: ${formData.industry}`,
+            `Reklam Bütçesi: ${formData.budget}`,
+            formData.phone ? `Telefon: ${formData.phone}` : null,
+          ].filter(Boolean).join("\n"),
         }),
       });
       const data = await response.json();
@@ -184,9 +189,32 @@ export default function GrowthForm() {
             </div>
           )}
 
-          {/* Step 4: Email */}
+          {/* Step 4: İletişim */}
           {currentStep === 4 && (
             <div className="flex flex-col gap-3">
+              <div className="flex gap-3">
+                <input
+                  type="text"
+                  placeholder={gf.name_placeholder}
+                  value={formData.name}
+                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                  className="flex-1 p-3.5 rounded-xl border border-border bg-surface text-ink placeholder:text-ink-subtle text-sm focus:outline-none focus:ring-2 focus:ring-[#a855f7]/40 focus:border-[#a855f7] transition-all"
+                />
+                <input
+                  type="text"
+                  placeholder={gf.surname_placeholder}
+                  value={formData.surname}
+                  onChange={(e) => setFormData({ ...formData, surname: e.target.value })}
+                  className="flex-1 p-3.5 rounded-xl border border-border bg-surface text-ink placeholder:text-ink-subtle text-sm focus:outline-none focus:ring-2 focus:ring-[#a855f7]/40 focus:border-[#a855f7] transition-all"
+                />
+              </div>
+              <input
+                type="tel"
+                placeholder={gf.phone_placeholder}
+                value={formData.phone}
+                onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                className="w-full p-3.5 rounded-xl border border-border bg-surface text-ink placeholder:text-ink-subtle text-sm focus:outline-none focus:ring-2 focus:ring-[#a855f7]/40 focus:border-[#a855f7] transition-all"
+              />
               <input
                 type="email"
                 placeholder={gf.email_placeholder}

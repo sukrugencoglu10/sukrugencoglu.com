@@ -32,7 +32,7 @@ export const tr: Translations = {
     title_accent: "Kuruyoruz",
     items: [
       {
-        title: "Yüksek Performanslı Web Geliştirme",
+        title: "Yüksek Performanslı Web Siteleri",
         desc: "Hızın dönüşüm demek olduğunu biliyorum. Next.js, React ve Tailwind CSS kullanarak, Google Core Web Vitals skorları yeşil yanan, SEO uyumlu ve kullanıcıyı satışa ikna eden ultra hızlı web deneyimleri inşa ediyorum."
       },
       {
@@ -91,6 +91,9 @@ export const tr: Translations = {
     goals: ["Google'da Üstte Görülme", "WhatsApp & Telefon Araması", "Form Doldurulması", "Diğer"],
     industries: ["E-Ticaret", "İnşaat & Gayrimenkul", "Sağlık & Estetik", "Hukuk & Danışmanlık", "Eğitim", "Diğer"],
     budgets: ["10.000₺ – 20.000₺", "20.000₺ – 50.000₺", "50.000₺ – 150.000₺+", "Belirtmek İstemiyorum"],
+    name_placeholder: "Adınız",
+    surname_placeholder: "Soyadınız",
+    phone_placeholder: "Telefon numaranız",
     email_placeholder: "E-posta Adresiniz",
     submit: "Analizi Başlat",
     sending: "Gönderiliyor...",
