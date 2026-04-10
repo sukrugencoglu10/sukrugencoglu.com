@@ -1476,61 +1476,78 @@ const AI_CAT_LABELS = {
 function YzHaritasi() {
   const [hovered, setHovered] = useState(null)
   const [selected, setSelected] = useState(null)
+  const [terms, setTerms] = useState(AI_TERMS)
+  const [dragging, setDragging] = useState(null)
+  const [editId, setEditId] = useState(null)
+  const [saving, setSaving] = useState(false)
+  const [lastSaved, setLastSaved] = useState(null)
 
-  const termMap = Object.fromEntries(AI_TERMS.map(t => [t.id, t]))
+  // Veriyi ilk yüklemede çek
+  useEffect(() => {
+    fetch('/api/ai-terimleri')
+      .then(res => res.json())
+      .then(data => {
+        if (data && Array.isArray(data) && data.length > 0) {
+          setTerms(data)
+        }
+      })
+      .catch(err => console.error('AI Terimleri yükleme hatası:', err))
+  }, [])
+
+  const handleSave = async () => {
+    setSaving(true)
+    try {
+      const res = await fetch('/api/ai-terimleri', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(terms),
+      })
+      if (res.ok) {
+        setLastSaved(new Date().toLocaleTimeString())
+      } else {
+        alert('Kaydedilemedi')
+      }
+    } catch (err) {
+      alert('Hata: ' + err.message)
+    }
+    setSaving(false)
+  }
+
+  useEffect(() => {
+    const handleMouseMove = (e) => {
+      if (!dragging) return
+      const dx = e.clientX - dragging.startMouseX
+      const dy = e.clientY - dragging.startMouseY
+      setTerms(prev => prev.map(t => {
+        if (t.id === dragging.id) {
+          return { ...t, x: dragging.startNodeX + dx, y: dragging.startNodeY + dy }
+        }
+        return t
+      }))
+    }
+    
+    const handleMouseUp = () => setDragging(null)
+
+    if (dragging) {
+      window.addEventListener('mousemove', handleMouseMove)
+      window.addEventListener('mouseup', handleMouseUp)
+    }
+    return () => {
+      window.removeEventListener('mousemove', handleMouseMove)
+      window.removeEventListener('mouseup', handleMouseUp)
+    }
+  }, [dragging])
+
+  const termMap = Object.fromEntries(terms.map(t => [t.id, t]))
   const selectedTerm = selected ? termMap[selected] : null
 
-  const connectedIds = hovered ? new Set([
-    hovered,
-    ...AI_CONNECTIONS.filter(c => c.from === hovered || c.to === hovered).flatMap(c => [c.from, c.to]),
-  ]) : null
-
-  const CANVAS_W = 880
-  const CANVAS_H = 555
-
-  return (
-    <div style={{ padding: '2rem 1.25rem', fontFamily: 'inherit' }}>
-      <div style={{ marginBottom: '1.25rem' }}>
-        <h1 style={{ fontSize: 22, fontWeight: 500, margin: 0 }}>Yapay Zeka Terimleri</h1>
-        <p style={{ fontSize: 13, color: '#888', marginTop: 4 }}>
-          AI ekosisteminin temel kavramları ve aralarındaki ilişkiler · Terime tıkla: açıklamayı gör
-        </p>
-      </div>
-
-      {/* Legenda */}
-      <div style={{ display: 'flex', gap: 14, marginBottom: '1.25rem', flexWrap: 'wrap' }}>
-        {Object.entries(AI_CAT_LABELS).map(([cat, label]) => (
-          <div key={cat} style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 12, color: '#555' }}>
-            <div style={{ width: 10, height: 10, borderRadius: 2, background: AI_CAT_COLORS[cat].stripe }} />
-            {label}
-          </div>
-        ))}
-      </div>
-
-      {/* Ana alan: harita + panel */}
-      <div style={{ display: 'flex', gap: 16, alignItems: 'flex-start' }}>
-
-        {/* Canvas */}
-        <div style={{ flex: 1, overflowX: 'auto', background: '#fafafa', border: '0.5px solid #e8e8e8', borderRadius: 12, padding: '8px 0 10px' }}>
-          <div style={{ position: 'relative', width: CANVAS_W, height: CANVAS_H, margin: '0 auto' }}>
-
-            {/* SVG çizgiler */}
-            <svg width={CANVAS_W} height={CANVAS_H} style={{ position: 'absolute', top: 0, left: 0, pointerEvents: 'none' }}>
-              <defs>
-                <marker id="ai-arr" markerWidth="7" markerHeight="7" refX="5" refY="3.5" orient="auto">
-                  <path d="M0,0 L0,7 L7,3.5 z" fill="#ccc" />
-                </marker>
-                <marker id="ai-arr-hi" markerWidth="7" markerHeight="7" refX="5" refY="3.5" orient="auto">
-                  <path d="M0,0 L0,7 L7,3.5 z" fill="#777" />
-                </marker>
-              </defs>
               {AI_CONNECTIONS.map((conn, i) => {
                 const from = termMap[conn.from]
                 const to = termMap[conn.to]
                 if (!from || !to) return null
                 const p1 = aiEdgePoint(from, to)
                 const p2 = aiEdgePoint(to, from)
-                const isActive = hovered && (conn.from === hovered || conn.to === hovered)
+                const isActive = activeId && (conn.from === activeId || conn.to === activeId)
                 return (
                   <line
                     key={i}
@@ -1544,17 +1561,34 @@ function YzHaritasi() {
             </svg>
 
             {/* Node'lar */}
-            {AI_TERMS.map(term => {
+            {terms.map(term => {
               const colors = AI_CAT_COLORS[term.cat]
               const isHovered = hovered === term.id
               const isSelected = selected === term.id
               const isDimmed = connectedIds && !connectedIds.has(term.id)
+              const isDragging = dragging?.id === term.id
+
               return (
                 <div
                   key={term.id}
                   onMouseEnter={() => setHovered(term.id)}
                   onMouseLeave={() => setHovered(null)}
-                  onClick={() => setSelected(isSelected ? null : term.id)}
+                  onClick={(e) => {
+                    if (dragging && (Math.abs(e.clientX - dragging.startMouseX) > 5 || Math.abs(e.clientY - dragging.startMouseY) > 5)) {
+                      return
+                    }
+                    setSelected(isSelected ? null : term.id)
+                  }}
+                  onMouseDown={(e) => {
+                    if (e.button !== 0) return
+                    setDragging({
+                      id: term.id,
+                      startMouseX: e.clientX,
+                      startMouseY: e.clientY,
+                      startNodeX: term.x,
+                      startNodeY: term.y
+                    })
+                  }}
                   style={{
                     position: 'absolute',
                     left: term.x - AI_NODE_W / 2,
@@ -1565,16 +1599,16 @@ function YzHaritasi() {
                     border: `${isSelected ? 2 : 1}px solid ${isSelected ? colors.stripe : (isHovered ? colors.stripe : colors.border)}`,
                     borderRadius: 8,
                     padding: '6px 10px 6px 12px',
-                    opacity: isDimmed ? 0.22 : 1,
+                    opacity: isDimmed && !isDragging ? 0.22 : 1,
                     boxShadow: isSelected
                       ? `inset 3px 0 0 ${colors.stripe}, 0 0 0 3px ${colors.stripe}33, 0 4px 16px ${colors.stripe}22`
                       : isHovered
                         ? `inset 3px 0 0 ${colors.stripe}, 0 3px 12px ${colors.stripe}33`
                         : `inset 3px 0 0 ${colors.stripe}, 0 1px 3px rgba(0,0,0,0.06)`,
-                    transition: 'all 0.13s',
-                    zIndex: isSelected ? 3 : isHovered ? 2 : 1,
+                    transition: isDragging ? 'none' : 'all 0.13s',
+                    zIndex: isDragging ? 4 : isSelected ? 3 : isHovered ? 2 : 1,
                     display: 'flex', flexDirection: 'column', justifyContent: 'center',
-                    cursor: 'pointer', userSelect: 'none',
+                    cursor: isDragging ? 'grabbing' : 'grab', userSelect: 'none',
                   }}
                 >
                   <div style={{ fontSize: 13, fontWeight: 700, color: colors.stripe, lineHeight: 1.2, marginBottom: 3, whiteSpace: 'pre-line' }}>{term.abbr}</div>
@@ -1598,19 +1632,53 @@ function YzHaritasi() {
           position: 'sticky',
           top: 80,
         }}>
-          {selectedTerm ? (
             <>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
-                <div style={{ width: 8, height: 8, borderRadius: 2, background: AI_CAT_COLORS[selectedTerm.cat].stripe, flexShrink: 0 }} />
-                <span style={{ fontSize: 11, color: AI_CAT_COLORS[selectedTerm.cat].stripe, fontWeight: 600 }}>
-                  {AI_CAT_LABELS[selectedTerm.cat].toUpperCase()}
-                </span>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <div style={{ width: 8, height: 8, borderRadius: 2, background: AI_CAT_COLORS[selectedTerm.cat].stripe, flexShrink: 0 }} />
+                  <span style={{ fontSize: 11, color: AI_CAT_COLORS[selectedTerm.cat].stripe, fontWeight: 600 }}>
+                    {AI_CAT_LABELS[selectedTerm.cat].toUpperCase()}
+                  </span>
+                </div>
+                <button
+                  onClick={() => setEditId(prev => prev === selectedTerm.id ? null : selectedTerm.id)}
+                  style={{
+                    fontSize: 11, cursor: 'pointer', padding: '4px 10px',
+                    borderRadius: 6, border: '0.5px solid #d0d0d0', background: '#fff', color: '#555'
+                  }}
+                >
+                  {editId === selectedTerm.id ? 'Bitti' : 'Düzenle'}
+                </button>
               </div>
               <div style={{ fontSize: 18, fontWeight: 700, color: AI_CAT_COLORS[selectedTerm.cat].stripe, marginBottom: 4, whiteSpace: 'pre-line' }}>
                 {selectedTerm.abbr}
               </div>
               <div style={{ fontSize: 12, color: '#888', marginBottom: 12 }}>{selectedTerm.sub}</div>
-              <div style={{ fontSize: 13, color: '#333', lineHeight: 1.7 }}>{selectedTerm.desc}</div>
+              {editId === selectedTerm.id ? (
+                <textarea
+                  value={selectedTerm.desc}
+                  onChange={e => setTerms(prev => prev.map(t => t.id === selectedTerm.id ? { ...t, desc: e.target.value } : t))}
+                  onPaste={(e) => {
+                    e.preventDefault()
+                    const text = e.clipboardData.getData('text/plain')
+                    const cleanText = text.replace(/\r/g, '').replace(/\n{3,}/g, '\n\n')
+                    const target = e.target
+                    const start = target.selectionStart
+                    const end = target.selectionEnd
+                    const current = target.value
+                    const newValue = current.substring(0, start) + cleanText + current.substring(end)
+                    setTerms(prev => prev.map(t => t.id === selectedTerm.id ? { ...t, desc: newValue } : t))
+                    setTimeout(() => { target.selectionStart = target.selectionEnd = start + cleanText.length }, 0)
+                  }}
+                  style={{
+                    width: '100%', minHeight: 120, padding: 12, fontSize: 13, lineHeight: 1.7,
+                    color: '#333', border: '0.5px solid #ccc', borderRadius: 8,
+                    outline: 'none', resize: 'vertical', fontFamily: 'inherit'
+                  }}
+                />
+              ) : (
+                <div style={{ fontSize: 13, color: '#333', lineHeight: 1.7, whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>{selectedTerm.desc}</div>
+              )}
             </>
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: 160, gap: 8, color: '#ccc', textAlign: 'center' }}>
@@ -1620,6 +1688,22 @@ function YzHaritasi() {
           )}
         </div>
 
+      </div>
+
+      {/* Kaydet butonu — sağ alt */}
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: 12, marginTop: 12 }}>
+        {lastSaved && <span style={{ fontSize: 11, color: '#1D9E75' }}>Kaydedildi: {lastSaved}</span>}
+        <button
+          onClick={handleSave}
+          disabled={saving}
+          style={{
+            background: '#111', color: '#fff', border: 'none', borderRadius: 8,
+            padding: '6px 14px', fontSize: 13, cursor: saving ? 'not-allowed' : 'pointer',
+            opacity: saving ? 0.7 : 1, transition: 'all 0.2s'
+          }}
+        >
+          {saving ? 'Kaydediliyor...' : 'Değişiklikleri Kaydet'}
+        </button>
       </div>
     </div>
   )
