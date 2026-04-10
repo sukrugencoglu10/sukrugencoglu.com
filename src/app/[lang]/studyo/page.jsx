@@ -676,6 +676,220 @@ Kurallar:
     </div>
   )
 }
+// ─── GTM Ekosistemi Zihin Haritası ───────────────────────────────────────────
+const GTM_NW = 140
+const GTM_NH = 56
+
+const GTM_CAT_COLORS = {
+  veri:      { bg: '#FFF8E1', border: '#F9A82566', stripe: '#F57F17' },
+  merkez:    { bg: '#E8F5E9', border: '#2E7D3266', stripe: '#2E7D32' },
+  bileşen:   { bg: '#E3F2FD', border: '#1565C066', stripe: '#1565C0' },
+  hedef:     { bg: '#F3E5F5', border: '#6A1B9A66', stripe: '#6A1B9A' },
+}
+
+const GTM_TERMS = [
+  {
+    id: 'datalayer', abbr: 'Data Layer', sub: 'Veri Katmanı', cat: 'veri', x: 400, y: 50,
+    desc: 'Web sitesindeki tüm olay ve kullanıcı verilerinin toplandığı JavaScript nesnesi. GTM bu katmandan veri okur. Örneğin bir kullanıcı butona tıkladığında "purchase" eventi, ürün adı, fiyat gibi bilgiler buraya yazılır.',
+  },
+  {
+    id: 'gtm', abbr: 'GTM', sub: 'Google Tag Manager', cat: 'merkez', x: 400, y: 170,
+    desc: 'Google Tag Manager — tüm takip kodlarını (etiketleri) merkezi bir panelden yönetmeyi sağlayan ücretsiz araç. Kod yazmaya gerek kalmadan etiket ekleyip, tetikleyici ve değişken tanımlayabilirsin. Data Layer\'dan veri okur, koşullara göre etiketleri ateşler.',
+  },
+  {
+    id: 'variable', abbr: 'Variable', sub: 'Değişken', cat: 'bileşen', x: 150, y: 300,
+    desc: 'GTM\'nin veri taşıyıcısı. Data Layer\'daki değerleri (sayfa URL, ürün fiyatı, kullanıcı ID vb.) yakalayıp etiketlere ve tetikleyicilere iletir. Örneğin {{Page URL}} değişkeni o anki sayfa adresini döner.',
+  },
+  {
+    id: 'trigger', abbr: 'Trigger', sub: 'Tetikleyici', cat: 'bileşen', x: 400, y: 300,
+    desc: 'Bir etiketin ne zaman çalışacağını belirleyen koşul/kural. "Kullanıcı formu gönderdiğinde", "Sayfa yüklendiğinde", "Butona tıklandığında" gibi olayları dinler ve eşleştiğinde ilgili etiketi ateşler.',
+  },
+  {
+    id: 'tag', abbr: 'Tag', sub: 'Etiket', cat: 'bileşen', x: 650, y: 300,
+    desc: 'Üçüncü parti platformlara veri gönderen kod parçacığı. Google Ads dönüşüm kodu, GA4 olay etiketi, Facebook Pixel gibi. Tetikleyici koşulu sağlandığında GTM bu etiketi çalıştırır ve veriyi ilgili platforma iletir.',
+  },
+  {
+    id: 'googleads', abbr: 'Google Ads', sub: 'Dönüşüm Takibi', cat: 'hedef', x: 150, y: 440,
+    desc: 'Google Ads dönüşüm etiketi — reklam tıklamalarından gelen kullanıcıların sitede gerçekleştirdiği değerli eylemleri (satın alma, form doldurma, arama) takip eder. "Conversion Linker" ve "Google Ads Conversion Tracking" etiketleri GTM üzerinden kurulur.',
+  },
+  {
+    id: 'ga4', abbr: 'GA4', sub: 'Google Analytics 4', cat: 'hedef', x: 400, y: 440,
+    desc: 'Google Analytics 4 — olay tabanlı (event-based) yeni nesil analitik platformu. Sayfa görüntüleme, tıklama, kaydırma gibi etkileşimleri ölçer. GTM üzerinden "GA4 Configuration" ve "GA4 Event" etiketleri ile kurulur.',
+  },
+  {
+    id: 'fbcapi', abbr: 'FB Pixel\n& CAPI', sub: 'Facebook / Meta', cat: 'hedef', x: 650, y: 440,
+    desc: 'Facebook Pixel (tarayıcı taraflı) ve Conversions API (sunucu taraflı) — Meta reklamlarının dönüşüm verilerini almasını sağlar. iOS 14+ kısıtlamaları nedeniyle Pixel tek başına yeterli değildir; CAPI ile sunucu üzerinden de veri gönderilerek veri kaybı minimuma indirilir.',
+  },
+]
+
+const GTM_CONNECTIONS = [
+  { from: 'datalayer', to: 'gtm' },
+  { from: 'gtm', to: 'variable' },
+  { from: 'gtm', to: 'trigger' },
+  { from: 'gtm', to: 'tag' },
+  { from: 'tag', to: 'googleads' },
+  { from: 'tag', to: 'ga4' },
+  { from: 'tag', to: 'fbcapi' },
+  { from: 'variable', to: 'trigger' },
+  { from: 'trigger', to: 'tag' },
+]
+
+function gtmEdgePoint(from, to) {
+  const dx = to.x - from.x
+  const dy = to.y - from.y
+  if (Math.abs(dx) < 0.01 && Math.abs(dy) < 0.01) return { x: from.x, y: from.y }
+  const hw = GTM_NW / 2
+  const hh = GTM_NH / 2
+  const scaleX = Math.abs(dx) > 0.01 ? hw / Math.abs(dx) : Infinity
+  const scaleY = Math.abs(dy) > 0.01 ? hh / Math.abs(dy) : Infinity
+  const scale = Math.min(scaleX, scaleY)
+  return { x: from.x + dx * scale, y: from.y + dy * scale }
+}
+
+function GtmZihinHaritasi() {
+  const [selected, setSelected] = useState(null)
+  const [hovered, setHovered] = useState(null)
+
+  const termMap = Object.fromEntries(GTM_TERMS.map(t => [t.id, t]))
+  const selectedTerm = selected ? termMap[selected] : null
+
+  const activeId = hovered || selected
+  const connectedIds = activeId ? new Set([
+    activeId,
+    ...GTM_CONNECTIONS.filter(c => c.from === activeId || c.to === activeId).flatMap(c => [c.from, c.to]),
+  ]) : null
+
+  const CANVAS_W = 800
+  const CANVAS_H = 500
+
+  return (
+    <div style={{ marginTop: '4rem', paddingTop: '2rem', borderTop: '1px solid #eee' }}>
+      <div style={{ marginBottom: '1.25rem' }}>
+        <h2 style={{ fontSize: 20, fontWeight: 500, margin: 0 }}>GTM Ekosistemi</h2>
+        <p style={{ fontSize: 13, color: '#888', marginTop: 4 }}>
+          Data Layer → GTM → Etiket akışı · kutucuğa tıkla, açıklamayı oku
+        </p>
+      </div>
+
+      {/* Legenda */}
+      <div style={{ display: 'flex', gap: 16, marginBottom: '1rem', flexWrap: 'wrap' }}>
+        {[['veri', 'Veri Kaynağı'], ['merkez', 'Merkez'], ['bileşen', 'GTM Bileşeni'], ['hedef', 'Hedef Platform']].map(([cat, label]) => (
+          <div key={cat} style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 12, color: '#555' }}>
+            <div style={{ width: 10, height: 10, borderRadius: 2, background: GTM_CAT_COLORS[cat].stripe }} />
+            {label}
+          </div>
+        ))}
+      </div>
+
+      {/* Canvas */}
+      <div style={{ overflowX: 'auto', background: '#fafafa', border: '0.5px solid #e8e8e8', borderRadius: 12, padding: '12px 0' }}>
+        <div style={{ position: 'relative', width: CANVAS_W, height: CANVAS_H, margin: '0 auto' }}>
+
+          {/* SVG bağlantı çizgileri */}
+          <svg
+            width={CANVAS_W} height={CANVAS_H}
+            style={{ position: 'absolute', top: 0, left: 0, pointerEvents: 'none' }}
+          >
+            <defs>
+              <marker id="gtm-arr" markerWidth="7" markerHeight="7" refX="5" refY="3.5" orient="auto">
+                <path d="M0,0 L0,7 L7,3.5 z" fill="#ccc" />
+              </marker>
+              <marker id="gtm-arr-hi" markerWidth="7" markerHeight="7" refX="5" refY="3.5" orient="auto">
+                <path d="M0,0 L0,7 L7,3.5 z" fill="#888" />
+              </marker>
+            </defs>
+            {GTM_CONNECTIONS.map((conn, i) => {
+              const from = termMap[conn.from]
+              const to = termMap[conn.to]
+              if (!from || !to) return null
+              const p1 = gtmEdgePoint(from, to)
+              const p2 = gtmEdgePoint(to, from)
+              const isActive = activeId && (conn.from === activeId || conn.to === activeId)
+              return (
+                <line
+                  key={i}
+                  x1={p1.x} y1={p1.y} x2={p2.x} y2={p2.y}
+                  stroke={isActive ? '#888' : '#ddd'}
+                  strokeWidth={isActive ? 2 : 1.5}
+                  markerEnd={isActive ? 'url(#gtm-arr-hi)' : 'url(#gtm-arr)'}
+                />
+              )
+            })}
+          </svg>
+
+          {/* Node'lar */}
+          {GTM_TERMS.map(term => {
+            const colors = GTM_CAT_COLORS[term.cat]
+            const isSelected = selected === term.id
+            const isHov = hovered === term.id
+            const isDimmed = connectedIds && !connectedIds.has(term.id)
+            return (
+              <div
+                key={term.id}
+                onClick={() => setSelected(prev => prev === term.id ? null : term.id)}
+                onMouseEnter={() => setHovered(term.id)}
+                onMouseLeave={() => setHovered(null)}
+                style={{
+                  position: 'absolute',
+                  left: term.x - GTM_NW / 2,
+                  top: term.y - GTM_NH / 2,
+                  width: GTM_NW,
+                  height: GTM_NH,
+                  background: colors.bg,
+                  border: `1.5px solid ${isSelected ? colors.stripe : isHov ? colors.stripe : colors.border}`,
+                  boxShadow: isSelected
+                    ? `inset 3px 0 0 ${colors.stripe}, 0 4px 16px ${colors.stripe}44`
+                    : isHov
+                    ? `inset 3px 0 0 ${colors.stripe}, 0 3px 12px ${colors.stripe}33`
+                    : `inset 3px 0 0 ${colors.stripe}, 0 1px 3px rgba(0,0,0,0.06)`,
+                  borderRadius: 8,
+                  padding: '6px 10px 6px 12px',
+                  opacity: isDimmed ? 0.25 : 1,
+                  transition: 'all 0.15s',
+                  zIndex: isSelected ? 3 : isHov ? 2 : 1,
+                  display: 'flex', flexDirection: 'column', justifyContent: 'center',
+                  cursor: 'pointer', userSelect: 'none',
+                }}
+              >
+                <div style={{ fontSize: 14, fontWeight: 700, color: colors.stripe, lineHeight: 1.2, marginBottom: 2, whiteSpace: 'pre-line' }}>{term.abbr}</div>
+                <div style={{ fontSize: 10, color: '#555', lineHeight: 1.3 }}>{term.sub}</div>
+              </div>
+            )
+          })}
+        </div>
+      </div>
+
+      {/* Açıklama paneli — haritanın altında */}
+      <div style={{
+        marginTop: 16,
+        background: selectedTerm ? '#fff' : '#fafafa',
+        border: `0.5px solid ${selectedTerm ? GTM_CAT_COLORS[selectedTerm.cat].stripe + '44' : '#e8e8e8'}`,
+        borderRadius: 12,
+        padding: '1.25rem 1.5rem',
+        minHeight: 80,
+        transition: 'all 0.2s',
+      }}>
+        {selectedTerm ? (
+          <>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
+              <div style={{ width: 8, height: 8, borderRadius: 2, background: GTM_CAT_COLORS[selectedTerm.cat].stripe, flexShrink: 0 }} />
+              <span style={{ fontSize: 18, fontWeight: 700, color: GTM_CAT_COLORS[selectedTerm.cat].stripe, whiteSpace: 'pre-line' }}>
+                {selectedTerm.abbr}
+              </span>
+              <span style={{ fontSize: 12, color: '#aaa', marginLeft: 4 }}>{selectedTerm.sub}</span>
+            </div>
+            <div style={{ fontSize: 14, color: '#333', lineHeight: 1.8 }}>{selectedTerm.desc}</div>
+          </>
+        ) : (
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, color: '#ccc', minHeight: 60 }}>
+            <span style={{ fontSize: 20 }}>◎</span>
+            <span style={{ fontSize: 13 }}>Bir kutucuğa tıkla, açıklamasını oku</span>
+          </div>
+        )}
+      </div>
+    </div>
+  )
+}
 
 // ─── Reklam Terimleri Mantık Haritası ────────────────────────────────────────
 const NODE_W = 144
@@ -888,6 +1102,9 @@ function MantiKHaritasi() {
           <div key={label} style={{ position: 'relative', width: 160, flexShrink: 0, textAlign: 'center' }}>{label}</div>
         ))}
       </div>
+
+      {/* ─── GTM Ekosistemi Zihin Haritası ─────────────────────────────────── */}
+      <GtmZihinHaritasi />
 
       <div style={{ marginTop: '4rem', paddingTop: '2rem', borderTop: '1px solid #eee' }}>
         <ReklamHiyerarsisi
