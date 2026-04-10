@@ -943,7 +943,8 @@ function GtmZihinHaritasi() {
                 onPaste={(e) => {
                   e.preventDefault()
                   const text = e.clipboardData.getData('text/plain')
-                  const cleanText = text.replace(/\r/g, '').replace(/\n\s*\n/g, '\n')
+                  // Satır sonlarını (\r) temizle ve 3 veya daha fazla boşluğu 2'ye (paragraf boşluğu) düşür
+                  const cleanText = text.replace(/\r/g, '').replace(/\n{3,}/g, '\n\n')
                   
                   const target = e.target
                   const start = target.selectionStart
@@ -964,7 +965,7 @@ function GtmZihinHaritasi() {
                 }}
               />
             ) : (
-              <div style={{ fontSize: 14, color: '#333', lineHeight: 1.8 }}>{selectedTerm.desc}</div>
+              <div style={{ fontSize: 14, color: '#333', lineHeight: 1.8, whiteSpace: 'pre-line' }}>{selectedTerm.desc}</div>
             )}
           </>
         ) : (
