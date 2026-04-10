@@ -1541,6 +1541,51 @@ function YzHaritasi() {
   const termMap = Object.fromEntries(terms.map(t => [t.id, t]))
   const selectedTerm = selected ? termMap[selected] : null
 
+  const activeId = hovered || selected
+  const connectedIds = activeId ? new Set([
+    activeId,
+    ...AI_CONNECTIONS.filter(c => c.from === activeId || c.to === activeId).flatMap(c => [c.from, c.to]),
+  ]) : null
+
+  const CANVAS_W = 880
+  const CANVAS_H = 555
+
+  return (
+    <div style={{ padding: '2rem 1.25rem', fontFamily: 'inherit' }}>
+      <div style={{ marginBottom: '1.25rem' }}>
+        <h1 style={{ fontSize: 22, fontWeight: 500, margin: 0 }}>Yapay Zeka Terimleri</h1>
+        <p style={{ fontSize: 13, color: '#888', marginTop: 4 }}>
+          AI ekosisteminin temel kavramları ve aralarındaki ilişkiler · Terime tıkla: açıklamayı gör
+        </p>
+      </div>
+
+      {/* Legenda */}
+      <div style={{ display: 'flex', gap: 14, marginBottom: '1.25rem', flexWrap: 'wrap' }}>
+        {Object.entries(AI_CAT_LABELS).map(([cat, label]) => (
+          <div key={cat} style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 12, color: '#555' }}>
+            <div style={{ width: 10, height: 10, borderRadius: 2, background: AI_CAT_COLORS[cat].stripe }} />
+            {label}
+          </div>
+        ))}
+      </div>
+
+      {/* Ana alan: harita + panel */}
+      <div style={{ display: 'flex', gap: 16, alignItems: 'flex-start' }}>
+
+        {/* Canvas */}
+        <div style={{ flex: 1, overflowX: 'auto', background: '#fafafa', border: '0.5px solid #e8e8e8', borderRadius: 12, padding: '8px 0 10px' }}>
+          <div style={{ position: 'relative', width: CANVAS_W, height: CANVAS_H, margin: '0 auto' }}>
+
+            {/* SVG çizgiler */}
+            <svg width={CANVAS_W} height={CANVAS_H} style={{ position: 'absolute', top: 0, left: 0, pointerEvents: 'none' }}>
+              <defs>
+                <marker id="ai-arr" markerWidth="7" markerHeight="7" refX="5" refY="3.5" orient="auto">
+                  <path d="M0,0 L0,7 L7,3.5 z" fill="#ccc" />
+                </marker>
+                <marker id="ai-arr-hi" markerWidth="7" markerHeight="7" refX="5" refY="3.5" orient="auto">
+                  <path d="M0,0 L0,7 L7,3.5 z" fill="#777" />
+                </marker>
+              </defs>
               {AI_CONNECTIONS.map((conn, i) => {
                 const from = termMap[conn.from]
                 const to = termMap[conn.to]
@@ -1632,6 +1677,7 @@ function YzHaritasi() {
           position: 'sticky',
           top: 80,
         }}>
+          {selectedTerm ? (
             <>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
