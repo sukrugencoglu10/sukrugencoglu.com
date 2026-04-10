@@ -752,6 +752,39 @@ function GtmZihinHaritasi() {
   const [terms, setTerms] = useState(GTM_TERMS)
   const [dragging, setDragging] = useState(null)
   const [editId, setEditId] = useState(null)
+  const [saving, setSaving] = useState(false)
+  const [lastSaved, setLastSaved] = useState(null)
+
+  // Veriyi ilk yüklemede çek
+  useEffect(() => {
+    fetch('/api/gtm-ekosistemi')
+      .then(res => res.json())
+      .then(data => {
+        if (data && Array.isArray(data) && data.length > 0) {
+          setTerms(data)
+        }
+      })
+      .catch(err => console.error('GTM yükleme hatası:', err))
+  }, [])
+
+  const handleSave = async () => {
+    setSaving(true)
+    try {
+      const res = await fetch('/api/gtm-ekosistemi', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(terms),
+      })
+      if (res.ok) {
+        setLastSaved(new Date().toLocaleTimeString())
+      } else {
+        alert('Kaydedilemedi')
+      }
+    } catch (err) {
+      alert('Hata: ' + err.message)
+    }
+    setSaving(false)
+  }
 
   useEffect(() => {
     const handleMouseMove = (e) => {
@@ -792,12 +825,28 @@ function GtmZihinHaritasi() {
 
   return (
     <div style={{ marginTop: '4rem', paddingTop: '2rem', borderTop: '1px solid #eee' }}>
-      <div style={{ marginBottom: '1.25rem' }}>
-        <h2 style={{ fontSize: 20, fontWeight: 500, margin: 0 }}>GTM Ekosistemi</h2>
-        <p style={{ fontSize: 13, color: '#888', marginTop: 4 }}>
-          Data Layer → GTM → Etiket akışı · kutucuğu tutup sürükle, tıklayarak açıklamayı oku
-        </p>
-      </div>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1.25rem' }}>
+          <div>
+            <h2 style={{ fontSize: 20, fontWeight: 500, margin: 0 }}>GTM Ekosistemi</h2>
+            <p style={{ fontSize: 13, color: '#888', marginTop: 4 }}>
+              Data Layer → GTM → Etiket akışı · kutucuğu tutup sürükle, tıklayarak açıklamayı oku
+            </p>
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+            {lastSaved && <span style={{ fontSize: 11, color: '#1D9E75' }}>Kaydedildi: {lastSaved}</span>}
+            <button
+              onClick={handleSave}
+              disabled={saving}
+              style={{
+                background: '#111', color: '#fff', border: 'none', borderRadius: 8,
+                padding: '6px 14px', fontSize: 13, cursor: saving ? 'not-allowed' : 'pointer',
+                opacity: saving ? 0.7 : 1, transition: 'all 0.2s'
+              }}
+            >
+              {saving ? 'Kaydediliyor...' : 'Değişiklikleri Kaydet'}
+            </button>
+          </div>
+        </div>
 
       {/* Legenda */}
       <div style={{ display: 'flex', gap: 16, marginBottom: '1rem', flexWrap: 'wrap' }}>
@@ -1035,6 +1084,39 @@ function MantiKHaritasi() {
   const [hovered, setHovered] = useState(null)
   const [terms, setTerms] = useState(AD_TERMS)
   const [dragging, setDragging] = useState(null)
+  const [saving, setSaving] = useState(false)
+  const [lastSaved, setLastSaved] = useState(null)
+
+  // Veriyi ilk yüklemede çek
+  useEffect(() => {
+    fetch('/api/reklam-terimleri')
+      .then(res => res.json())
+      .then(data => {
+        if (data && Array.isArray(data) && data.length > 0) {
+          setTerms(data)
+        }
+      })
+      .catch(err => console.error('Reklam Terimleri yükleme hatası:', err))
+  }, [])
+
+  const handleSave = async () => {
+    setSaving(true)
+    try {
+      const res = await fetch('/api/reklam-terimleri', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(terms),
+      })
+      if (res.ok) {
+        setLastSaved(new Date().toLocaleTimeString())
+      } else {
+        alert('Kaydedilemedi')
+      }
+    } catch (err) {
+      alert('Hata: ' + err.message)
+    }
+    setSaving(false)
+  }
 
   useEffect(() => {
     const handleMouseMove = (e) => {
@@ -1073,11 +1155,27 @@ function MantiKHaritasi() {
 
   return (
     <div style={{ padding: '2rem 1.25rem', fontFamily: 'inherit' }}>
-      <div style={{ marginBottom: '1.25rem' }}>
-        <h1 style={{ fontSize: 22, fontWeight: 500, margin: 0 }}>Reklam Terimleri</h1>
-        <p style={{ fontSize: 13, color: '#888', marginTop: 4 }}>
-          Dijital reklamcılık kısaltmaları ve funnel içindeki hiyerarşik ilişkileri
-        </p>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1.25rem' }}>
+        <div>
+          <h1 style={{ fontSize: 22, fontWeight: 500, margin: 0 }}>Reklam Terimleri</h1>
+          <p style={{ fontSize: 13, color: '#888', marginTop: 4 }}>
+            Dijital reklamcılık kısaltmaları ve funnel içindeki hiyerarşik ilişkileri
+          </p>
+        </div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+          {lastSaved && <span style={{ fontSize: 11, color: '#1D9E75' }}>Kaydedildi: {lastSaved}</span>}
+          <button
+            onClick={handleSave}
+            disabled={saving}
+            style={{
+              background: '#111', color: '#fff', border: 'none', borderRadius: 8,
+              padding: '6px 14px', fontSize: 13, cursor: saving ? 'not-allowed' : 'pointer',
+              opacity: saving ? 0.7 : 1, transition: 'all 0.2s'
+            }}
+          >
+            {saving ? 'Kaydediliyor...' : 'Değişiklikleri Kaydet'}
+          </button>
+        </div>
       </div>
 
       {/* Legenda */}
