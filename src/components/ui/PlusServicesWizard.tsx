@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useLanguage } from "@/context/LanguageContext";
 import Badge from "@/components/ui/Badge";
 
-export default function PlusServicesWizard() {
+export default function PlusServicesWizard({ showContactButton = false }: { showContactButton?: boolean }) {
   const { t } = useLanguage();
   const ps = t.plusServices;
 
@@ -38,6 +38,7 @@ export default function PlusServicesWizard() {
   const ctaDisabled = isOther && !otherText.trim();
 
   return (
+    <>
     <div className="bg-white rounded-2xl border border-border p-6 sm:p-8 shadow-[var(--shadow-card)]">
 
       {/* Badge + başlık */}
@@ -161,5 +162,17 @@ export default function PlusServicesWizard() {
         </motion.div>
       </AnimatePresence>
     </div>
+
+    {showContactButton && (
+      <a
+        href={`https://wa.me/905324072694?text=${encodeURIComponent(t.contact.whatsapp_message)}`}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="flex items-center justify-center gap-2 px-6 py-3 rounded-xl border border-orange bg-white text-ink text-sm font-semibold hover:text-orange transition-colors duration-200"
+      >
+        {t.services.cta}
+      </a>
+    )}
+  </>
   );
 }

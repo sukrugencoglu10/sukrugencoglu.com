@@ -30,8 +30,8 @@ export default function ContactPage() {
     <ContactSection
       pinnedAnons={
         <div className="flex flex-col gap-8">
-          <AiServicesTeaser inline />
-          <PlusServicesWizard />
+          <AiServicesTeaser inline showCta={false} />
+          <PlusServicesWizard showContactButton />
         </div>
       }
     />
