@@ -1,7 +1,9 @@
 "use client";
 
+import Link from "next/link";
 import { useLanguage } from "@/context/LanguageContext";
 import Badge from "@/components/ui/Badge";
+import { getSlug } from "@/lib/slugs";
 
 export default function AiServicesTeaser({ inline = false, showCta = true }: { inline?: boolean; showCta?: boolean }) {
   const { t, lang } = useLanguage();
@@ -38,14 +40,12 @@ export default function AiServicesTeaser({ inline = false, showCta = true }: { i
 
       {/* Buton */}
       {showCta && (
-        <a
-          href={`https://wa.me/905324072694?text=${encodeURIComponent(t.contact.whatsapp_message)}`}
-          target="_blank"
-          rel="noopener noreferrer"
+        <Link
+          href={`/${lang}/${getSlug(lang, "contact")}`}
           className="inline-flex items-center gap-2 px-6 py-3 rounded-xl border border-orange bg-white text-ink text-sm font-semibold hover:text-orange transition-colors duration-200"
         >
-          {t.services.cta}
-        </a>
+          {t.nav.cta}
+        </Link>
       )}
     </div>
   );
