@@ -756,7 +756,7 @@ function GtmZihinHaritasi() {
   const activeId = hovered || selected
   const connectedIds = activeId ? new Set([
     activeId,
-    ...GTM_CONNECTIONS.filter(c => c.from === activeId || c.to === activeId).flatMap(c => [c.from, c.to]),
+    ...GTM_CONNECTIONS.filter(c => c.from === activeId).map(c => c.to),
   ]) : null
 
   const CANVAS_W = 800
@@ -804,7 +804,7 @@ function GtmZihinHaritasi() {
               if (!from || !to) return null
               const p1 = gtmEdgePoint(from, to)
               const p2 = gtmEdgePoint(to, from)
-              const isActive = activeId && (conn.from === activeId || conn.to === activeId)
+              const isActive = activeId && conn.from === activeId
               return (
                 <line
                   key={i}
