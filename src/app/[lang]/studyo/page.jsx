@@ -825,28 +825,12 @@ function GtmZihinHaritasi() {
 
   return (
     <div style={{ marginTop: '4rem', paddingTop: '2rem', borderTop: '1px solid #eee' }}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1.25rem' }}>
-          <div>
-            <h2 style={{ fontSize: 20, fontWeight: 500, margin: 0 }}>GTM Ekosistemi</h2>
-            <p style={{ fontSize: 13, color: '#888', marginTop: 4 }}>
-              Data Layer → GTM → Etiket akışı · kutucuğu tutup sürükle, tıklayarak açıklamayı oku
-            </p>
-          </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-            {lastSaved && <span style={{ fontSize: 11, color: '#1D9E75' }}>Kaydedildi: {lastSaved}</span>}
-            <button
-              onClick={handleSave}
-              disabled={saving}
-              style={{
-                background: '#111', color: '#fff', border: 'none', borderRadius: 8,
-                padding: '6px 14px', fontSize: 13, cursor: saving ? 'not-allowed' : 'pointer',
-                opacity: saving ? 0.7 : 1, transition: 'all 0.2s'
-              }}
-            >
-              {saving ? 'Kaydediliyor...' : 'Değişiklikleri Kaydet'}
-            </button>
-          </div>
-        </div>
+      <div style={{ marginBottom: '1.25rem' }}>
+        <h2 style={{ fontSize: 20, fontWeight: 500, margin: 0 }}>GTM Ekosistemi</h2>
+        <p style={{ fontSize: 13, color: '#888', marginTop: 4 }}>
+          Data Layer → GTM → Etiket akışı · kutucuğu tutup sürükle, tıklayarak açıklamayı oku
+        </p>
+      </div>
 
       {/* Legenda */}
       <div style={{ display: 'flex', gap: 16, marginBottom: '1rem', flexWrap: 'wrap' }}>
@@ -1024,6 +1008,22 @@ function GtmZihinHaritasi() {
           </div>
         )}
       </div>
+
+      {/* Kaydet butonu — sağ alt */}
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: 12, marginTop: 12 }}>
+        {lastSaved && <span style={{ fontSize: 11, color: '#1D9E75' }}>Kaydedildi: {lastSaved}</span>}
+        <button
+          onClick={handleSave}
+          disabled={saving}
+          style={{
+            background: '#111', color: '#fff', border: 'none', borderRadius: 8,
+            padding: '6px 14px', fontSize: 13, cursor: saving ? 'not-allowed' : 'pointer',
+            opacity: saving ? 0.7 : 1, transition: 'all 0.2s'
+          }}
+        >
+          {saving ? 'Kaydediliyor...' : 'Değişiklikleri Kaydet'}
+        </button>
+      </div>
     </div>
   )
 }
@@ -1155,27 +1155,11 @@ function MantiKHaritasi() {
 
   return (
     <div style={{ padding: '2rem 1.25rem', fontFamily: 'inherit' }}>
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1.25rem' }}>
-        <div>
-          <h1 style={{ fontSize: 22, fontWeight: 500, margin: 0 }}>Reklam Terimleri</h1>
-          <p style={{ fontSize: 13, color: '#888', marginTop: 4 }}>
-            Dijital reklamcılık kısaltmaları ve funnel içindeki hiyerarşik ilişkileri
-          </p>
-        </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-          {lastSaved && <span style={{ fontSize: 11, color: '#1D9E75' }}>Kaydedildi: {lastSaved}</span>}
-          <button
-            onClick={handleSave}
-            disabled={saving}
-            style={{
-              background: '#111', color: '#fff', border: 'none', borderRadius: 8,
-              padding: '6px 14px', fontSize: 13, cursor: saving ? 'not-allowed' : 'pointer',
-              opacity: saving ? 0.7 : 1, transition: 'all 0.2s'
-            }}
-          >
-            {saving ? 'Kaydediliyor...' : 'Değişiklikleri Kaydet'}
-          </button>
-        </div>
+      <div style={{ marginBottom: '1.25rem' }}>
+        <h1 style={{ fontSize: 22, fontWeight: 500, margin: 0 }}>Reklam Terimleri</h1>
+        <p style={{ fontSize: 13, color: '#888', marginTop: 4 }}>
+          Dijital reklamcılık kısaltmaları ve funnel içindeki hiyerarşik ilişkileri
+        </p>
       </div>
 
       {/* Legenda */}
@@ -1359,6 +1343,22 @@ function MantiKHaritasi() {
           focusedDescFontSize={15}
           focusedDescLineHeight={1.8}
         />
+      </div>
+
+      {/* Kaydet butonu — sağ alt */}
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: 12, marginTop: 12 }}>
+        {lastSaved && <span style={{ fontSize: 11, color: '#1D9E75' }}>Kaydedildi: {lastSaved}</span>}
+        <button
+          onClick={handleSave}
+          disabled={saving}
+          style={{
+            background: '#111', color: '#fff', border: 'none', borderRadius: 8,
+            padding: '6px 14px', fontSize: 13, cursor: saving ? 'not-allowed' : 'pointer',
+            opacity: saving ? 0.7 : 1, transition: 'all 0.2s'
+          }}
+        >
+          {saving ? 'Kaydediliyor...' : 'Değişiklikleri Kaydet'}
+        </button>
       </div>
     </div>
   )
