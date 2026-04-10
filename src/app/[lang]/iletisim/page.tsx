@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import ContactSection from "@/components/sections/ContactSection";
+import AiServicesTeaser from "@/components/sections/AiServicesTeaser";
 import PlusServicesWizard from "@/components/ui/PlusServicesWizard";
 
 const baseUrl = "https://www.sukrugencoglu.com";
@@ -25,7 +26,12 @@ export const metadata: Metadata = {
 export default function IletisimPage() {
   return (
     <ContactSection
-      pinnedAnons={<PlusServicesWizard />}
+      pinnedAnons={
+        <div className="flex flex-col gap-8">
+          <AiServicesTeaser inline />
+          <PlusServicesWizard />
+        </div>
+      }
     />
   );
 }
