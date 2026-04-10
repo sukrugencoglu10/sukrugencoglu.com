@@ -904,7 +904,7 @@ function MantiKHaritasi() {
           showNestedFaq={false}
           addToTop={true}
           descMinHeight={150}
-          focusedLeftWidth={220}
+          focusedLeftWidth={360}
           focusedDescMinHeight={300}
           focusedDescFontSize={15}
           focusedDescLineHeight={1.8}
