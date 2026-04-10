@@ -25,7 +25,6 @@ export const metadata: Metadata = {
 export default function IletisimPage() {
   return (
     <ContactSection
-      mobileFirstRight
       pinnedAnons={<AiServicesTeaser inline />}
     />
   );
