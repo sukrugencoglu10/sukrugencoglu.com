@@ -65,15 +65,16 @@ export default function PlusServicesWizard({ showContactButton = false }: { show
   };
 
   return (
-    <div className="flex flex-col gap-5">
+    <div className="flex flex-col gap-6">
 
-      {/* ── Başlık — kartın DIŞINDA ── */}
-      <div className="flex flex-col gap-2">
-        <Badge color="orange">{ps.badge}</Badge>
-        <h2 className="text-3xl sm:text-4xl font-extrabold text-ink tracking-tight">
-          {ps.title}
-        </h2>
-        <p className="text-ink-muted text-sm leading-relaxed">{ps.subtitle}</p>
+      {/* ── Başlık — kartın DIŞINDA (sol kolonla birebir aynı yapı) ── */}
+      <Badge color="orange">{ps.badge}</Badge>
+      <h2 className="text-3xl sm:text-4xl font-extrabold text-ink tracking-tight">
+        {ps.title}
+      </h2>
+      <div>
+        <p className="text-[10px] uppercase tracking-[0.25em] text-ink-subtle mb-1">{ps.form_label}</p>
+        <h3 className="text-lg font-bold text-ink">{ps.form_subtitle}</h3>
       </div>
 
       {/* ── Kart ── */}

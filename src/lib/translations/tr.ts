@@ -152,6 +152,8 @@ export const tr: Translations = {
       "Raporlama & Analitik Paneli",
       "Diğer",
     ],
+    form_label: "Hızlı Başvuru",
+    form_subtitle: "İhtiyacınıza Özel Sistem Kuralım",
     step2_title: "Açıklama",
     step2_subtitle: "Seçtiğiniz hizmet hakkında bize kısaca bilgi verin.",
     description_placeholder: "İhtiyacınızı kısaca açıklayın...",

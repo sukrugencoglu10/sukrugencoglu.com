@@ -150,6 +150,8 @@ export const en = {
       "Reporting & Analytics Dashboard",
       "Other",
     ],
+    form_label: "Quick Application",
+    form_subtitle: "Build the Right System for Your Needs",
     step2_title: "Description",
     step2_subtitle: "Tell us briefly about your needs for the selected service.",
     description_placeholder: "Briefly describe your need...",
@@ -277,6 +279,8 @@ export interface Translations {
     title: string;
     subtitle: string;
     categories: string[];
+    form_label: string;
+    form_subtitle: string;
     step2_title: string;
     step2_subtitle: string;
     description_placeholder: string;
