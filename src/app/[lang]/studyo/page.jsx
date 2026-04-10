@@ -751,6 +751,7 @@ function GtmZihinHaritasi() {
   const [hovered, setHovered] = useState(null)
   const [terms, setTerms] = useState(GTM_TERMS)
   const [dragging, setDragging] = useState(null)
+  const [editId, setEditId] = useState(null)
 
   useEffect(() => {
     const handleMouseMove = (e) => {
@@ -917,14 +918,37 @@ function GtmZihinHaritasi() {
       }}>
         {selectedTerm ? (
           <>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
-              <div style={{ width: 8, height: 8, borderRadius: 2, background: GTM_CAT_COLORS[selectedTerm.cat].stripe, flexShrink: 0 }} />
-              <span style={{ fontSize: 18, fontWeight: 700, color: GTM_CAT_COLORS[selectedTerm.cat].stripe, whiteSpace: 'pre-line' }}>
-                {selectedTerm.abbr}
-              </span>
-              <span style={{ fontSize: 12, color: '#aaa', marginLeft: 4 }}>{selectedTerm.sub}</span>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <div style={{ width: 8, height: 8, borderRadius: 2, background: GTM_CAT_COLORS[selectedTerm.cat].stripe, flexShrink: 0 }} />
+                <span style={{ fontSize: 18, fontWeight: 700, color: GTM_CAT_COLORS[selectedTerm.cat].stripe, whiteSpace: 'pre-line' }}>
+                  {selectedTerm.abbr}
+                </span>
+                <span style={{ fontSize: 12, color: '#aaa', marginLeft: 4 }}>{selectedTerm.sub}</span>
+              </div>
+              <button
+                onClick={() => setEditId(prev => prev === selectedTerm.id ? null : selectedTerm.id)}
+                style={{
+                  fontSize: 11, cursor: 'pointer', padding: '4px 10px',
+                  borderRadius: 6, border: '0.5px solid #d0d0d0', background: '#fff', color: '#555'
+                }}
+              >
+                {editId === selectedTerm.id ? 'Bitti' : 'Düzenle'}
+              </button>
             </div>
-            <div style={{ fontSize: 14, color: '#333', lineHeight: 1.8 }}>{selectedTerm.desc}</div>
+            {editId === selectedTerm.id ? (
+              <textarea
+                value={selectedTerm.desc}
+                onChange={e => setTerms(prev => prev.map(t => t.id === selectedTerm.id ? { ...t, desc: e.target.value } : t))}
+                style={{
+                  width: '100%', minHeight: 120, padding: 12, fontSize: 14, lineHeight: 1.8,
+                  color: '#333', border: '0.5px solid #ccc', borderRadius: 8,
+                  outline: 'none', resize: 'vertical', fontFamily: 'inherit'
+                }}
+              />
+            ) : (
+              <div style={{ fontSize: 14, color: '#333', lineHeight: 1.8 }}>{selectedTerm.desc}</div>
+            )}
           </>
         ) : (
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, color: '#ccc', minHeight: 60 }}>
