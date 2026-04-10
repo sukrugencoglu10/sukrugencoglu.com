@@ -79,7 +79,7 @@ export const tr: Translations = {
     whatsapp_message: "Merhaba Şükrü Bey, hizmetleriniz hakkında bilgi alabilir miyim?",
     whatsapp_tooltip: "WhatsApp'tan Bize Sorun",
     free_analysis_label: "Ücretsiz Analiz",
-    form_title: "Büyüme Potansiyelinizi Keşfedin",
+    form_title: "Reklamlarla Büyüme Potansiyelinizi Keşfedin",
   },
   growthForm: {
     steps: [
