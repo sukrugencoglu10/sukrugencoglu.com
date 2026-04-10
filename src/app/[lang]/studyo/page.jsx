@@ -3166,6 +3166,105 @@ function SSS() {
   )
 }
 
+// ─── Renkler — marka renk paleti referansı ────────────────────────────────────
+const BRAND_COLORS = [
+  { group: 'Logo Renkleri', colors: [
+    { name: 'Pembe',  hex: '#e95578', desc: 'Logo sol kare' },
+    { name: 'Sarı',   hex: '#f4bd13', desc: 'Logo büyük yay' },
+    { name: 'Mavi',   hex: '#1e6296', desc: 'Logo alt yay' },
+    { name: 'Mor',    hex: '#81358a', desc: 'Logo sağ üçgen' },
+  ]},
+  { group: 'Ana Sayfa Renkleri', colors: [
+    { name: 'Yeşil (Accent)',  hex: '#12b347', desc: 'CTA butonları, vurgular' },
+    { name: 'Yeşil Açık',      hex: '#3ecf6a', desc: 'Hover / açık varyant' },
+    { name: 'Yeşil Koyu',      hex: '#0e933a', desc: 'Aktif / koyu varyant' },
+    { name: 'Turuncu',         hex: '#ff6b00', desc: 'Hizmetler CTA, badge' },
+    { name: 'Turuncu Koyu',    hex: '#e56000', desc: 'Hover varyant' },
+  ]},
+  { group: 'Nötr Tonlar', colors: [
+    { name: 'Siyah (Ink)',     hex: '#111111', desc: 'Ana metin rengi' },
+    { name: 'Gri Koyu',       hex: '#444444', desc: 'İkincil metin' },
+    { name: 'Gri',            hex: '#666666', desc: 'Soluk metin' },
+    { name: 'Pembe Nav',      hex: '#e879a0', desc: 'Navbar hover / aktif dot' },
+  ]},
+]
+
+function Renkler() {
+  const [copiedHex, setCopiedHex] = useState(null)
+
+  const copyHex = (hex) => {
+    navigator.clipboard.writeText(hex)
+    setCopiedHex(hex)
+    setTimeout(() => setCopiedHex(null), 1500)
+  }
+
+  return (
+    <div style={{ maxWidth: 700, margin: '0 auto', padding: '2rem 1rem', fontFamily: 'inherit' }}>
+      <div style={{ marginBottom: '2rem' }}>
+        <h1 style={{ fontSize: 22, fontWeight: 500, margin: 0 }}>Marka Renkleri</h1>
+        <p style={{ fontSize: 13, color: '#888', marginTop: 4 }}>
+          Logo ve ana sayfa renk paleti · tıkla kopyala
+        </p>
+      </div>
+
+      {BRAND_COLORS.map(group => (
+        <div key={group.group} style={{ marginBottom: '2rem' }}>
+          <div style={{
+            fontSize: 11,
+            fontWeight: 600,
+            letterSpacing: '0.06em',
+            color: '#aaa',
+            marginBottom: 12,
+            textTransform: 'uppercase',
+          }}>{group.group}</div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(150px, 1fr))', gap: 10 }}>
+            {group.colors.map(c => {
+              const isCopied = copiedHex === c.hex
+              return (
+                <div
+                  key={c.hex + c.name}
+                  onClick={() => copyHex(c.hex)}
+                  style={{
+                    background: '#fff',
+                    border: isCopied ? '1.5px solid #1D9E75' : '0.5px solid #e8e8e8',
+                    borderRadius: 12,
+                    overflow: 'hidden',
+                    cursor: 'pointer',
+                    transition: 'all 0.15s',
+                    boxShadow: isCopied ? '0 0 0 2px #1D9E7533' : 'none',
+                  }}
+                >
+                  {/* Renk önizleme */}
+                  <div style={{
+                    height: 56,
+                    background: c.hex,
+                    borderRadius: '12px 12px 0 0',
+                  }} />
+                  {/* Bilgi */}
+                  <div style={{ padding: '10px 12px' }}>
+                    <div style={{ fontSize: 13, fontWeight: 600, color: '#111', marginBottom: 2 }}>{c.name}</div>
+                    <div style={{
+                      fontSize: 12,
+                      fontFamily: 'monospace',
+                      color: isCopied ? '#1D9E75' : '#888',
+                      fontWeight: isCopied ? 600 : 400,
+                      marginBottom: 4,
+                    }}>
+                      {isCopied ? '✓ Kopyalandı' : c.hex}
+                    </div>
+                    <div style={{ fontSize: 11, color: '#bbb', lineHeight: 1.3 }}>{c.desc}</div>
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+        </div>
+      ))}
+    </div>
+  )
+}
+
 // ─── Araç listesi ─────────────────────────────────────────────────────────────
 const TOOLS = [
   {
@@ -3215,6 +3314,12 @@ const TOOLS = [
     label: 'Vaka Çalışmaları',
     icon: '◆',
     component: VakaCalismalari,
+  },
+  {
+    id: 'renkler',
+    label: 'Renkler',
+    icon: '◕',
+    component: Renkler,
   },
 ]
 
