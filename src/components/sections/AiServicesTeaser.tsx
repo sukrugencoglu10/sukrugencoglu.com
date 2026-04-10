@@ -41,7 +41,7 @@ export default function AiServicesTeaser({ inline = false }: { inline?: boolean 
         href={`https://wa.me/905324072694?text=${encodeURIComponent(t.contact.whatsapp_message)}`}
         target="_blank"
         rel="noopener noreferrer"
-        className="inline-flex items-center gap-2 px-6 py-3 rounded-xl border border-border bg-white text-ink text-sm font-semibold hover:border-orange hover:text-orange transition-colors duration-200"
+        className="inline-flex items-center gap-2 px-6 py-3 rounded-xl border border-orange bg-white text-ink text-sm font-semibold hover:text-orange transition-colors duration-200"
       >
         {t.services.cta}
       </a>
