@@ -26,15 +26,8 @@ export const metadata: Metadata = {
 
 export default function ContactPage() {
   return (
-    <>
-      <ContactSection />
-      <section className="section-padding bg-white border-t border-border">
-        <div className="container-site">
-          <div className="max-w-xl mx-auto flex flex-col gap-6">
-            <PlusServicesWizard showContactButton />
-          </div>
-        </div>
-      </section>
-    </>
+    <ContactSection
+      pinnedAnons={<PlusServicesWizard showContactButton />}
+    />
   );
 }

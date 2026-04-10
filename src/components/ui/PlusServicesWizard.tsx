@@ -15,7 +15,7 @@ export default function PlusServicesWizard({ showContactButton = false }: { show
   const { t } = useLanguage();
   const ps = t.plusServices;
 
-  const [step, setStep] = useState<1 | 2 | 3>(1);
+  const [step, setStep]               = useState<1 | 2 | 3>(1);
   const [selected, setSelected]       = useState("");
   const [description, setDescription] = useState("");
   const [name, setName]               = useState("");
@@ -29,13 +29,8 @@ export default function PlusServicesWizard({ showContactButton = false }: { show
   const namedCategories = ps.categories.slice(0, -1);
   const otherLabel      = ps.categories[ps.categories.length - 1];
 
-  /* ── handlers ── */
   const handleSelect = (cat: string) => { setSelected(cat); setStep(2); };
-
-  const handleBack = (toStep: 1 | 2) => {
-    setStep(toStep);
-    setError(null);
-  };
+  const handleBack   = (toStep: 1 | 2) => { setStep(toStep); setError(null); };
 
   const handleSubmit = async () => {
     if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
@@ -69,10 +64,20 @@ export default function PlusServicesWizard({ showContactButton = false }: { show
     }
   };
 
-  /* ── success state ── */
-  if (sent) {
-    return (
-      <>
+  return (
+    <div className="flex flex-col gap-5">
+
+      {/* ── Başlık — kartın DIŞINDA ── */}
+      <div className="flex flex-col gap-2">
+        <Badge color="orange">{ps.badge}</Badge>
+        <h2 className="text-3xl sm:text-4xl font-extrabold text-ink tracking-tight">
+          {ps.title}
+        </h2>
+        <p className="text-ink-muted text-sm leading-relaxed">{ps.subtitle}</p>
+      </div>
+
+      {/* ── Kart ── */}
+      {sent ? (
         <div className="bg-white rounded-2xl border border-border p-8 shadow-[var(--shadow-card)] flex flex-col items-center text-center gap-4">
           <motion.div
             initial={{ scale: 0 }}
@@ -87,212 +92,154 @@ export default function PlusServicesWizard({ showContactButton = false }: { show
           <h3 className="text-lg font-bold text-ink">{ps.success_title}</h3>
           <p className="text-sm text-ink-muted">{ps.success_desc}</p>
         </div>
-        {showContactButton && <WhatsAppButton t={t} />}
-      </>
-    );
-  }
+      ) : (
+        <div className="bg-white rounded-2xl border border-border p-6 sm:p-8 shadow-[var(--shadow-card)]">
 
-  return (
-    <>
-      <div className="bg-white rounded-2xl border border-border p-6 sm:p-8 shadow-[var(--shadow-card)]">
-
-        {/* Badge + başlık */}
-        <div className="flex flex-col gap-2 mb-6">
-          <Badge color="orange">{ps.badge}</Badge>
-          <h2 className="text-xl font-semibold text-ink">{ps.title}</h2>
-          <p className="text-sm text-ink-muted">{ps.subtitle}</p>
-        </div>
-
-        {/* Progress bar (3 segment) */}
-        <div className="flex gap-2 mb-8">
-          {[1, 2, 3].map((n) => (
-            <div key={n} className="flex flex-col items-center gap-2 flex-1">
-              <div
-                className="h-1 w-full rounded-full transition-all duration-500"
-                style={
-                  step >= n
-                    ? { backgroundColor: "#ff6b00", boxShadow: "0 0 8px rgba(255,107,0,0.4)" }
-                    : { backgroundColor: "var(--color-border)" }
-                }
-              />
-              <span
-                className="text-[10px] uppercase tracking-widest transition-colors"
-                style={{ color: step === n ? "#ff6b00" : "var(--color-ink-subtle)" }}
-              >
-                0{n}
-              </span>
-            </div>
-          ))}
-        </div>
-
-        {/* Adım içeriği */}
-        <AnimatePresence mode="wait">
-          <motion.div
-            key={step}
-            initial={{ x: 20, opacity: 0 }}
-            animate={{ x: 0, opacity: 1 }}
-            exit={{ x: -20, opacity: 0 }}
-            transition={{ duration: 0.25 }}
-          >
-
-            {/* ── ADIM 1: Kategori seçimi ── */}
-            {step === 1 && (
-              <>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mb-3">
-                  {namedCategories.map((cat) => (
-                    <button
-                      key={cat}
-                      onClick={() => handleSelect(cat)}
-                      className="p-3.5 rounded-xl border text-left text-sm font-medium transition-all
-                        border-border bg-surface text-ink
-                        hover:border-orange/30 hover:bg-orange/5 hover:text-orange"
-                    >
-                      {cat}
-                    </button>
-                  ))}
-                </div>
-                <button
-                  onClick={() => handleSelect(otherLabel)}
-                  className="w-full p-3.5 rounded-xl border border-dashed text-left text-sm transition-all
-                    border-border text-ink-muted hover:border-orange/40 hover:text-orange"
-                >
-                  + {otherLabel}
-                </button>
-              </>
-            )}
-
-            {/* ── ADIM 2: Açıklama ── */}
-            {step === 2 && (
-              <>
-                <h3 className="text-base font-semibold text-ink mb-1">{ps.step2_title}</h3>
-                <p className="text-sm text-ink-muted mb-4">{ps.step2_subtitle}</p>
-
-                {/* Seçilen kategori chip */}
-                <div className="mb-4 px-4 py-2.5 rounded-xl bg-orange/10 border border-orange/30 text-orange text-sm font-medium">
-                  {selected}
-                </div>
-
-                {/* Açıklama textarea */}
-                <textarea
-                  rows={4}
-                  placeholder={ps.description_placeholder}
-                  value={description}
-                  onChange={(e) => setDescription(e.target.value)}
-                  className="w-full p-3.5 rounded-xl border border-border bg-surface text-ink
-                    placeholder:text-ink-subtle text-sm resize-none mb-5
-                    focus:outline-none focus:ring-2 focus:ring-[#ff6b00]/40 focus:border-[#ff6b00] transition-all"
+          {/* Progress bar (3 segment) */}
+          <div className="flex gap-2 mb-8">
+            {[1, 2, 3].map((n) => (
+              <div key={n} className="flex flex-col items-center gap-2 flex-1">
+                <div
+                  className="h-1 w-full rounded-full transition-all duration-500"
+                  style={
+                    step >= n
+                      ? { backgroundColor: "#ff6b00", boxShadow: "0 0 8px rgba(255,107,0,0.4)" }
+                      : { backgroundColor: "var(--color-border)" }
+                  }
                 />
-
-                <button
-                  onClick={() => setStep(3)}
-                  className="w-full py-3.5 rounded-xl bg-[#ff6b00] hover:bg-[#e56000] text-white
-                    font-medium text-sm transition-all
-                    shadow-[0_4px_16px_rgba(255,107,0,0.35)] hover:shadow-[0_4px_20px_rgba(255,107,0,0.45)]"
+                <span
+                  className="text-[10px] uppercase tracking-widest transition-colors"
+                  style={{ color: step === n ? "#ff6b00" : "var(--color-ink-subtle)" }}
                 >
-                  {ps.next}
-                </button>
+                  0{n}
+                </span>
+              </div>
+            ))}
+          </div>
 
-                <button
-                  onClick={() => handleBack(1)}
-                  className="text-xs text-ink-subtle hover:text-ink-muted transition-colors text-center mt-3 w-full"
-                >
-                  {ps.back}
-                </button>
-              </>
-            )}
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={step}
+              initial={{ x: 20, opacity: 0 }}
+              animate={{ x: 0, opacity: 1 }}
+              exit={{ x: -20, opacity: 0 }}
+              transition={{ duration: 0.25 }}
+            >
+              {/* ── ADIM 1: Kategori ── */}
+              {step === 1 && (
+                <>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mb-3">
+                    {namedCategories.map((cat) => (
+                      <button
+                        key={cat}
+                        onClick={() => handleSelect(cat)}
+                        className="p-3.5 rounded-xl border text-left text-sm font-medium transition-all
+                          border-border bg-surface text-ink
+                          hover:border-orange/30 hover:bg-orange/5 hover:text-orange"
+                      >
+                        {cat}
+                      </button>
+                    ))}
+                  </div>
+                  <button
+                    onClick={() => handleSelect(otherLabel)}
+                    className="w-full p-3.5 rounded-xl border border-dashed text-left text-sm transition-all
+                      border-border text-ink-muted hover:border-orange/40 hover:text-orange"
+                  >
+                    + {otherLabel}
+                  </button>
+                </>
+              )}
 
-            {/* ── ADIM 3: İletişim bilgileri ── */}
-            {step === 3 && (
-              <>
-                <h3 className="text-base font-semibold text-ink mb-1">{ps.step3_title}</h3>
-                <p className="text-sm text-ink-muted mb-4">{ps.step3_subtitle}</p>
+              {/* ── ADIM 2: Açıklama ── */}
+              {step === 2 && (
+                <>
+                  <h3 className="text-base font-semibold text-ink mb-1">{ps.step2_title}</h3>
+                  <p className="text-sm text-ink-muted mb-4">{ps.step2_subtitle}</p>
 
-                <div className="flex gap-3 mb-3">
-                  <input
-                    type="text"
-                    placeholder={ps.name_placeholder}
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                    className="flex-1 p-3 rounded-xl border border-border bg-surface text-ink text-sm
-                      placeholder:text-ink-subtle
+                  <div className="mb-4 px-4 py-2.5 rounded-xl bg-orange/10 border border-orange/30 text-orange text-sm font-medium">
+                    {selected}
+                  </div>
+
+                  <textarea
+                    rows={4}
+                    placeholder={ps.description_placeholder}
+                    value={description}
+                    onChange={(e) => setDescription(e.target.value)}
+                    className="w-full p-3.5 rounded-xl border border-border bg-surface text-ink
+                      placeholder:text-ink-subtle text-sm resize-none mb-5
                       focus:outline-none focus:ring-2 focus:ring-[#ff6b00]/40 focus:border-[#ff6b00] transition-all"
                   />
-                  <input
-                    type="text"
-                    placeholder={ps.surname_placeholder}
-                    value={surname}
-                    onChange={(e) => setSurname(e.target.value)}
-                    className="flex-1 p-3 rounded-xl border border-border bg-surface text-ink text-sm
-                      placeholder:text-ink-subtle
-                      focus:outline-none focus:ring-2 focus:ring-[#ff6b00]/40 focus:border-[#ff6b00] transition-all"
-                  />
-                </div>
 
-                <input
-                  type="tel"
-                  placeholder={ps.phone_placeholder}
-                  value={phone}
-                  onChange={(e) => setPhone(e.target.value)}
-                  className="w-full p-3 rounded-xl border border-border bg-surface text-ink text-sm
-                    placeholder:text-ink-subtle mb-3
-                    focus:outline-none focus:ring-2 focus:ring-[#ff6b00]/40 focus:border-[#ff6b00] transition-all"
-                />
+                  <button
+                    onClick={() => setStep(3)}
+                    className="w-full py-3.5 rounded-xl bg-[#ff6b00] hover:bg-[#e56000] text-white
+                      font-medium text-sm transition-all
+                      shadow-[0_4px_16px_rgba(255,107,0,0.35)] hover:shadow-[0_4px_20px_rgba(255,107,0,0.45)]"
+                  >
+                    {ps.next}
+                  </button>
 
-                <input
-                  type="email"
-                  placeholder={ps.email_placeholder}
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="w-full p-3 rounded-xl border border-border bg-surface text-ink text-sm
-                    placeholder:text-ink-subtle mb-5
-                    focus:outline-none focus:ring-2 focus:ring-[#ff6b00]/40 focus:border-[#ff6b00] transition-all"
-                />
+                  <button onClick={() => handleBack(1)} className="text-xs text-ink-subtle hover:text-ink-muted transition-colors text-center mt-3 w-full">
+                    {ps.back}
+                  </button>
+                </>
+              )}
 
-                {error && (
-                  <p className="text-red-500 text-xs mb-3">{error}</p>
-                )}
+              {/* ── ADIM 3: İletişim ── */}
+              {step === 3 && (
+                <>
+                  <h3 className="text-base font-semibold text-ink mb-1">{ps.step3_title}</h3>
+                  <p className="text-sm text-ink-muted mb-4">{ps.step3_subtitle}</p>
 
-                <button
-                  onClick={handleSubmit}
-                  disabled={isLoading}
-                  className="w-full py-3.5 rounded-xl bg-[#ff6b00] hover:bg-[#e56000] text-white
-                    font-medium text-sm transition-all disabled:opacity-60 disabled:cursor-not-allowed
-                    shadow-[0_4px_16px_rgba(255,107,0,0.35)] hover:shadow-[0_4px_20px_rgba(255,107,0,0.45)]"
-                >
-                  {isLoading ? ps.sending : ps.submit}
-                </button>
+                  <div className="flex gap-3 mb-3">
+                    <input type="text" placeholder={ps.name_placeholder} value={name}
+                      onChange={(e) => setName(e.target.value)}
+                      className="flex-1 p-3 rounded-xl border border-border bg-surface text-ink text-sm placeholder:text-ink-subtle focus:outline-none focus:ring-2 focus:ring-[#ff6b00]/40 focus:border-[#ff6b00] transition-all" />
+                    <input type="text" placeholder={ps.surname_placeholder} value={surname}
+                      onChange={(e) => setSurname(e.target.value)}
+                      className="flex-1 p-3 rounded-xl border border-border bg-surface text-ink text-sm placeholder:text-ink-subtle focus:outline-none focus:ring-2 focus:ring-[#ff6b00]/40 focus:border-[#ff6b00] transition-all" />
+                  </div>
 
-                <button
-                  onClick={() => handleBack(2)}
-                  className="text-xs text-ink-subtle hover:text-ink-muted transition-colors text-center mt-3 w-full"
-                >
-                  {ps.back}
-                </button>
-              </>
-            )}
+                  <input type="tel" placeholder={ps.phone_placeholder} value={phone}
+                    onChange={(e) => setPhone(e.target.value)}
+                    className="w-full p-3 rounded-xl border border-border bg-surface text-ink text-sm placeholder:text-ink-subtle mb-3 focus:outline-none focus:ring-2 focus:ring-[#ff6b00]/40 focus:border-[#ff6b00] transition-all" />
 
-          </motion.div>
-        </AnimatePresence>
-      </div>
+                  <input type="email" placeholder={ps.email_placeholder} value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    className="w-full p-3 rounded-xl border border-border bg-surface text-ink text-sm placeholder:text-ink-subtle mb-5 focus:outline-none focus:ring-2 focus:ring-[#ff6b00]/40 focus:border-[#ff6b00] transition-all" />
 
-      {showContactButton && <WhatsAppButton t={t} />}
-    </>
-  );
-}
+                  {error && <p className="text-red-500 text-xs mb-3">{error}</p>}
 
-function WhatsAppButton({ t }: { t: ReturnType<typeof import("@/context/LanguageContext").useLanguage>["t"] }) {
-  const ps = t.plusServices;
-  return (
-    <a
-      href={`https://wa.me/905324072694?text=${encodeURIComponent(t.contact.whatsapp_message)}`}
-      target="_blank"
-      rel="noopener noreferrer"
-      className="flex items-center justify-center gap-2 w-full py-3.5 rounded-xl
-        bg-[#ff6b00] hover:bg-[#e56000] text-white font-medium text-sm transition-all
-        shadow-[0_4px_16px_rgba(255,107,0,0.35)] hover:shadow-[0_4px_20px_rgba(255,107,0,0.45)]"
-    >
-      {WA_ICON}
-      {ps.whatsapp_cta}
-    </a>
+                  <button onClick={handleSubmit} disabled={isLoading}
+                    className="w-full py-3.5 rounded-xl bg-[#ff6b00] hover:bg-[#e56000] text-white font-medium text-sm transition-all disabled:opacity-60 disabled:cursor-not-allowed shadow-[0_4px_16px_rgba(255,107,0,0.35)] hover:shadow-[0_4px_20px_rgba(255,107,0,0.45)]">
+                    {isLoading ? ps.sending : ps.submit}
+                  </button>
+
+                  <button onClick={() => handleBack(2)} className="text-xs text-ink-subtle hover:text-ink-muted transition-colors text-center mt-3 w-full">
+                    {ps.back}
+                  </button>
+                </>
+              )}
+            </motion.div>
+          </AnimatePresence>
+        </div>
+      )}
+
+      {/* ── WhatsApp butonu ── */}
+      {showContactButton && (
+        <a
+          href={`https://wa.me/905324072694?text=${encodeURIComponent(t.contact.whatsapp_message)}`}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="flex items-center justify-center gap-2 w-full py-3.5 rounded-xl
+            bg-[#ff6b00] hover:bg-[#e56000] text-white font-medium text-sm transition-all
+            shadow-[0_4px_16px_rgba(255,107,0,0.35)] hover:shadow-[0_4px_20px_rgba(255,107,0,0.45)]"
+        >
+          {WA_ICON}
+          {ps.whatsapp_cta}
+        </a>
+      )}
+    </div>
   );
 }
