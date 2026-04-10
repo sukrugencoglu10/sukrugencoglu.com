@@ -750,6 +750,7 @@ function GtmZihinHaritasi() {
   const [selected, setSelected] = useState(null)
   const [hovered, setHovered] = useState(null)
   const [terms, setTerms] = useState(GTM_TERMS)
+  const [connections, setConnections] = useState(GTM_CONNECTIONS)
   const [dragging, setDragging] = useState(null)
   const [editId, setEditId] = useState(null)
   const [saving, setSaving] = useState(false)
@@ -760,7 +761,12 @@ function GtmZihinHaritasi() {
     fetch('/api/gtm-ekosistemi')
       .then(res => res.json())
       .then(data => {
-        if (data && Array.isArray(data) && data.length > 0) {
+        if (data && !Array.isArray(data) && data.terms) {
+          // Gelişmiş format (nesne)
+          setTerms(data.terms)
+          setConnections(data.connections || [])
+        } else if (data && Array.isArray(data) && data.length > 0) {
+          // Eski format (dizi)
           setTerms(data)
         }
       })
@@ -773,7 +779,7 @@ function GtmZihinHaritasi() {
       const res = await fetch('/api/gtm-ekosistemi', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(terms),
+        body: JSON.stringify({ terms, connections }),
       })
       if (res.ok) {
         setLastSaved(new Date().toLocaleTimeString())
@@ -817,19 +823,58 @@ function GtmZihinHaritasi() {
   const activeId = hovered || selected
   const connectedIds = activeId ? new Set([
     activeId,
-    ...GTM_CONNECTIONS.filter(c => c.from === activeId).map(c => c.to),
+    ...connections.filter(c => c.from === activeId).map(c => c.to),
+    ...connections.filter(c => c.to === activeId).map(c => c.from),
   ]) : null
+
+  const handleAddNode = () => {
+    const newId = 'node_' + Math.random().toString(36).substr(2, 9)
+    const newNode = {
+      id: newId,
+      abbr: 'Yeni Kutu',
+      sub: 'Açıklama alt başlığı',
+      cat: 'veri',
+      x: 400 + (Math.random() * 100),
+      y: 200 + (Math.random() * 100),
+      desc: 'Bu kutu için açıklama yazın...'
+    }
+    setTerms([...terms, newNode])
+    setSelected(newId)
+    setEditId(newId)
+  }
+
+  const handleAddConnection = (targetId) => {
+    if (!selected || !targetId || selected === targetId) return
+    if (connections.find(c => c.from === selected && c.to === targetId)) return
+    setConnections([...connections, { from: selected, to: targetId }])
+  }
+
+  const handleRemoveConnection = (targetId) => {
+    setConnections(connections.filter(c => !(c.from === selected && c.to === targetId)))
+  }
 
   const CANVAS_W = 1000
   const CANVAS_H = 500
 
   return (
     <div style={{ marginTop: '4rem', paddingTop: '2rem', borderTop: '1px solid #eee' }}>
-      <div style={{ marginBottom: '1.25rem' }}>
-        <h2 style={{ fontSize: 20, fontWeight: 500, margin: 0 }}>GTM Ekosistemi</h2>
-        <p style={{ fontSize: 13, color: '#888', marginTop: 4 }}>
-          Data Layer → GTM → Etiket akışı · kutucuğu tutup sürükle, tıklayarak açıklamayı oku
-        </p>
+      <div style={{ marginBottom: '1.25rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <div>
+          <h2 style={{ fontSize: 20, fontWeight: 500, margin: 0 }}>GTM Ekosistemi</h2>
+          <p style={{ fontSize: 13, color: '#888', marginTop: 4 }}>
+            Data Layer → GTM → Etiket akışı · kutucuğu tutup sürükle, tıklayarak açıklamayı oku
+          </p>
+        </div>
+        <button
+          onClick={handleAddNode}
+          style={{
+            background: '#fff', border: '1px solid #ddd', borderRadius: 8,
+            padding: '6px 12px', fontSize: 12, cursor: 'pointer', transition: 'all 0.2s',
+            display: 'flex', alignItems: 'center', gap: 6, color: '#444'
+          }}
+        >
+          <span style={{ fontSize: 16, fontWeight: 'bold' }}>+</span> Yeni Kutu Ekle
+        </button>
       </div>
 
       {/* Legenda */}
@@ -859,13 +904,13 @@ function GtmZihinHaritasi() {
                 <path d="M0,0 L0,7 L7,3.5 z" fill="#888" />
               </marker>
             </defs>
-            {GTM_CONNECTIONS.map((conn, i) => {
+            {connections.map((conn, i) => {
               const from = termMap[conn.from]
               const to = termMap[conn.to]
               if (!from || !to) return null
               const p1 = gtmEdgePoint(from, to)
               const p2 = gtmEdgePoint(to, from)
-              const isActive = activeId && conn.from === activeId
+              const isActive = activeId && (conn.from === activeId || conn.to === activeId)
               return (
                 <line
                   key={i}
@@ -970,33 +1015,129 @@ function GtmZihinHaritasi() {
               </button>
             </div>
             {editId === selectedTerm.id ? (
-              <textarea
-                value={selectedTerm.desc}
-                onChange={e => setTerms(prev => prev.map(t => t.id === selectedTerm.id ? { ...t, desc: e.target.value } : t))}
-                onPaste={(e) => {
-                  e.preventDefault()
-                  const text = e.clipboardData.getData('text/plain')
-                  // Satır sonlarını (\r) temizle ve 3 veya daha fazla boşluğu 2'ye (paragraf boşluğu) düşür
-                  const cleanText = text.replace(/\r/g, '').replace(/\n{3,}/g, '\n\n')
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+                <div style={{ display: 'flex', gap: 12 }}>
+                  <div style={{ flex: 1 }}>
+                    <label style={{ fontSize: 11, color: '#888', display: 'block', marginBottom: 4 }}>Kısa Ad</label>
+                    <input
+                      value={selectedTerm.abbr}
+                      onChange={e => setTerms(prev => prev.map(t => t.id === selectedTerm.id ? { ...t, abbr: e.target.value } : t))}
+                      style={{ width: '100%', padding: '6px 10px', fontSize: 13, border: '0.5px solid #ccc', borderRadius: 6, outline: 'none' }}
+                    />
+                  </div>
+                  <div style={{ flex: 1 }}>
+                    <label style={{ fontSize: 11, color: '#888', display: 'block', marginBottom: 4 }}>Alt Başlık</label>
+                    <input
+                      value={selectedTerm.sub}
+                      onChange={e => setTerms(prev => prev.map(t => t.id === selectedTerm.id ? { ...t, sub: e.target.value } : t))}
+                      style={{ width: '100%', padding: '6px 10px', fontSize: 13, border: '0.5px solid #ccc', borderRadius: 6, outline: 'none' }}
+                    />
+                  </div>
+                  <div style={{ flex: 1 }}>
+                    <label style={{ fontSize: 11, color: '#888', display: 'block', marginBottom: 4 }}>Kategori</label>
+                    <select
+                      value={selectedTerm.cat}
+                      onChange={e => setTerms(prev => prev.map(t => t.id === selectedTerm.id ? { ...t, cat: e.target.value } : t))}
+                      style={{ width: '100%', padding: '6px 10px', fontSize: 13, border: '0.5px solid #ccc', borderRadius: 6, outline: 'none' }}
+                    >
+                      <option value="veri">Veri Kaynağı</option>
+                      <option value="merkez">Merkez</option>
+                      <option value="bileşen">GTM Bileşeni</option>
+                      <option value="hedef">Hedef Platform</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div>
+                  <label style={{ fontSize: 11, color: '#888', display: 'block', marginBottom: 4 }}>Açıklama</label>
+                  <textarea
+                    value={selectedTerm.desc}
+                    onChange={e => setTerms(prev => prev.map(t => t.id === selectedTerm.id ? { ...t, desc: e.target.value } : t))}
+                    onPaste={(e) => {
+                      e.preventDefault()
+                      const text = e.clipboardData.getData('text/plain')
+                      const cleanText = text.replace(/\r/g, '').replace(/\n{3,}/g, '\n\n')
+                      const target = e.target
+                      const start = target.selectionStart
+                      const end = target.selectionEnd
+                      const current = target.value
+                      const newValue = current.substring(0, start) + cleanText + current.substring(end)
+                      setTerms(prev => prev.map(t => t.id === selectedTerm.id ? { ...t, desc: newValue } : t))
+                      setTimeout(() => { target.selectionStart = target.selectionEnd = start + cleanText.length }, 0)
+                    }}
+                    style={{
+                      width: '100%', minHeight: 100, padding: 12, fontSize: 14, lineHeight: 1.8,
+                      color: '#333', border: '0.5px solid #ccc', borderRadius: 8,
+                      outline: 'none', resize: 'vertical', fontFamily: 'inherit'
+                    }}
+                  />
+                </div>
+
+                <div style={{ borderTop: '0.5px solid #eee', paddingTop: 12 }}>
+                  <label style={{ fontSize: 11, color: '#888', display: 'block', marginBottom: 8, fontWeight: 600 }}>BAĞLANTI YÖNETİMİ</label>
                   
-                  const target = e.target
-                  const start = target.selectionStart
-                  const end = target.selectionEnd
-                  const current = target.value
-                  const newValue = current.substring(0, start) + cleanText + current.substring(end)
-                  
-                  setTerms(prev => prev.map(t => t.id === selectedTerm.id ? { ...t, desc: newValue } : t))
-                  
-                  setTimeout(() => {
-                    target.selectionStart = target.selectionEnd = start + cleanText.length
-                  }, 0)
-                }}
-                style={{
-                  width: '100%', minHeight: 120, padding: 12, fontSize: 14, lineHeight: 1.8,
-                  color: '#333', border: '0.5px solid #ccc', borderRadius: 8,
-                  outline: 'none', resize: 'vertical', fontFamily: 'inherit'
-                }}
-              />
+                  {/* Yeni bağlantı ekle */}
+                  <div style={{ display: 'flex', gap: 10, alignItems: 'center', marginBottom: 16 }}>
+                    <select
+                      id="target-node-select"
+                      style={{ flex: 1, padding: '6px 10px', fontSize: 12, border: '0.5px solid #ccc', borderRadius: 6, outline: 'none', background: '#fff' }}
+                    >
+                      <option value="">Bağlanacak kutuyu seç...</option>
+                      {terms.filter(t => t.id !== selectedTerm.id).map(t => (
+                        <option key={t.id} value={t.id}>{t.abbr} ({t.sub})</option>
+                      ))}
+                    </select>
+                    <button
+                      onClick={() => {
+                        const sel = document.getElementById('target-node-select')
+                        if (sel.value) handleAddConnection(sel.value)
+                      }}
+                      style={{ padding: '6px 14px', fontSize: 12, background: '#f5f5f5', border: '0.5px solid #ccc', borderRadius: 6, cursor: 'pointer' }}
+                    >
+                      Bağla
+                    </button>
+                  </div>
+
+                  {/* Mevcut bağlantılar */}
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+                    {connections.filter(c => c.from === selectedTerm.id).map(c => {
+                      const target = termMap[c.to]
+                      if (!target) return null
+                      return (
+                        <div key={c.to} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '4px 8px', background: '#f9f9f9', border: '0.5px solid #eee', borderRadius: 6, fontSize: 11 }}>
+                          <span>→ <b>{target.abbr}</b></span>
+                          <button onClick={() => handleRemoveConnection(c.to)} style={{ border: 'none', background: 'none', cursor: 'pointer', color: '#ff4d4f', fontWeight: 'bold', marginLeft: 4 }}>×</button>
+                        </div>
+                      )
+                    })}
+                    {connections.filter(c => c.to === selectedTerm.id).map(c => {
+                      const source = termMap[c.from]
+                      if (!source) return null
+                      return (
+                        <div key={c.from} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '4px 8px', background: '#fff', border: '0.5px solid #eee', borderRadius: 6, fontSize: 11, color: '#888', borderStyle: 'dashed' }}>
+                          <span>← <b>{source.abbr}</b> (Gelen)</span>
+                        </div>
+                      )
+                    })}
+                  </div>
+                </div>
+
+                 <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10, borderTop: '0.5px solid #eee', paddingTop: 12 }}>
+                    <button
+                      onClick={() => {
+                        if (confirm('Bu kutuyu ve tüm bağlantılarını silmek istediğinize emin misiniz?')) {
+                          setConnections(connections.filter(c => c.from !== selectedTerm.id && c.to !== selectedTerm.id))
+                          setTerms(terms.filter(t => t.id !== selectedTerm.id))
+                          setSelected(null)
+                          setEditId(null)
+                        }
+                      }}
+                      style={{ color: '#ff4d4f', fontSize: 12, background: 'none', border: 'none', cursor: 'pointer', textDecoration: 'underline' }}
+                    >
+                      Kutuyu Sil
+                    </button>
+                 </div>
+               </div>
             ) : (
               <div style={{ fontSize: 14, color: '#333', lineHeight: 1.8, whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>{selectedTerm.desc}</div>
             )}
@@ -1027,6 +1168,8 @@ function GtmZihinHaritasi() {
     </div>
   )
 }
+
+
 
 // ─── Reklam Terimleri Mantık Haritası ────────────────────────────────────────
 const NODE_W = 144
@@ -1081,9 +1224,12 @@ function edgePoint(from, to) {
 }
 
 function MantiKHaritasi() {
+  const [selected, setSelected] = useState(null)
   const [hovered, setHovered] = useState(null)
   const [terms, setTerms] = useState(AD_TERMS)
+  const [connections, setConnections] = useState(CONNECTIONS)
   const [dragging, setDragging] = useState(null)
+  const [editId, setEditId] = useState(null)
   const [saving, setSaving] = useState(false)
   const [lastSaved, setLastSaved] = useState(null)
 
@@ -1092,7 +1238,10 @@ function MantiKHaritasi() {
     fetch('/api/reklam-terimleri')
       .then(res => res.json())
       .then(data => {
-        if (data && Array.isArray(data) && data.length > 0) {
+        if (data && !Array.isArray(data) && data.terms) {
+          setTerms(data.terms)
+          setConnections(data.connections || [])
+        } else if (data && Array.isArray(data) && data.length > 0) {
           setTerms(data)
         }
       })
@@ -1105,7 +1254,7 @@ function MantiKHaritasi() {
       const res = await fetch('/api/reklam-terimleri', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(terms),
+        body: JSON.stringify({ terms, connections }),
       })
       if (res.ok) {
         setLastSaved(new Date().toLocaleTimeString())
@@ -1144,22 +1293,64 @@ function MantiKHaritasi() {
   }, [dragging])
 
   const termMap = Object.fromEntries(terms.map(t => [t.id, t]))
+  const selectedTerm = selected ? termMap[selected] : null
 
-  const connectedIds = hovered ? new Set([
-    hovered,
-    ...CONNECTIONS.filter(c => c.from === hovered || c.to === hovered).flatMap(c => [c.from, c.to]),
+  const activeId = hovered || selected
+  const connectedIds = activeId ? new Set([
+    activeId,
+    ...connections.filter(c => c.from === activeId).map(c => c.to),
+    ...connections.filter(c => c.to === activeId).map(c => c.from),
   ]) : null
+
+  const handleAddNode = () => {
+    const newId = 'node_' + Math.random().toString(36).substr(2, 9)
+    const newNode = {
+      id: newId,
+      abbr: 'Yeni Terim',
+      tr: 'Türkçe Açıklama',
+      en: 'English Translation',
+      cat: 'olcum',
+      x: 400 + (Math.random() * 100),
+      y: 200 + (Math.random() * 100),
+      desc: 'Bu terim için detaylı açıklama yazın...'
+    }
+    setTerms([...terms, newNode])
+    setSelected(newId)
+    setEditId(newId)
+  }
+
+  const handleAddConnection = (targetId) => {
+    if (!selected || !targetId || selected === targetId) return
+    if (connections.find(c => c.from === selected && c.to === targetId)) return
+    setConnections([...connections, { from: selected, to: targetId }])
+  }
+
+  const handleRemoveConnection = (targetId) => {
+    setConnections(connections.filter(c => !(c.from === selected && c.to === targetId)))
+  }
 
   const CANVAS_W = 1000
   const CANVAS_H = 460
 
   return (
     <div style={{ padding: '2rem 1.25rem', fontFamily: 'inherit' }}>
-      <div style={{ marginBottom: '1.25rem' }}>
-        <h1 style={{ fontSize: 22, fontWeight: 500, margin: 0 }}>Reklam Terimleri</h1>
-        <p style={{ fontSize: 13, color: '#888', marginTop: 4 }}>
-          Dijital reklamcılık kısaltmaları ve funnel içindeki hiyerarşik ilişkileri
-        </p>
+      <div style={{ marginBottom: '1.25rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <div>
+          <h1 style={{ fontSize: 22, fontWeight: 500, margin: 0 }}>Reklam Terimleri</h1>
+          <p style={{ fontSize: 13, color: '#888', marginTop: 4 }}>
+            Dijital reklamcılık kısaltmaları ve funnel içindeki hiyerarşik ilişkileri
+          </p>
+        </div>
+        <button
+          onClick={handleAddNode}
+          style={{
+            background: '#fff', border: '1px solid #ddd', borderRadius: 8,
+            padding: '6px 12px', fontSize: 12, cursor: 'pointer', transition: 'all 0.2s',
+            display: 'flex', alignItems: 'center', gap: 6, color: '#444'
+          }}
+        >
+          <span style={{ fontSize: 16, fontWeight: 'bold' }}>+</span> Yeni Kutu Ekle
+        </button>
       </div>
 
       {/* Legenda */}
@@ -1190,13 +1381,13 @@ function MantiKHaritasi() {
                 <path d="M0,0 L0,7 L7,3.5 z" fill="#888" />
               </marker>
             </defs>
-            {CONNECTIONS.map((conn, i) => {
+            {connections.map((conn, i) => {
               const from = termMap[conn.from]
               const to = termMap[conn.to]
               if (!from || !to) return null
               const p1 = edgePoint(from, to)
               const p2 = edgePoint(to, from)
-              const isActive = hovered && (conn.from === hovered || conn.to === hovered)
+              const isActive = activeId && (conn.from === activeId || conn.to === activeId)
               return (
                 <line
                   key={i}
@@ -1209,64 +1400,24 @@ function MantiKHaritasi() {
             })}
           </svg>
 
-          {/* KPI ayrı gösterge olarak üstte */}
-          {(() => {
-            const t = termMap['kpi']
-            const colors = CAT_COLORS[t.cat]
-            const isHovered = hovered === t.id
-            const isDimmed = connectedIds && !connectedIds.has(t.id)
-            return (
-              <div
-                key={t.id}
-                onMouseEnter={() => setHovered(t.id)}
-                onMouseLeave={() => setHovered(null)}
-                onMouseDown={(e) => {
-                  if (e.button !== 0) return
-                  setDragging({
-                    id: t.id,
-                    startMouseX: e.clientX,
-                    startMouseY: e.clientY,
-                    startNodeX: t.x,
-                    startNodeY: t.y
-                  })
-                }}
-                style={{
-                  position: 'absolute',
-                  left: t.x - NODE_W / 2,
-                  top: t.y - NODE_H / 2,
-                  width: NODE_W,
-                  height: NODE_H,
-                  background: colors.bg,
-                  border: `1px solid ${isHovered ? colors.stripe : colors.border}`,
-                  boxShadow: isHovered
-                    ? `inset 3px 0 0 ${colors.stripe}, 0 4px 16px ${colors.stripe}44`
-                    : `inset 3px 0 0 ${colors.stripe}, 0 1px 4px rgba(0,0,0,0.07)`,
-                  borderRadius: 8,
-                  padding: '7px 10px 7px 12px',
-                  opacity: isDimmed ? 0.25 : 1,
-                  transition: 'all 0.15s',
-                  zIndex: isHovered ? 2 : 1,
-                  display: 'flex', flexDirection: 'column', justifyContent: 'center',
-                  userSelect: 'none', cursor: 'grab',
-                }}
-              >
-                <div style={{ fontSize: 15, fontWeight: 700, color: colors.stripe, lineHeight: 1, marginBottom: 3 }}>{t.abbr}</div>
-                <div style={{ fontSize: 11, color: '#333', lineHeight: 1.3, fontWeight: 500 }}>{t.tr}</div>
-                <div style={{ fontSize: 10, color: '#999', lineHeight: 1.2, marginTop: 2 }}>{t.en}</div>
-              </div>
-            )
-          })()}
-
-          {/* Diğer node'lar */}
-          {terms.filter(t => t.id !== 'kpi').map(term => {
+          {/* Tüm node'lar */}
+          {terms.map(term => {
             const colors = CAT_COLORS[term.cat]
-            const isHovered = hovered === term.id
+            const isSelected = selected === term.id
+            const isHov = hovered === term.id
             const isDimmed = connectedIds && !connectedIds.has(term.id)
+            const isDragging = dragging?.id === term.id
             return (
               <div
                 key={term.id}
                 onMouseEnter={() => setHovered(term.id)}
                 onMouseLeave={() => setHovered(null)}
+                onClick={(e) => {
+                  if (dragging && (Math.abs(e.clientX - dragging.startMouseX) > 5 || Math.abs(e.clientY - dragging.startMouseY) > 5)) {
+                    return
+                  }
+                  setSelected(prev => prev === term.id ? null : term.id)
+                }}
                 onMouseDown={(e) => {
                   if (e.button !== 0) return
                   setDragging({
@@ -1284,17 +1435,19 @@ function MantiKHaritasi() {
                   width: NODE_W,
                   height: NODE_H,
                   background: colors.bg,
-                  border: `1px solid ${isHovered ? colors.stripe : colors.border}`,
-                  boxShadow: isHovered
+                  border: `1.5px solid ${isSelected ? colors.stripe : isHov ? colors.stripe : colors.border}`,
+                  boxShadow: isSelected
                     ? `inset 3px 0 0 ${colors.stripe}, 0 4px 16px ${colors.stripe}44`
+                    : isHov
+                    ? `inset 3px 0 0 ${colors.stripe}, 0 3px 12px ${colors.stripe}33`
                     : `inset 3px 0 0 ${colors.stripe}, 0 1px 4px rgba(0,0,0,0.07)`,
                   borderRadius: 8,
                   padding: '7px 10px 7px 12px',
-                  opacity: isDimmed && dragging?.id !== term.id ? 0.25 : 1,
-                  transition: dragging?.id === term.id ? 'none' : 'all 0.15s',
-                  zIndex: dragging?.id === term.id ? 4 : isHovered ? 2 : 1,
+                  opacity: isDimmed && !isDragging ? 0.25 : 1,
+                  transition: isDragging ? 'none' : 'all 0.15s',
+                  zIndex: isDragging ? 4 : isSelected ? 3 : isHov ? 2 : 1,
                   display: 'flex', flexDirection: 'column', justifyContent: 'center',
-                  userSelect: 'none', cursor: dragging?.id === term.id ? 'grabbing' : 'grab',
+                  userSelect: 'none', cursor: isDragging ? 'grabbing' : 'grab',
                 }}
               >
                 <div style={{ fontSize: 15, fontWeight: 700, color: colors.stripe, lineHeight: 1, marginBottom: 3 }}>{term.abbr}</div>
@@ -1320,29 +1473,179 @@ function MantiKHaritasi() {
         ))}
       </div>
 
-      {/* ─── GTM Ekosistemi Zihin Haritası ─────────────────────────────────── */}
-      <GtmZihinHaritasi />
+      {/* Açıklama paneli — haritanın altında */}
+      <div style={{
+        marginTop: 16,
+        background: selectedTerm ? '#fff' : '#fafafa',
+        border: `0.5px solid ${selectedTerm ? CAT_COLORS[selectedTerm.cat].stripe + '44' : '#e8e8e8'}`,
+        borderRadius: 12,
+        padding: '1.25rem 1.5rem',
+        minHeight: 80,
+        transition: 'all 0.2s',
+      }}>
+        {selectedTerm ? (
+          <>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <div style={{ width: 8, height: 8, borderRadius: 2, background: CAT_COLORS[selectedTerm.cat].stripe, flexShrink: 0 }} />
+                <span style={{ fontSize: 18, fontWeight: 700, color: CAT_COLORS[selectedTerm.cat].stripe }}>
+                  {selectedTerm.abbr}
+                </span>
+                <span style={{ fontSize: 12, color: '#aaa', marginLeft: 4 }}>{selectedTerm.tr} / {selectedTerm.en}</span>
+              </div>
+              <button
+                onClick={() => setEditId(prev => prev === selectedTerm.id ? null : selectedTerm.id)}
+                style={{
+                  fontSize: 11, cursor: 'pointer', padding: '4px 10px',
+                  borderRadius: 6, border: '0.5px solid #d0d0d0', background: '#fff', color: '#555'
+                }}
+              >
+                {editId === selectedTerm.id ? 'Bitti' : 'Düzenle'}
+              </button>
+            </div>
+            
+            {editId === selectedTerm.id ? (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+                <div style={{ display: 'flex', gap: 12 }}>
+                  <div style={{ flex: 1 }}>
+                    <label style={{ fontSize: 11, color: '#888', display: 'block', marginBottom: 4 }}>Kısaltma</label>
+                    <input
+                      value={selectedTerm.abbr}
+                      onChange={e => setTerms(prev => prev.map(t => t.id === selectedTerm.id ? { ...t, abbr: e.target.value } : t))}
+                      style={{ width: '100%', padding: '6px 10px', fontSize: 13, border: '0.5px solid #ccc', borderRadius: 6, outline: 'none' }}
+                    />
+                  </div>
+                  <div style={{ flex: 2 }}>
+                    <label style={{ fontSize: 11, color: '#888', display: 'block', marginBottom: 4 }}>Türkçe</label>
+                    <input
+                      value={selectedTerm.tr}
+                      onChange={e => setTerms(prev => prev.map(t => t.id === selectedTerm.id ? { ...t, tr: e.target.value } : t))}
+                      style={{ width: '100%', padding: '6px 10px', fontSize: 13, border: '0.5px solid #ccc', borderRadius: 6, outline: 'none' }}
+                    />
+                  </div>
+                  <div style={{ flex: 2 }}>
+                    <label style={{ fontSize: 11, color: '#888', display: 'block', marginBottom: 4 }}>İngilizce</label>
+                    <input
+                      value={selectedTerm.en}
+                      onChange={e => setTerms(prev => prev.map(t => t.id === selectedTerm.id ? { ...t, en: e.target.value } : t))}
+                      style={{ width: '100%', padding: '6px 10px', fontSize: 13, border: '0.5px solid #ccc', borderRadius: 6, outline: 'none' }}
+                    />
+                  </div>
+                  <div style={{ flex: 1 }}>
+                    <label style={{ fontSize: 11, color: '#888', display: 'block', marginBottom: 4 }}>Kategori</label>
+                    <select
+                      value={selectedTerm.cat}
+                      onChange={e => setTerms(prev => prev.map(t => t.id === selectedTerm.id ? { ...t, cat: e.target.value } : t))}
+                      style={{ width: '100%', padding: '6px 10px', fontSize: 13, border: '0.5px solid #ccc', borderRadius: 6, outline: 'none' }}
+                    >
+                      <option value="maliyet">Maliyet</option>
+                      <option value="olcum">Ölçüm</option>
+                      <option value="strateji">Strateji</option>
+                      <option value="eylem">Eylem</option>
+                    </select>
+                  </div>
+                </div>
 
-      <div style={{ marginTop: '4rem', paddingTop: '2rem', borderTop: '1px solid #eee' }}>
-        <ReklamHiyerarsisi
-          apiPath="/api/kavramlar"
-          headerText="Bilişimsel Kavramlar"
-          headerSubtext="Bilişim dünyasındaki önemli kavramları ve açıklamalarını yönet"
-          emptyText="Henüz kavram yok."
-          emptyIcon="📚"
-          titlePlaceholder="Kavram adı..."
-          descPlaceholder="Açıklama yaz..."
-          searchPlaceholder="Kavram veya açıklamada ara..."
-          titleFallback="Kavram yok"
-          descFallback="Açıklama yok"
-          showNestedFaq={false}
-          addToTop={true}
-          descMinHeight={150}
-          focusedLeftWidth={360}
-          focusedDescMinHeight={300}
-          focusedDescFontSize={15}
-          focusedDescLineHeight={1.8}
-        />
+                <div>
+                  <label style={{ fontSize: 11, color: '#888', display: 'block', marginBottom: 4 }}>Açıklama</label>
+                  <textarea
+                    value={selectedTerm.desc}
+                    onChange={e => setTerms(prev => prev.map(t => t.id === selectedTerm.id ? { ...t, desc: e.target.value } : t))}
+                    onPaste={(e) => {
+                      e.preventDefault()
+                      const text = e.clipboardData.getData('text/plain')
+                      const cleanText = text.replace(/\r/g, '').replace(/\n{3,}/g, '\n\n')
+                      const target = e.target
+                      const start = target.selectionStart
+                      const end = target.selectionEnd
+                      const current = target.value
+                      const newValue = current.substring(0, start) + cleanText + current.substring(end)
+                      setTerms(prev => prev.map(t => t.id === selectedTerm.id ? { ...t, desc: newValue } : t))
+                      setTimeout(() => { target.selectionStart = target.selectionEnd = start + cleanText.length }, 0)
+                    }}
+                    style={{
+                      width: '100%', minHeight: 100, padding: 12, fontSize: 14, lineHeight: 1.8,
+                      color: '#333', border: '0.5px solid #ccc', borderRadius: 8,
+                      outline: 'none', resize: 'vertical', fontFamily: 'inherit'
+                    }}
+                  />
+                </div>
+
+                <div style={{ borderTop: '0.5px solid #eee', paddingTop: 12 }}>
+                  <label style={{ fontSize: 11, color: '#888', display: 'block', marginBottom: 8, fontWeight: 600 }}>BAĞLANTI YÖNETİMİ</label>
+                  
+                  {/* Yeni bağlantı ekle */}
+                  <div style={{ display: 'flex', gap: 10, alignItems: 'center', marginBottom: 16 }}>
+                    <select
+                      id="reklam-target-select"
+                      style={{ flex: 1, padding: '6px 10px', fontSize: 12, border: '0.5px solid #ccc', borderRadius: 6, outline: 'none', background: '#fff' }}
+                    >
+                      <option value="">Bağlanacak kutuyu seç...</option>
+                      {terms.filter(t => t.id !== selectedTerm.id).map(t => (
+                        <option key={t.id} value={t.id}>{t.abbr} ({t.tr})</option>
+                      ))}
+                    </select>
+                    <button
+                      onClick={() => {
+                        const sel = document.getElementById('reklam-target-select')
+                        if (sel.value) handleAddConnection(sel.value)
+                      }}
+                      style={{ padding: '6px 14px', fontSize: 12, background: '#f5f5f5', border: '0.5px solid #ccc', borderRadius: 6, cursor: 'pointer' }}
+                    >
+                      Bağla
+                    </button>
+                  </div>
+
+                  {/* Mevcut bağlantılar */}
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+                    {connections.filter(c => c.from === selectedTerm.id).map(c => {
+                      const target = termMap[c.to]
+                      if (!target) return null
+                      return (
+                        <div key={c.to} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '4px 8px', background: '#f9f9f9', border: '0.5px solid #eee', borderRadius: 6, fontSize: 11 }}>
+                          <span>→ <b>{target.abbr}</b></span>
+                          <button onClick={() => handleRemoveConnection(c.to)} style={{ border: 'none', background: 'none', cursor: 'pointer', color: '#ff4d4f', fontWeight: 'bold', marginLeft: 4 }}>×</button>
+                        </div>
+                      )
+                    })}
+                    {connections.filter(c => c.to === selectedTerm.id).map(c => {
+                      const source = termMap[c.from]
+                      if (!source) return null
+                      return (
+                        <div key={c.from} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '4px 8px', background: '#fff', border: '0.5px solid #eee', borderRadius: 6, fontSize: 11, color: '#888', borderStyle: 'dashed' }}>
+                          <span>← <b>{source.abbr}</b> (Gelen)</span>
+                        </div>
+                      )
+                    })}
+                  </div>
+                </div>
+
+                <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10, borderTop: '0.5px solid #eee', paddingTop: 12 }}>
+                   <button
+                    onClick={() => {
+                      if (confirm('Bu kutuyu ve tüm bağlantılarını silmek istediğinize emin misiniz?')) {
+                        setConnections(connections.filter(c => c.from !== selectedTerm.id && c.to !== selectedTerm.id))
+                        setTerms(terms.filter(t => t.id !== selectedTerm.id))
+                        setSelected(null)
+                        setEditId(null)
+                      }
+                    }}
+                    style={{ color: '#ff4d4f', fontSize: 12, background: 'none', border: 'none', cursor: 'pointer', textDecoration: 'underline' }}
+                   >
+                    Kutuyu Sil
+                   </button>
+                </div>
+              </div>
+            ) : (
+              <div style={{ fontSize: 14, color: '#333', lineHeight: 1.8, whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>{selectedTerm.desc}</div>
+            )}
+          </>
+        ) : (
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, color: '#ccc', minHeight: 60 }}>
+            <span style={{ fontSize: 20 }}>◎</span>
+            <span style={{ fontSize: 13 }}>Bir kutucuğa tıkla, açıklamasını oku</span>
+          </div>
+        )}
       </div>
 
       {/* Kaydet butonu — sağ alt */}
@@ -1477,6 +1780,7 @@ function YzHaritasi() {
   const [hovered, setHovered] = useState(null)
   const [selected, setSelected] = useState(null)
   const [terms, setTerms] = useState(AI_TERMS)
+  const [connections, setConnections] = useState(AI_CONNECTIONS)
   const [dragging, setDragging] = useState(null)
   const [editId, setEditId] = useState(null)
   const [saving, setSaving] = useState(false)
@@ -1487,7 +1791,10 @@ function YzHaritasi() {
     fetch('/api/ai-terimleri')
       .then(res => res.json())
       .then(data => {
-        if (data && Array.isArray(data) && data.length > 0) {
+        if (data && !Array.isArray(data) && data.terms) {
+          setTerms(data.terms)
+          setConnections(data.connections || [])
+        } else if (data && Array.isArray(data) && data.length > 0) {
           setTerms(data)
         }
       })
@@ -1500,7 +1807,7 @@ function YzHaritasi() {
       const res = await fetch('/api/ai-terimleri', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(terms),
+        body: JSON.stringify({ terms, connections }),
       })
       if (res.ok) {
         setLastSaved(new Date().toLocaleTimeString())
@@ -1544,19 +1851,58 @@ function YzHaritasi() {
   const activeId = hovered || selected
   const connectedIds = activeId ? new Set([
     activeId,
-    ...AI_CONNECTIONS.filter(c => c.from === activeId || c.to === activeId).flatMap(c => [c.from, c.to]),
+    ...connections.filter(c => c.from === activeId).map(c => c.to),
+    ...connections.filter(c => c.to === activeId).map(c => c.from),
   ]) : null
+
+  const handleAddNode = () => {
+    const newId = 'node_' + Math.random().toString(36).substr(2, 9)
+    const newNode = {
+      id: newId,
+      abbr: 'Yeni AI Terimi',
+      sub: 'Alt başlık...',
+      cat: 'temel',
+      x: 300 + (Math.random() * 100),
+      y: 200 + (Math.random() * 100),
+      desc: 'Bu AI kavramı için açıklama yazın...'
+    }
+    setTerms([...terms, newNode])
+    setSelected(newId)
+    setEditId(newId)
+  }
+
+  const handleAddConnection = (targetId) => {
+    if (!selected || !targetId || selected === targetId) return
+    if (connections.find(c => c.from === selected && c.to === targetId)) return
+    setConnections([...connections, { from: selected, to: targetId }])
+  }
+
+  const handleRemoveConnection = (targetId) => {
+    setConnections(connections.filter(c => !(c.from === selected && c.to === targetId)))
+  }
 
   const CANVAS_W = 880
   const CANVAS_H = 555
 
   return (
     <div style={{ padding: '2rem 1.25rem', fontFamily: 'inherit' }}>
-      <div style={{ marginBottom: '1.25rem' }}>
-        <h1 style={{ fontSize: 22, fontWeight: 500, margin: 0 }}>Yapay Zeka Terimleri</h1>
-        <p style={{ fontSize: 13, color: '#888', marginTop: 4 }}>
-          AI ekosisteminin temel kavramları ve aralarındaki ilişkiler · Terime tıkla: açıklamayı gör
-        </p>
+      <div style={{ marginBottom: '1.25rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <div>
+          <h1 style={{ fontSize: 22, fontWeight: 500, margin: 0 }}>Yapay Zeka Terimleri</h1>
+          <p style={{ fontSize: 13, color: '#888', marginTop: 4 }}>
+            AI ekosisteminin temel kavramları ve aralarındaki ilişkiler · Terime tıkla: açıklamayı gör
+          </p>
+        </div>
+        <button
+          onClick={handleAddNode}
+          style={{
+            background: '#fff', border: '1px solid #ddd', borderRadius: 8,
+            padding: '6px 12px', fontSize: 12, cursor: 'pointer', transition: 'all 0.2s',
+            display: 'flex', alignItems: 'center', gap: 6, color: '#444'
+          }}
+        >
+          <span style={{ fontSize: 16, fontWeight: 'bold' }}>+</span> Yeni Kutu Ekle
+        </button>
       </div>
 
       {/* Legenda */}
@@ -1586,7 +1932,7 @@ function YzHaritasi() {
                   <path d="M0,0 L0,7 L7,3.5 z" fill="#777" />
                 </marker>
               </defs>
-              {AI_CONNECTIONS.map((conn, i) => {
+            {connections.map((conn, i) => {
                 const from = termMap[conn.from]
                 const to = termMap[conn.to]
                 if (!from || !to) return null
@@ -1666,16 +2012,20 @@ function YzHaritasi() {
 
         {/* Açıklama paneli */}
         <div style={{
-          width: 240,
+          width: 300,
           flexShrink: 0,
           background: '#fff',
           border: '0.5px solid #e8e8e8',
           borderRadius: 12,
           padding: '1.25rem',
           minHeight: 200,
+          maxHeight: '80vh',
+          overflowY: 'auto',
           alignSelf: 'flex-start',
           position: 'sticky',
           top: 80,
+          transition: 'all 0.2s',
+          boxShadow: selectedTerm ? '0 8px 24px rgba(0,0,0,0.05)' : 'none'
         }}>
           {selectedTerm ? (
             <>
@@ -1696,34 +2046,123 @@ function YzHaritasi() {
                   {editId === selectedTerm.id ? 'Bitti' : 'Düzenle'}
                 </button>
               </div>
-              <div style={{ fontSize: 18, fontWeight: 700, color: AI_CAT_COLORS[selectedTerm.cat].stripe, marginBottom: 4, whiteSpace: 'pre-line' }}>
-                {selectedTerm.abbr}
-              </div>
-              <div style={{ fontSize: 12, color: '#888', marginBottom: 12 }}>{selectedTerm.sub}</div>
+
               {editId === selectedTerm.id ? (
-                <textarea
-                  value={selectedTerm.desc}
-                  onChange={e => setTerms(prev => prev.map(t => t.id === selectedTerm.id ? { ...t, desc: e.target.value } : t))}
-                  onPaste={(e) => {
-                    e.preventDefault()
-                    const text = e.clipboardData.getData('text/plain')
-                    const cleanText = text.replace(/\r/g, '').replace(/\n{3,}/g, '\n\n')
-                    const target = e.target
-                    const start = target.selectionStart
-                    const end = target.selectionEnd
-                    const current = target.value
-                    const newValue = current.substring(0, start) + cleanText + current.substring(end)
-                    setTerms(prev => prev.map(t => t.id === selectedTerm.id ? { ...t, desc: newValue } : t))
-                    setTimeout(() => { target.selectionStart = target.selectionEnd = start + cleanText.length }, 0)
-                  }}
-                  style={{
-                    width: '100%', minHeight: 120, padding: 12, fontSize: 13, lineHeight: 1.7,
-                    color: '#333', border: '0.5px solid #ccc', borderRadius: 8,
-                    outline: 'none', resize: 'vertical', fontFamily: 'inherit'
-                  }}
-                />
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+                  <div>
+                    <label style={{ fontSize: 11, color: '#888', display: 'block', marginBottom: 4 }}>Başlık</label>
+                    <input
+                      value={selectedTerm.abbr}
+                      onChange={e => setTerms(prev => prev.map(t => t.id === selectedTerm.id ? { ...t, abbr: e.target.value } : t))}
+                      style={{ width: '100%', padding: '6px 10px', fontSize: 13, border: '0.5px solid #ccc', borderRadius: 6, outline: 'none' }}
+                    />
+                  </div>
+                  <div>
+                    <label style={{ fontSize: 11, color: '#888', display: 'block', marginBottom: 4 }}>Alt Başlık</label>
+                    <input
+                      value={selectedTerm.sub}
+                      onChange={e => setTerms(prev => prev.map(t => t.id === selectedTerm.id ? { ...t, sub: e.target.value } : t))}
+                      style={{ width: '100%', padding: '6px 10px', fontSize: 13, border: '0.5px solid #ccc', borderRadius: 6, outline: 'none' }}
+                    />
+                  </div>
+                  <div>
+                    <label style={{ fontSize: 11, color: '#888', display: 'block', marginBottom: 4 }}>Kategori</label>
+                    <select
+                      value={selectedTerm.cat}
+                      onChange={e => setTerms(prev => prev.map(t => t.id === selectedTerm.id ? { ...t, cat: e.target.value } : t))}
+                      style={{ width: '100%', padding: '6px 10px', fontSize: 13, border: '0.5px solid #ccc', borderRadius: 6, outline: 'none' }}
+                    >
+                      {Object.entries(AI_CAT_LABELS).map(([val, label]) => (
+                        <option key={val} value={val}>{label}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <div>
+                    <label style={{ fontSize: 11, color: '#888', display: 'block', marginBottom: 4 }}>Açıklama</label>
+                    <textarea
+                      value={selectedTerm.desc}
+                      onChange={e => setTerms(prev => prev.map(t => t.id === selectedTerm.id ? { ...t, desc: e.target.value } : t))}
+                      onPaste={(e) => {
+                        e.preventDefault()
+                        const text = e.clipboardData.getData('text/plain')
+                        const cleanText = text.replace(/\r/g, '').replace(/\n{3,}/g, '\n\n')
+                        const target = e.target
+                        const start = target.selectionStart
+                        const end = target.selectionEnd
+                        const current = target.value
+                        const newValue = current.substring(0, start) + cleanText + current.substring(end)
+                        setTerms(prev => prev.map(t => t.id === selectedTerm.id ? { ...t, desc: newValue } : t))
+                        setTimeout(() => { target.selectionStart = target.selectionEnd = start + cleanText.length }, 0)
+                      }}
+                      style={{
+                        width: '100%', minHeight: 100, padding: 12, fontSize: 13, lineHeight: 1.7,
+                        color: '#333', border: '0.5px solid #ccc', borderRadius: 8,
+                        outline: 'none', resize: 'vertical', fontFamily: 'inherit'
+                      }}
+                    />
+                  </div>
+
+                  <div style={{ borderTop: '0.5px solid #eee', paddingTop: 12 }}>
+                    <label style={{ fontSize: 11, color: '#888', display: 'block', marginBottom: 8, fontWeight: 600 }}>BAĞLANTI YÖNETİMİ</label>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                      <select
+                        id="ai-target-select"
+                        style={{ width: '100%', padding: '6px 10px', fontSize: 12, border: '0.5px solid #ccc', borderRadius: 6, outline: 'none', background: '#fff' }}
+                      >
+                        <option value="">Bağlanacak kutuyu seç...</option>
+                        {terms.filter(t => t.id !== selectedTerm.id).map(t => (
+                          <option key={t.id} value={t.id}>{t.abbr} ({t.sub})</option>
+                        ))}
+                      </select>
+                      <button
+                        onClick={() => {
+                          const sel = document.getElementById('ai-target-select')
+                          if (sel.value) handleAddConnection(sel.value)
+                        }}
+                        style={{ padding: '6px 14px', fontSize: 12, background: '#f5f5f5', border: '0.5px solid #ccc', borderRadius: 6, cursor: 'pointer' }}
+                      >
+                        Bağlantı Ekle
+                      </button>
+                    </div>
+
+                    <div style={{ marginTop: 12, display: 'flex', flexDirection: 'column', gap: 6 }}>
+                      {connections.filter(c => c.from === selectedTerm.id).map(c => {
+                        const target = termMap[c.to]
+                        if (!target) return null
+                        return (
+                          <div key={c.to} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '4px 8px', background: '#f9f9f9', border: '0.5px solid #eee', borderRadius: 6, fontSize: 11 }}>
+                            <span>→ {target.abbr}</span>
+                            <button onClick={() => handleRemoveConnection(c.to)} style={{ border: 'none', background: 'none', cursor: 'pointer', color: '#ff4d4f' }}>Kaldır</button>
+                          </div>
+                        )
+                      })}
+                    </div>
+                  </div>
+
+                  <div style={{ marginTop: 'auto', paddingTop: 12, borderTop: '0.5px solid #eee', display: 'flex', justifyContent: 'center' }}>
+                    <button
+                      onClick={() => {
+                        if (confirm('Bu kutuyu ve tüm bağlantılarını silmek istediğinize emin misiniz?')) {
+                          setConnections(connections.filter(c => c.from !== selectedTerm.id && c.to !== selectedTerm.id))
+                          setTerms(terms.filter(t => t.id !== selectedTerm.id))
+                          setSelected(null)
+                          setEditId(null)
+                        }
+                      }}
+                      style={{ color: '#ff4d4f', fontSize: 11, background: 'none', border: 'none', cursor: 'pointer', textDecoration: 'underline' }}
+                    >
+                      Kutuyu Tamamen Sil
+                    </button>
+                  </div>
+                </div>
               ) : (
-                <div style={{ fontSize: 13, color: '#333', lineHeight: 1.7, whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>{selectedTerm.desc}</div>
+                <>
+                  <div style={{ fontSize: 18, fontWeight: 700, color: AI_CAT_COLORS[selectedTerm.cat].stripe, marginBottom: 4, whiteSpace: 'pre-line' }}>
+                    {selectedTerm.abbr}
+                  </div>
+                  <div style={{ fontSize: 12, color: '#888', marginBottom: 12 }}>{selectedTerm.sub}</div>
+                  <div style={{ fontSize: 13, color: '#333', lineHeight: 1.7, whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>{selectedTerm.desc}</div>
+                </>
               )}
             </>
           ) : (
