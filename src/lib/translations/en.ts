@@ -24,7 +24,8 @@ export const en = {
     subtitle: "Real projects. Real results.",
   },
   services: {
-    badge: "Services",
+    badge: "+Plus Services",
+    cta: "Contact Us",
     title: "Building AI-Powered Custom",
     title_accent: "Software Infrastructures",
     items: [
@@ -165,6 +166,7 @@ export interface Translations {
   };
   services: {
     badge: string;
+    cta: string;
     title: string;
     title_accent: string;
     items: {

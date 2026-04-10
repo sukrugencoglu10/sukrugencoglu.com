@@ -26,7 +26,8 @@ export const tr: Translations = {
     subtitle: "Gerçek projeler. Gerçek sonuçlar.",
   },
   services: {
-    badge: "Hizmetlerimiz",
+    badge: "+Plus Hizmetlerimiz",
+    cta: "İletişime Geçiniz",
     title: "Aİ Destekli İhtiyaca Uygun Yazılım Altyapıları",
     title_accent: "Kuruyoruz",
     items: [
