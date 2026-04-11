@@ -26,7 +26,7 @@ export default function AiServicesTeaser({ inline = false, showCta = true }: { i
         {lang === "tr" ? (
           <>
             İşletmenizin İhtiyacına Özel<br />
-            Yapay Zeka Tabanlı Yazılım Altyapıları<br />
+            Yapay Zeka Tabanlı<br className="sm:hidden" /> Yazılım Altyapıları<br />
             <span className="text-orange">Kuruyoruz</span>
           </>
         ) : (
