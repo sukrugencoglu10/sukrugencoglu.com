@@ -57,14 +57,14 @@ export default function AdvertisingHierarchyLiveMap() {
       });
   }, []);
 
-  // Zoom logic
+  // Zoom logic for wheel
   useEffect(() => {
     const handleWheel = (e: WheelEvent) => {
       if (e.ctrlKey) {
         e.preventDefault();
         const delta = e.deltaY > 0 ? -0.1 : 0.1;
         setZoom(prev => {
-          const next = Math.min(Math.max(prev + delta, 0.3), 2.5);
+          const next = Math.min(Math.max(prev + delta, 0.2), 3.0);
           return parseFloat(next.toFixed(2));
         });
       }
@@ -78,6 +78,10 @@ export default function AdvertisingHierarchyLiveMap() {
       if (canvasArea) canvasArea.removeEventListener('wheel', handleWheel);
     };
   }, []);
+
+  const handleZoomIn = () => setZoom(prev => Math.min(prev + 0.1, 3.0));
+  const handleZoomOut = () => setZoom(prev => Math.max(prev - 0.1, 0.2));
+  const handleZoomReset = () => setZoom(1);
 
   const termMap = Object.fromEntries(terms.map(t => [t.id, t]));
   const activeIds = new Set<string>();
@@ -114,7 +118,7 @@ export default function AdvertisingHierarchyLiveMap() {
           </h3>
           <p className="text-sm text-gray-500 mt-1">Stüdyo'da hazırlanan güncel reklam stratejisi ve web hiyerarşisi</p>
           <p className="text-[10px] text-gray-400 mt-2 font-medium uppercase tracking-wider">
-            💡 İPUCU: Yakınlaşmak/Uzaklaşmak için <span className="bg-gray-200 px-1 rounded text-gray-600">CTRL + Kaydır</span>
+            💡 İPUCU: Yakınlaşmak için <span className="bg-gray-200 px-1 rounded text-gray-600">CTRL + Kaydır</span> veya butonları kullanın
           </p>
         </div>
         <div className="hidden sm:flex gap-4 items-center">
@@ -124,19 +128,18 @@ export default function AdvertisingHierarchyLiveMap() {
               {label}
             </div>
           ))}
-          <div className="ml-4 pl-4 border-l border-gray-200 flex items-center gap-2">
-             <button onClick={() => setZoom(1)} className="text-[10px] font-bold text-accent hover:underline">SIFIRLA</button>
-             <span className="text-[10px] font-mono bg-gray-100 px-2 py-0.5 rounded text-gray-500">%{Math.round(zoom * 100)}</span>
+          <div className="ml-4 pl-4 border-l border-gray-200 flex items-center gap-1 font-mono text-[11px] text-gray-400">
+             <span>%{Math.round(zoom * 100)}</span>
           </div>
         </div>
       </div>
 
-      <div className="flex flex-col lg:flex-row">
+      <div className="flex flex-col lg:flex-row relative">
         {/* Canvas Area */}
         <div 
           ref={canvasRef}
-          className="flex-1 overflow-auto p-4 bg-[#fafafa] relative min-h-[500px]" 
-          style={{ maxHeight: '70vh' }}
+          className="flex-1 overflow-auto p-8 bg-[#fafafa] relative min-h-[500px]" 
+          style={{ maxHeight: '75vh' }}
         >
           <div style={{ 
             position: "relative", 
@@ -145,7 +148,7 @@ export default function AdvertisingHierarchyLiveMap() {
             margin: '0 auto',
             transform: `scale(${zoom})`,
             transformOrigin: 'center top',
-            transition: 'transform 0.1s ease-out'
+            transition: 'transform 0.15s ease-out'
           }}>
             {/* SVG Lines */}
             <svg width={canvasDim.w} height={canvasDim.h} style={{ position: 'absolute', top: 0, left: 0, pointerEvents: 'none' }}>
@@ -217,6 +220,33 @@ export default function AdvertisingHierarchyLiveMap() {
                 </div>
               );
             })}
+          </div>
+
+          {/* Floating Zoom Controls - Bottom Right of Canvas */}
+          <div className="absolute bottom-6 right-6 flex flex-col gap-2 z-50">
+             <div className="flex flex-col bg-white border border-gray-200 rounded-lg shadow-lg overflow-hidden">
+                <button 
+                  onClick={handleZoomIn}
+                  className="w-10 h-10 flex items-center justify-center text-gray-600 hover:bg-gray-50 border-b border-gray-100 transition-colors"
+                  title="Yakınlaştır"
+                >
+                  <span className="text-xl font-bold">+</span>
+                </button>
+                <button 
+                  onClick={handleZoomOut}
+                  className="w-10 h-10 flex items-center justify-center text-gray-600 hover:bg-gray-50 border-b border-gray-100 transition-colors"
+                  title="Uzaklaştır"
+                >
+                  <span className="text-xl font-bold">−</span>
+                </button>
+                <button 
+                  onClick={handleZoomReset}
+                  className="w-10 h-10 flex items-center justify-center text-accent text-[10px] font-bold hover:bg-gray-50 transition-colors"
+                  title="Sıfırla"
+                >
+                  RESET
+                </button>
+             </div>
           </div>
         </div>
 
