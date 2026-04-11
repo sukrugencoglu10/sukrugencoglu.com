@@ -38,7 +38,7 @@ export default function AdvertisingHierarchyLiveMap() {
   const [hovered, setHovered] = useState<string | null>(null);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [zoom, setZoom] = useState(1);
-  const canvasRef = useRef<HTMLDivElement>(null);
+  const canvasAreaRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     fetch('/api/reklam-hiyerarsisi-harita')
@@ -57,26 +57,24 @@ export default function AdvertisingHierarchyLiveMap() {
       });
   }, []);
 
-  // Zoom logic for wheel
+  // Zoom logic for wheel - Using window level listener when hovering to ensure prevention of browser zoom
   useEffect(() => {
     const handleWheel = (e: WheelEvent) => {
-      if (e.ctrlKey) {
-        e.preventDefault();
-        const delta = e.deltaY > 0 ? -0.1 : 0.1;
-        setZoom(prev => {
-          const next = Math.min(Math.max(prev + delta, 0.2), 3.0);
-          return parseFloat(next.toFixed(2));
-        });
+      // Check if mouse is within the map area
+      if (canvasAreaRef.current && canvasAreaRef.current.contains(e.target as Node)) {
+        if (e.ctrlKey || e.metaKey) {
+          e.preventDefault();
+          const delta = e.deltaY > 0 ? -0.1 : 0.1;
+          setZoom(prev => {
+            const next = Math.min(Math.max(prev + delta, 0.2), 3.0);
+            return parseFloat(next.toFixed(2));
+          });
+        }
       }
     };
 
-    const canvasArea = canvasRef.current;
-    if (canvasArea) {
-      canvasArea.addEventListener('wheel', handleWheel, { passive: false });
-    }
-    return () => {
-      if (canvasArea) canvasArea.removeEventListener('wheel', handleWheel);
-    };
+    window.addEventListener('wheel', handleWheel, { passive: false });
+    return () => window.removeEventListener('wheel', handleWheel);
   }, []);
 
   const handleZoomIn = () => setZoom(prev => Math.min(prev + 0.1, 3.0));
@@ -117,9 +115,14 @@ export default function AdvertisingHierarchyLiveMap() {
             Canlı Reklam Hiyerarşisi Haritası
           </h3>
           <p className="text-sm text-gray-500 mt-1">Stüdyo'da hazırlanan güncel reklam stratejisi ve web hiyerarşisi</p>
-          <p className="text-[10px] text-gray-400 mt-2 font-medium uppercase tracking-wider">
-            💡 İPUCU: Yakınlaşmak için <span className="bg-gray-200 px-1 rounded text-gray-600">CTRL + Kaydır</span> veya butonları kullanın
-          </p>
+          <div className="flex gap-4 mt-3">
+             <p className="text-[10px] text-gray-400 font-medium uppercase tracking-wider flex items-center gap-1">
+               <span className="bg-gray-200 px-1 rounded text-gray-600">CTRL + Kaydır</span> Yakınlaş / Uzaklaş
+             </p>
+             <p className="text-[10px] text-gray-400 font-medium uppercase tracking-wider flex items-center gap-1">
+               <span className="bg-gray-200 px-1 rounded text-gray-600">Tıkla</span> Detayları Gör
+             </p>
+          </div>
         </div>
         <div className="hidden sm:flex gap-4 items-center">
           {Object.entries(RH_CAT_LABELS).map(([cat, label]) => (
@@ -135,12 +138,13 @@ export default function AdvertisingHierarchyLiveMap() {
       </div>
 
       <div className="flex flex-col lg:flex-row relative">
-        {/* Canvas Area */}
+        {/* Canvas Area Wrap */}
         <div 
-          ref={canvasRef}
+          ref={canvasAreaRef}
           className="flex-1 overflow-auto p-8 bg-[#fafafa] relative min-h-[500px]" 
-          style={{ maxHeight: '75vh' }}
+          style={{ maxHeight: '78vh' }}
         >
+          {/* Zoomable Container */}
           <div style={{ 
             position: "relative", 
             width: canvasDim.w, 
@@ -148,7 +152,8 @@ export default function AdvertisingHierarchyLiveMap() {
             margin: '0 auto',
             transform: `scale(${zoom})`,
             transformOrigin: 'center top',
-            transition: 'transform 0.15s ease-out'
+            transition: 'transform 0.15s ease-out',
+            paddingBottom: 40 // Add some breathing room at the bottom when zoomed
           }}>
             {/* SVG Lines */}
             <svg width={canvasDim.w} height={canvasDim.h} style={{ position: 'absolute', top: 0, left: 0, pointerEvents: 'none' }}>
@@ -222,29 +227,29 @@ export default function AdvertisingHierarchyLiveMap() {
             })}
           </div>
 
-          {/* Floating Zoom Controls - Bottom Right of Canvas */}
+          {/* Floating Zoom Controls */}
           <div className="absolute bottom-6 right-6 flex flex-col gap-2 z-50">
-             <div className="flex flex-col bg-white border border-gray-200 rounded-lg shadow-lg overflow-hidden">
+             <div className="flex flex-col bg-white border border-gray-200 rounded-lg shadow-xl overflow-hidden">
                 <button 
                   onClick={handleZoomIn}
-                  className="w-10 h-10 flex items-center justify-center text-gray-600 hover:bg-gray-50 border-b border-gray-100 transition-colors"
-                  title="Yakınlaştır"
+                  className="w-12 h-12 flex items-center justify-center text-gray-700 hover:bg-gray-50 border-b border-gray-100 transition-colors"
+                  title="Yakınlaştır (+)"
                 >
-                  <span className="text-xl font-bold">+</span>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
                 </button>
                 <button 
                   onClick={handleZoomOut}
-                  className="w-10 h-10 flex items-center justify-center text-gray-600 hover:bg-gray-50 border-b border-gray-100 transition-colors"
-                  title="Uzaklaştır"
+                  className="w-12 h-12 flex items-center justify-center text-gray-700 hover:bg-gray-50 border-b border-gray-100 transition-colors"
+                  title="Uzaklaştır (-)"
                 >
-                  <span className="text-xl font-bold">−</span>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line></svg>
                 </button>
                 <button 
                   onClick={handleZoomReset}
-                  className="w-10 h-10 flex items-center justify-center text-accent text-[10px] font-bold hover:bg-gray-50 transition-colors"
-                  title="Sıfırla"
+                  className="w-12 h-12 flex items-center justify-center text-accent text-[10px] font-bold hover:bg-gray-50 transition-colors bg-gray-50/30"
+                  title="Orijinal Boyut"
                 >
-                  RESET
+                  %{Math.round(zoom * 100)}
                 </button>
              </div>
           </div>
