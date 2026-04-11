@@ -57,10 +57,13 @@ export default function HomePage() {
         <AiServicesTeaser />
       </div>
       <MantikhHaritasiSection />
-      <ContactSection mobileFirstRight pinnedAnons={<PlusServicesWizard />} />
-      {/* Mobilde iletişim formunun altında */}
+      <ContactSection pinnedAnons={<div className="hidden lg:block"><PlusServicesWizard /></div>} />
+      {/* Mobilde mantık haritasının altında */}
       <div className="lg:hidden">
         <AiServicesTeaser />
+      </div>
+      <div className="lg:hidden">
+        <PlusServicesWizard />
       </div>
       <MobileContactBar />
     </>
