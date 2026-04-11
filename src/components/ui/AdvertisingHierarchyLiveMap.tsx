@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 
 const RH_NODE_W = 136;
 const RH_NODE_H = 66;
@@ -37,6 +37,8 @@ export default function AdvertisingHierarchyLiveMap() {
   const [loading, setLoading] = useState(true);
   const [hovered, setHovered] = useState<string | null>(null);
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [zoom, setZoom] = useState(1);
+  const canvasRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     fetch('/api/reklam-hiyerarsisi-harita')
@@ -53,6 +55,28 @@ export default function AdvertisingHierarchyLiveMap() {
         console.error('Harita yükleme hatası:', err);
         setLoading(false);
       });
+  }, []);
+
+  // Zoom logic
+  useEffect(() => {
+    const handleWheel = (e: WheelEvent) => {
+      if (e.ctrlKey) {
+        e.preventDefault();
+        const delta = e.deltaY > 0 ? -0.1 : 0.1;
+        setZoom(prev => {
+          const next = Math.min(Math.max(prev + delta, 0.3), 2.5);
+          return parseFloat(next.toFixed(2));
+        });
+      }
+    };
+
+    const canvasArea = canvasRef.current;
+    if (canvasArea) {
+      canvasArea.addEventListener('wheel', handleWheel, { passive: false });
+    }
+    return () => {
+      if (canvasArea) canvasArea.removeEventListener('wheel', handleWheel);
+    };
   }, []);
 
   const termMap = Object.fromEntries(terms.map(t => [t.id, t]));
@@ -89,21 +113,40 @@ export default function AdvertisingHierarchyLiveMap() {
             Canlı Reklam Hiyerarşisi Haritası
           </h3>
           <p className="text-sm text-gray-500 mt-1">Stüdyo'da hazırlanan güncel reklam stratejisi ve web hiyerarşisi</p>
+          <p className="text-[10px] text-gray-400 mt-2 font-medium uppercase tracking-wider">
+            💡 İPUCU: Yakınlaşmak/Uzaklaşmak için <span className="bg-gray-200 px-1 rounded text-gray-600">CTRL + Kaydır</span>
+          </p>
         </div>
-        <div className="hidden sm:flex gap-4">
+        <div className="hidden sm:flex gap-4 items-center">
           {Object.entries(RH_CAT_LABELS).map(([cat, label]) => (
             <div key={cat} className="flex items-center gap-2 text-xs font-medium text-gray-600">
               <div style={{ width: 8, height: 8, borderRadius: 2, background: (RH_CAT_COLORS[cat] || RH_CAT_COLORS.web).stripe }} />
               {label}
             </div>
           ))}
+          <div className="ml-4 pl-4 border-l border-gray-200 flex items-center gap-2">
+             <button onClick={() => setZoom(1)} className="text-[10px] font-bold text-accent hover:underline">SIFIRLA</button>
+             <span className="text-[10px] font-mono bg-gray-100 px-2 py-0.5 rounded text-gray-500">%{Math.round(zoom * 100)}</span>
+          </div>
         </div>
       </div>
 
       <div className="flex flex-col lg:flex-row">
         {/* Canvas Area */}
-        <div className="flex-1 overflow-auto p-4 bg-[#fafafa] relative min-h-[500px]" style={{ maxHeight: '70vh' }}>
-          <div style={{ position: "relative", width: canvasDim.w, height: canvasDim.h, margin: '0 auto' }}>
+        <div 
+          ref={canvasRef}
+          className="flex-1 overflow-auto p-4 bg-[#fafafa] relative min-h-[500px]" 
+          style={{ maxHeight: '70vh' }}
+        >
+          <div style={{ 
+            position: "relative", 
+            width: canvasDim.w, 
+            height: canvasDim.h, 
+            margin: '0 auto',
+            transform: `scale(${zoom})`,
+            transformOrigin: 'center top',
+            transition: 'transform 0.1s ease-out'
+          }}>
             {/* SVG Lines */}
             <svg width={canvasDim.w} height={canvasDim.h} style={{ position: 'absolute', top: 0, left: 0, pointerEvents: 'none' }}>
               <defs>
