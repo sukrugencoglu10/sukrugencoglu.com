@@ -24,7 +24,7 @@ export default function MantikhHaritasiSection({ belowDashboard }: { belowDashbo
 
         {/* Content: 2 columns */}
         <div className="grid grid-cols-1 lg:grid-cols-5 gap-8 lg:gap-12">
-          {/* Left: Numbered steps (3/5) — mobilde ikinci sıraya */}
+          {/* Left: Numbered steps + GrowthDashboard (3/5) — mobilde ikinci sıraya */}
           <div className="lg:col-span-3 flex flex-col gap-3 order-2 lg:order-1">
             {mh.items.map((item, index) => {
               const isHighlight = index === 1;
@@ -37,7 +37,6 @@ export default function MantikhHaritasiSection({ belowDashboard }: { belowDashbo
                       : "bg-white border-[#1e6296]/15 hover:border-[#1e6296]/30"
                   }`}
                 >
-                  {/* Number badge */}
                   <div
                     className={`flex-shrink-0 w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold ${
                       isHighlight ? "bg-white/20 text-white" : "bg-[#1e6296]/10 text-[#1e6296]"
@@ -45,8 +44,6 @@ export default function MantikhHaritasiSection({ belowDashboard }: { belowDashbo
                   >
                     {index + 1}
                   </div>
-
-                  {/* Content */}
                   <div className="flex flex-col gap-1.5 min-w-0">
                     <p
                       className={`font-semibold leading-snug ${
@@ -80,11 +77,14 @@ export default function MantikhHaritasiSection({ belowDashboard }: { belowDashbo
                 </div>
               );
             })}
+            {/* GrowthDashboard adımların altında */}
+            <div className="mt-4">
+              <GrowthDashboard />
+            </div>
           </div>
 
-          {/* Right: Growth Dashboard (2/5) — mobilde birinci sıraya */}
-          <div className="lg:col-span-2 order-1 lg:order-2 flex flex-col gap-8">
-            <GrowthDashboard />
+          {/* Right: belowDashboard slot (2/5) — mobilde birinci sıraya */}
+          <div className="lg:col-span-2 order-1 lg:order-2">
             {belowDashboard && <div className="hidden lg:block">{belowDashboard}</div>}
           </div>
         </div>
