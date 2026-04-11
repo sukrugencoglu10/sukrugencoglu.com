@@ -4,7 +4,7 @@
 // Erişim: sukrugencoglu.com/tr/studyo  |  sukrugencoglu.com/en/studyo
 // Giriş korumalı — STUDYO_USER + STUDYO_PASS env var'larıyla
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 
 // ─── Login ekranı ─────────────────────────────────────────────────────────────
 function LoginScreen({ onSuccess }) {
