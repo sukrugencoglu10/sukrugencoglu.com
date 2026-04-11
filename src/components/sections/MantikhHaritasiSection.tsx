@@ -10,7 +10,7 @@ export default function MantikhHaritasiSection({ belowDashboard }: { belowDashbo
   const mh = t.mantikhHaritasi;
 
   return (
-    <section id="mantik-haritasi" className="section-padding" style={{ backgroundColor: "rgba(30, 98, 150, 0.06)" }}>
+    <section id="mantik-haritasi" className="section-padding lg:!py-10" style={{ backgroundColor: "rgba(30, 98, 150, 0.06)" }}>
       <div className="container-site">
         {/* Header */}
         <div className="flex flex-col items-center gap-4 text-center mb-12">
