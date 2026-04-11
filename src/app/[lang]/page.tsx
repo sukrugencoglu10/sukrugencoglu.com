@@ -60,7 +60,7 @@ export default function HomePage() {
       <ContactSection pinnedAnons={<div className="hidden lg:block"><PlusServicesWizard /></div>} />
       {/* Mobilde mantık haritasının altında */}
       <div className="lg:hidden">
-        <AiServicesTeaser />
+        <AiServicesTeaser showCta={false} />
       </div>
       <div className="lg:hidden">
         <PlusServicesWizard />
