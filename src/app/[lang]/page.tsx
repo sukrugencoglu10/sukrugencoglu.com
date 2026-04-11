@@ -55,7 +55,7 @@ export default function HomePage() {
       <MantikhHaritasiSection belowDashboard={<ContactSection noWrapper />} />
       {/* Masaüstünde mantık haritasının altında */}
       <div id="hizmetlerimiz" className="hidden lg:block">
-        <AiServicesTeaser showCta={false} badge="Birlikte Çalışalım" />
+        <AiServicesTeaser showCta={false} badge="+Plus Hizmetlerimiz" />
       </div>
       {/* Mobilde standalone ContactSection */}
       <div className="lg:hidden">
