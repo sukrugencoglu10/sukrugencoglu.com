@@ -1113,8 +1113,7 @@ function GtmZihinHaritasi() {
                  if (confirm(`Seçili ${selectedIds.length} kutuyu ve bağlantılarını silmek istediğinize emin misiniz?`)) {
                    setConnections(connections.filter(c => !selectedIds.includes(c.from) && !selectedIds.includes(c.to)))
                    setTerms(terms.filter(t => !selectedIds.includes(t.id)))
-                   setSelectedIds([])
-                   if (editId !== term.id) setEditId(null)
+                   setSelectedIds([]); setEditId(null);
                  }
                }}
                style={{ padding: '10px 14px', background: '#ffefef', border: '1px solid #ffccc7', color: '#f5222d', borderRadius: 8, cursor: 'pointer', fontWeight: 600, fontFamily: 'inherit' }}            >
@@ -1279,8 +1278,7 @@ function GtmZihinHaritasi() {
                         if (confirm('Bu kutuyu ve tüm bağlantılarını silmek istediğinize emin misiniz?')) {
                           setConnections(connections.filter(c => c.from !== selectedTerm.id && c.to !== selectedTerm.id))
                           setTerms(terms.filter(t => t.id !== selectedTerm.id))
-                          setSelectedIds([])
-                          if (editId !== term.id) setEditId(null)
+                          setSelectedIds([]); setEditId(null);
                         }
                       }}
                       style={{ color: '#ff4d4f', fontSize: 12, background: 'none', border: 'none', cursor: 'pointer', textDecoration: 'underline' }}
@@ -1755,8 +1753,7 @@ function MantiKHaritasi() {
                  if (confirm(`Seçili ${selectedIds.length} kutuyu ve bağlantılarını silmek istediğinize emin misiniz?`)) {
                    setConnections(connections.filter(c => !selectedIds.includes(c.from) && !selectedIds.includes(c.to)))
                    setTerms(terms.filter(t => !selectedIds.includes(t.id)))
-                   setSelectedIds([])
-                   if (editId !== term.id) setEditId(null)
+                   setSelectedIds([]); setEditId(null);
                  }
                }}
                style={{ padding: '10px 14px', background: '#ffefef', border: '1px solid #ffccc7', color: '#f5222d', borderRadius: 8, cursor: 'pointer', fontWeight: 600, fontFamily: 'inherit' }}            >
@@ -1930,8 +1927,7 @@ function MantiKHaritasi() {
                       if (confirm('Bu kutuyu ve tüm bağlantılarını silmek istediğinize emin misiniz?')) {
                         setConnections(connections.filter(c => c.from !== selectedTerm.id && c.to !== selectedTerm.id))
                         setTerms(terms.filter(t => t.id !== selectedTerm.id))
-                        setSelectedIds([])
-                        if (editId !== term.id) setEditId(null)
+                        setSelectedIds([]); setEditId(null);
                       }
                     }}
                     style={{ color: '#ff4d4f', fontSize: 12, background: 'none', border: 'none', cursor: 'pointer', textDecoration: 'underline' }}
@@ -2452,8 +2448,7 @@ function YzHaritasi() {
                  if (confirm(`Seçili ${selectedIds.length} kutuyu ve bağlantılarını silmek istediğinize emin misiniz?`)) {
                    setConnections(connections.filter(c => !selectedIds.includes(c.from) && !selectedIds.includes(c.to)))
                    setTerms(terms.filter(t => !selectedIds.includes(t.id)))
-                   setSelectedIds([])
-                   if (editId !== term.id) setEditId(null)
+                   setSelectedIds([]); setEditId(null);
                  }
                }}
                style={{ padding: '10px 14px', background: '#ffefef', border: '1px solid #ffccc7', color: '#f5222d', borderRadius: 8, cursor: 'pointer', fontWeight: 600, fontFamily: 'inherit' }}            >
@@ -2509,7 +2504,7 @@ function YzHaritasi() {
                       ))}
                     </select>
                   </div>
-                  <!-- TEXTAREA_MOVED -->
+                  {/* TEXTAREA_MOVED */}
 
                   <div style={{ borderTop: '0.5px solid #eee', paddingTop: 12 }}>
                     <label style={{ fontSize: 11, color: '#888', display: 'block', marginBottom: 8, fontWeight: 600 }}>BAĞLANTI YÖNETİMİ</label>
@@ -2579,8 +2574,7 @@ function YzHaritasi() {
                         if (confirm('Bu kutuyu ve tüm bağlantılarını silmek istediğinize emin misiniz?')) {
                           setConnections(connections.filter(c => c.from !== selectedTerm.id && c.to !== selectedTerm.id))
                           setTerms(terms.filter(t => t.id !== selectedTerm.id))
-                          setSelectedIds([])
-                          if (editId !== term.id) setEditId(null)
+                          setSelectedIds([]); setEditId(null);
                         }
                       }}
                       style={{ color: '#ff4d4f', fontSize: 11, background: 'none', border: 'none', cursor: 'pointer', textDecoration: 'underline' }}
@@ -2595,7 +2589,7 @@ function YzHaritasi() {
                     {selectedTerm.abbr}
                   </div>
                   <div style={{ fontSize: 12, color: '#888', marginBottom: 12 }}>{selectedTerm.sub}</div>
-                  <!-- PREVIEW_MOVED -->
+                  {/* PREVIEW_MOVED */}
                 </>
               )}
             </>
@@ -5162,8 +5156,7 @@ function ReklamHiyerarsisiHaritasi() {
                  if (confirm(`Seçili ${selectedIds.length} kutuyu ve bağlantılarını silmek istediğinize emin misiniz?`)) {
                    setConnections(connections.filter(c => !selectedIds.includes(c.from) && !selectedIds.includes(c.to)))
                    setTerms(terms.filter(t => !selectedIds.includes(t.id)))
-                   setSelectedIds([])
-                   if (editId !== term.id) setEditId(null)
+                   setSelectedIds([]); setEditId(null);
                  }
                }}
                style={{ padding: '10px 14px', background: '#ffefef', border: '1px solid #ffccc7', color: '#f5222d', borderRadius: 8, cursor: 'pointer', fontWeight: 600, fontFamily: 'inherit' }}            >
@@ -5219,7 +5212,7 @@ function ReklamHiyerarsisiHaritasi() {
                       ))}
                     </select>
                   </div>
-                  <!-- TEXTAREA_MOVED -->
+                  {/* TEXTAREA_MOVED */}
 
                   <div style={{ borderTop: '0.5px solid #eee', paddingTop: 12 }}>
                     <label style={{ fontSize: 11, color: '#888', display: 'block', marginBottom: 8, fontWeight: 600 }}>BAĞLANTI YÖNETİMİ</label>
@@ -5289,8 +5282,7 @@ function ReklamHiyerarsisiHaritasi() {
                         if (confirm('Bu kutuyu ve tüm bağlantılarını silmek istediğinize emin misiniz?')) {
                           setConnections(connections.filter(c => c.from !== selectedTerm.id && c.to !== selectedTerm.id))
                           setTerms(terms.filter(t => t.id !== selectedTerm.id))
-                          setSelectedIds([])
-                          if (editId !== term.id) setEditId(null)
+                          setSelectedIds([]); setEditId(null);
                         }
                       }}
                       style={{ color: '#ff4d4f', fontSize: 11, background: 'none', border: 'none', cursor: 'pointer', textDecoration: 'underline' }}
@@ -5305,7 +5297,7 @@ function ReklamHiyerarsisiHaritasi() {
                     {selectedTerm.abbr}
                   </div>
                   <div style={{ fontSize: 12, color: '#888', marginBottom: 12 }}>{selectedTerm.sub}</div>
-                  <!-- PREVIEW_MOVED -->
+                  {/* PREVIEW_MOVED */}
                 </>
               )}
             </>
