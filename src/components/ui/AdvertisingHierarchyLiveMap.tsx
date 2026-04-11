@@ -1,22 +1,24 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 
 const RH_NODE_W = 136;
 const RH_NODE_H = 66;
 
-const RH_CAT_COLORS = {
+type Category = 'web' | 'seo' | 'ads' | 'sosyal';
+
+const RH_CAT_COLORS: Record<string, { bg: string, border: string, stripe: string }> = {
   web: { bg: '#E3F2FD', border: '#1565C066', stripe: '#1565C0' },
   seo: { bg: '#FFF8E1', border: '#F57F1766', stripe: '#F57F17' },
   ads: { bg: '#E8F5E9', border: '#1B5E2066', stripe: '#1B5E20' },
   sosyal: { bg: '#F3E5F5', border: '#6A1B9A66', stripe: '#6A1B9A' },
 };
 
-const RH_CAT_LABELS = {
+const RH_CAT_LABELS: Record<string, string> = {
   web: 'Web Merkezi', seo: 'Organik Büyüme', ads: 'Ücretli Reklam', sosyal: 'Sosyal Medya',
 };
 
-function rhEdgePoint(from, to) {
+function rhEdgePoint(from: any, to: any) {
   const dx = to.x - from.x;
   const dy = to.y - from.y;
   if (Math.abs(dx) < 0.01 && Math.abs(dy) < 0.01) return { x: from.x, y: from.y };
@@ -29,12 +31,12 @@ function rhEdgePoint(from, to) {
 }
 
 export default function AdvertisingHierarchyLiveMap() {
-  const [terms, setTerms] = useState([]);
-  const [connections, setConnections] = useState([]);
+  const [terms, setTerms] = useState<any[]>([]);
+  const [connections, setConnections] = useState<any[]>([]);
   const [canvasDim, setCanvasDim] = useState({ w: 800, h: 500 });
   const [loading, setLoading] = useState(true);
-  const [hovered, setHovered] = useState(null);
-  const [selectedId, setSelectedId] = useState(null);
+  const [hovered, setHovered] = useState<string | null>(null);
+  const [selectedId, setSelectedId] = useState<string | null>(null);
 
   useEffect(() => {
     fetch('/api/reklam-hiyerarsisi-harita')
@@ -54,12 +56,12 @@ export default function AdvertisingHierarchyLiveMap() {
   }, []);
 
   const termMap = Object.fromEntries(terms.map(t => [t.id, t]));
-  const activeIds = new Set();
+  const activeIds = new Set<string>();
   if (selectedId) activeIds.add(selectedId);
   if (hovered) activeIds.add(hovered);
 
   const connectedIds = activeIds.size > 0 ? new Set([
-    ...activeIds,
+    ...Array.from(activeIds),
     ...connections.filter(c => activeIds.has(c.from)).map(c => c.to),
     ...connections.filter(c => activeIds.has(c.to)).map(c => c.from),
   ]) : null;
@@ -91,7 +93,7 @@ export default function AdvertisingHierarchyLiveMap() {
         <div className="hidden sm:flex gap-4">
           {Object.entries(RH_CAT_LABELS).map(([cat, label]) => (
             <div key={cat} className="flex items-center gap-2 text-xs font-medium text-gray-600">
-              <div style={{ width: 8, height: 8, borderRadius: 2, background: RH_CAT_COLORS[cat].stripe }} />
+              <div style={{ width: 8, height: 8, borderRadius: 2, background: (RH_CAT_COLORS[cat] || RH_CAT_COLORS.web).stripe }} />
               {label}
             </div>
           ))}
@@ -134,7 +136,7 @@ export default function AdvertisingHierarchyLiveMap() {
 
             {/* Nodes */}
             {terms.map(term => {
-              const colors = RH_CAT_COLORS[term.cat] || RH_CAT_COLORS['web'];
+              const colors = RH_CAT_COLORS[term.cat] || RH_CAT_COLORS.web;
               const isSelected = selectedId === term.id;
               const isHov = hovered === term.id;
               const isDimmed = connectedIds && !connectedIds.has(term.id);
@@ -180,7 +182,7 @@ export default function AdvertisingHierarchyLiveMap() {
           {selectedTerm ? (
             <>
               <div className="flex items-center gap-2">
-                <div style={{ width: 10, height: 10, borderRadius: 3, background: RH_CAT_COLORS[selectedTerm.cat].stripe }} />
+                <div style={{ width: 10, height: 10, borderRadius: 3, background: (RH_CAT_COLORS[selectedTerm.cat] || RH_CAT_COLORS.web).stripe }} />
                 <span className="text-[10px] font-bold tracking-wider text-gray-400 uppercase">
                   {(RH_CAT_LABELS[selectedTerm.cat] || 'Kategori')}
                 </span>
