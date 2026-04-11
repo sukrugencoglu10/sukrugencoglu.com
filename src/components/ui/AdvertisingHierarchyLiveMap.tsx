@@ -40,6 +40,10 @@ export default function AdvertisingHierarchyLiveMap() {
   const [zoom, setZoom] = useState(1);
   const canvasAreaRef = useRef<HTMLDivElement>(null);
 
+  // States for Panning
+  const [isPanning, setIsPanning] = useState(false);
+  const [panStart, setPanStart] = useState({ x: 0, y: 0, scrollLeft: 0, scrollTop: 0 });
+
   useEffect(() => {
     fetch('/api/reklam-hiyerarsisi-harita')
       .then(res => res.json())
@@ -57,10 +61,9 @@ export default function AdvertisingHierarchyLiveMap() {
       });
   }, []);
 
-  // Zoom logic for wheel - Using window level listener when hovering to ensure prevention of browser zoom
+  // Zoom logic for wheel
   useEffect(() => {
     const handleWheel = (e: WheelEvent) => {
-      // Check if mouse is within the map area
       if (canvasAreaRef.current && canvasAreaRef.current.contains(e.target as Node)) {
         if (e.ctrlKey || e.metaKey) {
           e.preventDefault();
@@ -76,6 +79,36 @@ export default function AdvertisingHierarchyLiveMap() {
     window.addEventListener('wheel', handleWheel, { passive: false });
     return () => window.removeEventListener('wheel', handleWheel);
   }, []);
+
+  // Panning Handlers
+  const handleMouseDown = (e: React.MouseEvent) => {
+    // Only pan if clicking on empty space (not a node/button)
+    // We check if the clicked element is the background container
+    if (e.target === e.currentTarget || (e.target as any).tagName === 'svg' || (e.target as any).tagName === 'line') {
+      setIsPanning(true);
+      if (canvasAreaRef.current) {
+        setPanStart({
+          x: e.clientX,
+          y: e.clientY,
+          scrollLeft: canvasAreaRef.current.scrollLeft,
+          scrollTop: canvasAreaRef.current.scrollTop
+        });
+      }
+    }
+  };
+
+  const handleMouseMove = (e: React.MouseEvent) => {
+    if (!isPanning || !canvasAreaRef.current) return;
+    
+    e.preventDefault();
+    const dx = e.clientX - panStart.x;
+    const dy = e.clientY - panStart.y;
+    
+    canvasAreaRef.current.scrollLeft = panStart.scrollLeft - dx;
+    canvasAreaRef.current.scrollTop = panStart.scrollTop - dy;
+  };
+
+  const handleMouseUp = () => setIsPanning(false);
 
   const handleZoomIn = () => setZoom(prev => Math.min(prev + 0.1, 3.0));
   const handleZoomOut = () => setZoom(prev => Math.max(prev - 0.1, 0.2));
@@ -115,12 +148,15 @@ export default function AdvertisingHierarchyLiveMap() {
             Canlı Reklam Hiyerarşisi Haritası
           </h3>
           <p className="text-sm text-gray-500 mt-1">Stüdyo'da hazırlanan güncel reklam stratejisi ve web hiyerarşisi</p>
-          <div className="flex gap-4 mt-3">
+          <div className="flex flex-wrap gap-4 mt-3">
              <p className="text-[10px] text-gray-400 font-medium uppercase tracking-wider flex items-center gap-1">
-               <span className="bg-gray-200 px-1 rounded text-gray-600">CTRL + Kaydır</span> Yakınlaş / Uzaklaş
+               <span className="bg-gray-200 px-1 rounded text-gray-600">Sürükle</span> Haritayı Kaydır
              </p>
              <p className="text-[10px] text-gray-400 font-medium uppercase tracking-wider flex items-center gap-1">
-               <span className="bg-gray-200 px-1 rounded text-gray-600">Tıkla</span> Detayları Gör
+               <span className="bg-gray-200 px-1 rounded text-gray-600">CTRL + Kaydır</span> Yakınlaş
+             </p>
+             <p className="text-[10px] text-gray-400 font-medium uppercase tracking-wider flex items-center gap-1">
+               <span className="bg-gray-200 px-1 rounded text-gray-600">Tıkla</span> Detay Gör
              </p>
           </div>
         </div>
@@ -138,13 +174,17 @@ export default function AdvertisingHierarchyLiveMap() {
       </div>
 
       <div className="flex flex-col lg:flex-row relative">
-        {/* Main View Area (Relative for fixed zoom controls) */}
+        {/* Main View Area */}
         <div className="flex-1 relative bg-[#fafafa]">
           {/* Scrollable Container */}
           <div 
             ref={canvasAreaRef}
-            className="w-full overflow-auto p-8" 
-            style={{ maxHeight: '78vh', minHeight: '500px' }}
+            onMouseDown={handleMouseDown}
+            onMouseMove={handleMouseMove}
+            onMouseUp={handleMouseUp}
+            onMouseLeave={handleMouseUp}
+            className={`w-full overflow-auto p-12 transition-all ${isPanning ? 'cursor-grabbing select-none' : 'cursor-grab'}`}
+            style={{ maxHeight: '78vh', minHeight: '540px' }}
           >
             {/* Zoomable Canvas */}
             <div style={{ 
@@ -155,7 +195,8 @@ export default function AdvertisingHierarchyLiveMap() {
               transform: `scale(${zoom})`,
               transformOrigin: 'center top',
               transition: 'transform 0.15s ease-out',
-              paddingBottom: 40
+              paddingBottom: 60,
+              pointerEvents: isPanning ? 'none' : 'auto' // Prevent node clicks while panning
             }}>
               {/* SVG Lines */}
               <svg width={canvasDim.w} height={canvasDim.h} style={{ position: 'absolute', top: 0, left: 0, pointerEvents: 'none' }}>
@@ -199,7 +240,10 @@ export default function AdvertisingHierarchyLiveMap() {
                     key={term.id}
                     onMouseEnter={() => setHovered(term.id)}
                     onMouseLeave={() => setHovered(null)}
-                    onClick={() => setSelectedId(prev => prev === term.id ? null : term.id)}
+                    onClick={(e) => {
+                      e.stopPropagation(); // Avoid triggering pan
+                      setSelectedId(prev => prev === term.id ? null : term.id);
+                    }}
                     style={{
                       position: 'absolute',
                       left: term.x - RH_NODE_W / 2,
@@ -230,25 +274,25 @@ export default function AdvertisingHierarchyLiveMap() {
             </div>
           </div>
 
-          {/* Fixed Zoom Controls - Relative to flex-1, outside scroll area */}
+          {/* Fixed Zoom Controls */}
           <div className="absolute bottom-6 right-6 flex flex-col gap-2 z-50">
              <div className="flex flex-col bg-white border border-gray-200 rounded-lg shadow-2xl overflow-hidden">
                 <button 
-                  onClick={handleZoomIn}
+                  onClick={(e) => { e.stopPropagation(); handleZoomIn(); }}
                   className="w-12 h-12 flex items-center justify-center text-gray-700 hover:bg-gray-50 border-b border-gray-100 transition-colors"
                   title="Yakınlaştır (+)"
                 >
                   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
                 </button>
                 <button 
-                  onClick={handleZoomOut}
+                  onClick={(e) => { e.stopPropagation(); handleZoomOut(); }}
                   className="w-12 h-12 flex items-center justify-center text-gray-700 hover:bg-gray-50 border-b border-gray-100 transition-colors"
                   title="Uzaklaştır (-)"
                 >
                   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line></svg>
                 </button>
                 <button 
-                  onClick={handleZoomReset}
+                  onClick={(e) => { e.stopPropagation(); handleZoomReset(); }}
                   className="w-12 h-12 flex items-center justify-center text-accent text-[11px] font-bold hover:bg-gray-50 transition-colors bg-gray-50/50"
                   title="Orijinal Boyut"
                 >
