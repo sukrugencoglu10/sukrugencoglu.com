@@ -85,7 +85,9 @@ export default function MantikhHaritasiSection({ belowDashboard }: { belowDashbo
 
           {/* Right: belowDashboard slot (2/5) — mobilde birinci sıraya */}
           <div className="lg:col-span-2 order-1 lg:order-2">
-            {belowDashboard && <div className="hidden lg:block">{belowDashboard}</div>}
+            {belowDashboard && (
+              <div className="hidden lg:block sticky top-24">{belowDashboard}</div>
+            )}
           </div>
         </div>
       </div>
