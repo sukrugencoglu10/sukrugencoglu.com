@@ -5,6 +5,7 @@ import WorkSection from "@/components/sections/WorkSection";
 import MantikhHaritasiSection from "@/components/sections/MantikhHaritasiSection";
 import ContactSection from "@/components/sections/ContactSection";
 import AiServicesTeaser from "@/components/sections/AiServicesTeaser";
+import PlusServicesWizard from "@/components/ui/PlusServicesWizard";
 
 const baseUrl = "https://www.sukrugencoglu.com";
 
@@ -59,7 +60,7 @@ export default function HomePage() {
       <div className="lg:hidden">
         <AiServicesTeaser />
       </div>
-      <ContactSection pinnedAnons={<AiServicesTeaser inline />} />
+      <ContactSection pinnedAnons={<PlusServicesWizard />} />
     </>
   );
 }
