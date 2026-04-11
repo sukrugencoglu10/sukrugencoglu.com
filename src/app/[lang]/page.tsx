@@ -4,7 +4,6 @@ import MarqueeText from "@/components/sections/MarqueeText";
 import WorkSection from "@/components/sections/WorkSection";
 import MantikhHaritasiSection from "@/components/sections/MantikhHaritasiSection";
 import ContactSection from "@/components/sections/ContactSection";
-import PinnedAnons from "@/components/sections/PinnedAnons";
 import AiServicesTeaser from "@/components/sections/AiServicesTeaser";
 
 const baseUrl = "https://www.sukrugencoglu.com";
@@ -60,7 +59,7 @@ export default function HomePage() {
       <div className="lg:hidden">
         <AiServicesTeaser />
       </div>
-      <ContactSection pinnedAnons={<PinnedAnons />} />
+      <ContactSection pinnedAnons={<AiServicesTeaser inline />} />
     </>
   );
 }
