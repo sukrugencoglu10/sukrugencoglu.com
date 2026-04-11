@@ -50,7 +50,7 @@ export default function HomePage() {
       <div className="relative z-10 mt-0 md:-mt-[80px]">
         <MarqueeText />
       </div>
-      <WorkSection />
+      {/* Çalışmalar artık ayrı bir sayfa olduğu için buradan çıkarıldı */}
       {/* Masaüstünde vaka çalışmalarının hemen altında */}
       <div className="hidden lg:block">
         <AiServicesTeaser />
