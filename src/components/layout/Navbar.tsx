@@ -40,11 +40,11 @@ export default function Navbar() {
       setActiveSection("process");
       return;
     }
-    if (pathname.endsWith("/work")) {
+    if (pathname.endsWith("/work") || pathname.endsWith("/calismalar")) {
       setActiveSection("work");
       return;
     }
-    if (pathname.endsWith("/contact")) {
+    if (pathname.endsWith("/contact") || pathname.endsWith("/iletisim")) {
       setActiveSection("contact");
       return;
     }
