@@ -62,8 +62,10 @@ export default function HomePage() {
       <div className="lg:hidden">
         <AiServicesTeaser showCta={false} />
       </div>
-      <div className="lg:hidden">
-        <PlusServicesWizard />
+      <div className="lg:hidden section-padding">
+        <div className="container-site">
+          <PlusServicesWizard />
+        </div>
       </div>
       <MobileContactBar />
     </>
