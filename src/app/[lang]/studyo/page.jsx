@@ -929,8 +929,8 @@ function GtmZihinHaritasi() {
                  const maxY = Math.max(selectionBox.startY, selectionBox.currY)
 
                  const newlySelected = terms.filter(t => {
-                   const halfW = GTM_NODE_W / 2
-                   const halfH = GTM_NODE_H / 2
+                   const halfW = GTM_NW / 2
+                   const halfH = GTM_NH / 2
                    const nodeMinX = t.x - halfW
                    const nodeMaxX = t.x + halfW
                    const nodeMinY = t.y - halfH
@@ -958,13 +958,13 @@ function GtmZihinHaritasi() {
           {/* SVG bağlantı çizgileri */}
           <svg
             width={canvasDim.w} height={canvasDim.h}
-            style={{ position: 'absolute', top: 0, left: 0, pointerEvents: 'none' }}
+            style={{ position: 'absolute', top: 0, left: 0, pointerEvents: 'none', overflow: 'visible', zIndex: 5 }}
           >
             <defs>
-              <marker id="gtm-arr" markerWidth="7" markerHeight="7" refX="5" refY="3.5" orient="auto">
+              <marker id="gtm-arr" markerWidth="7" markerHeight="7" refX="7" refY="3.5" orient="auto">
                 <path d="M0,0 L0,7 L7,3.5 z" fill="#ccc" />
               </marker>
-              <marker id="gtm-arr-hi" markerWidth="7" markerHeight="7" refX="5" refY="3.5" orient="auto">
+              <marker id="gtm-arr-hi" markerWidth="7" markerHeight="7" refX="7" refY="3.5" orient="auto">
                 <path d="M0,0 L0,7 L7,3.5 z" fill="#888" />
               </marker>
             </defs>
@@ -1575,13 +1575,13 @@ function MantiKHaritasi() {
           {/* SVG bağlantı çizgileri */}
           <svg
             width={canvasDim.w} height={canvasDim.h}
-            style={{ position: 'absolute', top: 0, left: 0, pointerEvents: 'none' }}
+            style={{ position: 'absolute', top: 0, left: 0, pointerEvents: 'none', overflow: 'visible', zIndex: 5 }}
           >
             <defs>
-              <marker id="arr" markerWidth="7" markerHeight="7" refX="5" refY="3.5" orient="auto">
+              <marker id="arr" markerWidth="7" markerHeight="7" refX="7" refY="3.5" orient="auto">
                 <path d="M0,0 L0,7 L7,3.5 z" fill="#ccc" />
               </marker>
-              <marker id="arr-hi" markerWidth="7" markerHeight="7" refX="5" refY="3.5" orient="auto">
+              <marker id="arr-hi" markerWidth="7" markerHeight="7" refX="7" refY="3.5" orient="auto">
                 <path d="M0,0 L0,7 L7,3.5 z" fill="#888" />
               </marker>
             </defs>
@@ -2268,12 +2268,12 @@ function YzHaritasi() {
           >
 
             {/* SVG çizgiler */}
-            <svg width={canvasDim.w} height={canvasDim.h} style={{ position: 'absolute', top: 0, left: 0, pointerEvents: 'none' }}>
+            <svg width={canvasDim.w} height={canvasDim.h} style={{ position: 'absolute', top: 0, left: 0, pointerEvents: 'none', overflow: 'visible', zIndex: 5 }}>
               <defs>
-                <marker id="ai-arr" markerWidth="7" markerHeight="7" refX="5" refY="3.5" orient="auto">
+                <marker id="ai-arr" markerWidth="7" markerHeight="7" refX="7" refY="3.5" orient="auto">
                   <path d="M0,0 L0,7 L7,3.5 z" fill="#ccc" />
                 </marker>
-                <marker id="ai-arr-hi" markerWidth="7" markerHeight="7" refX="5" refY="3.5" orient="auto">
+                <marker id="ai-arr-hi" markerWidth="7" markerHeight="7" refX="7" refY="3.5" orient="auto">
                   <path d="M0,0 L0,7 L7,3.5 z" fill="#777" />
                 </marker>
               </defs>
@@ -4887,16 +4887,30 @@ function ReklamHiyerarsisiHaritasi() {
             Web ve reklam hiyerarşisi ilişkileri · Terime tıkla: açıklamayı gör
           </p>
         </div>
-        <button
-          onClick={handleAddNode}
-          style={{
-            background: '#fff', border: '1px solid #ddd', borderRadius: 8,
-            padding: '6px 12px', fontSize: 12, cursor: 'pointer', transition: 'all 0.2s',
-            display: 'flex', alignItems: 'center', gap: 6, color: '#444'
-          }}
-        >
-          <span style={{ fontSize: 16, fontWeight: 'bold' }}>+</span> Yeni Kutu Ekle
-        </button>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          {lastSaved && <span style={{ fontSize: 11, color: '#1D9E75' }}>Kaydedildi: {lastSaved}</span>}
+          <button
+            onClick={handleSave}
+            disabled={saving}
+            style={{
+              background: '#111', color: '#fff', border: 'none', borderRadius: 8,
+              padding: '6px 14px', fontSize: 13, cursor: saving ? 'not-allowed' : 'pointer',
+              opacity: saving ? 0.7 : 1, transition: 'all 0.2s'
+            }}
+          >
+            {saving ? 'Kaydediliyor...' : 'Değişiklikleri Kaydet'}
+          </button>
+          <button
+            onClick={handleAddNode}
+            style={{
+              background: '#fff', border: '1px solid #ddd', borderRadius: 8,
+              padding: '6px 12px', fontSize: 12, cursor: 'pointer', transition: 'all 0.2s',
+              display: 'flex', alignItems: 'center', gap: 6, color: '#444'
+            }}
+          >
+            <span style={{ fontSize: 16, fontWeight: 'bold' }}>+</span> Yeni Kutu Ekle
+          </button>
+        </div>
       </div>
 
       <div style={{ display: 'flex', gap: 14, marginBottom: '1.25rem', flexWrap: 'wrap' }}>
@@ -4969,12 +4983,12 @@ function ReklamHiyerarsisiHaritasi() {
              onMouseLeave={() => setSelectionBox(null)}
           >
 
-            <svg width={canvasDim.w} height={canvasDim.h} style={{ position: 'absolute', top: 0, left: 0, pointerEvents: 'none' }}>
+            <svg width={canvasDim.w} height={canvasDim.h} style={{ position: 'absolute', top: 0, left: 0, pointerEvents: 'none', overflow: 'visible', zIndex: 5 }}>
               <defs>
-                <marker id="rh-arr" markerWidth="7" markerHeight="7" refX="5" refY="3.5" orient="auto">
+                <marker id="rh-arr" markerWidth="7" markerHeight="7" refX="7" refY="3.5" orient="auto">
                   <path d="M0,0 L0,7 L7,3.5 z" fill="#ccc" />
                 </marker>
-                <marker id="rh-arr-hi" markerWidth="7" markerHeight="7" refX="5" refY="3.5" orient="auto">
+                <marker id="rh-arr-hi" markerWidth="7" markerHeight="7" refX="7" refY="3.5" orient="auto">
                   <path d="M0,0 L0,7 L7,3.5 z" fill="#777" />
                 </marker>
               </defs>
@@ -5316,20 +5330,6 @@ function ReklamHiyerarsisiHaritasi() {
         </div>
       )}
 
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: 12, marginTop: 12 }}>
-        {lastSaved && <span style={{ fontSize: 11, color: '#1D9E75' }}>Kaydedildi: {lastSaved}</span>}
-        <button
-          onClick={handleSave}
-          disabled={saving}
-          style={{
-            background: '#111', color: '#fff', border: 'none', borderRadius: 8,
-            padding: '6px 14px', fontSize: 13, cursor: saving ? 'not-allowed' : 'pointer',
-            opacity: saving ? 0.7 : 1, transition: 'all 0.2s'
-          }}
-        >
-          {saving ? 'Kaydediliyor...' : 'Değişiklikleri Kaydet'}
-        </button>
-      </div>
     </div>
   )
 }
