@@ -1030,7 +1030,7 @@ function GtmZihinHaritasi() {
                   if (dragging && (Math.abs(e.clientX - dragging.startMouseX) > 5 || Math.abs(e.clientY - dragging.startMouseY) > 5)) {
                     return
                   }
-                  setSelectedIds(prev => prev.includes(term.id) ? [] : [term.id])
+                  if (!selectedIds.includes(term.id)) setSelectedIds([term.id])
                 }}
                 onMouseEnter={() => setHovered(term.id)}
                 onMouseLeave={() => setHovered(null)}
@@ -1046,7 +1046,7 @@ function GtmZihinHaritasi() {
                       } else {
                         currentSelected = [term.id]
                         setSelectedIds(currentSelected)
-                        setEditId(null)
+                        if (editId !== term.id) setEditId(null)
                       }
                     }
 
@@ -1115,7 +1115,7 @@ function GtmZihinHaritasi() {
                    setConnections(connections.filter(c => !selectedIds.includes(c.from) && !selectedIds.includes(c.to)))
                    setTerms(terms.filter(t => !selectedIds.includes(t.id)))
                    setSelectedIds([])
-                   setEditId(null)
+                   /* setEditId(null) removed from click */
                  }
                }}
                style={{ padding: '10px 14px', background: '#ffefef', border: '1px solid #ffccc7', color: '#f5222d', borderRadius: 8, cursor: 'pointer', fontWeight: 600, fontFamily: 'inherit' }}            >
@@ -1281,7 +1281,7 @@ function GtmZihinHaritasi() {
                           setConnections(connections.filter(c => c.from !== selectedTerm.id && c.to !== selectedTerm.id))
                           setTerms(terms.filter(t => t.id !== selectedTerm.id))
                           setSelectedIds([])
-                          setEditId(null)
+                          /* setEditId(null) removed from click */
                         }
                       }}
                       style={{ color: '#ff4d4f', fontSize: 12, background: 'none', border: 'none', cursor: 'pointer', textDecoration: 'underline' }}
@@ -1664,8 +1664,8 @@ function MantiKHaritasi() {
                     if (e.shiftKey) {
                        setSelectedIds(prev => prev.includes(term.id) ? prev.filter(id => id !== term.id) : [...prev, term.id])
                     } else {
-                       setSelectedIds(prev => prev.length === 1 && prev[0] === term.id ? [] : [term.id])
-                       if (!(selectedIds.length === 1 && selectedIds[0] === term.id)) setEditId(null)
+                       if (!selectedIds.includes(term.id)) setSelectedIds([term.id])
+                       if (!(selectedIds.length === 1 && selectedIds[0] === term.id)) /* setEditId(null) removed from click */
                     }
                   }}
                 onMouseDown={(e) => {
@@ -1680,7 +1680,7 @@ function MantiKHaritasi() {
                       } else {
                         currentSelected = [term.id]
                         setSelectedIds(currentSelected)
-                        setEditId(null)
+                        if (editId !== term.id) setEditId(null)
                       }
                     }
 
@@ -1763,7 +1763,7 @@ function MantiKHaritasi() {
                    setConnections(connections.filter(c => !selectedIds.includes(c.from) && !selectedIds.includes(c.to)))
                    setTerms(terms.filter(t => !selectedIds.includes(t.id)))
                    setSelectedIds([])
-                   setEditId(null)
+                   /* setEditId(null) removed from click */
                  }
                }}
                style={{ padding: '10px 14px', background: '#ffefef', border: '1px solid #ffccc7', color: '#f5222d', borderRadius: 8, cursor: 'pointer', fontWeight: 600, fontFamily: 'inherit' }}            >
@@ -1938,7 +1938,7 @@ function MantiKHaritasi() {
                         setConnections(connections.filter(c => c.from !== selectedTerm.id && c.to !== selectedTerm.id))
                         setTerms(terms.filter(t => t.id !== selectedTerm.id))
                         setSelectedIds([])
-                        setEditId(null)
+                        /* setEditId(null) removed from click */
                       }
                     }}
                     style={{ color: '#ff4d4f', fontSize: 12, background: 'none', border: 'none', cursor: 'pointer', textDecoration: 'underline' }}
@@ -2375,8 +2375,8 @@ function YzHaritasi() {
                     if (e.shiftKey) {
                        setSelectedIds(prev => prev.includes(term.id) ? prev.filter(id => id !== term.id) : [...prev, term.id])
                     } else {
-                       setSelectedIds(prev => prev.length === 1 && prev[0] === term.id ? [] : [term.id])
-                       if (!(selectedIds.length === 1 && selectedIds[0] === term.id)) setEditId(null)
+                       if (!selectedIds.includes(term.id)) setSelectedIds([term.id])
+                       if (!(selectedIds.length === 1 && selectedIds[0] === term.id)) /* setEditId(null) removed from click */
                     }
                   }}
                   onMouseDown={(e) => {
@@ -2391,7 +2391,7 @@ function YzHaritasi() {
                       } else {
                         currentSelected = [term.id]
                         setSelectedIds(currentSelected)
-                        setEditId(null)
+                        if (editId !== term.id) setEditId(null)
                       }
                     }
 
@@ -2466,7 +2466,7 @@ function YzHaritasi() {
                    setConnections(connections.filter(c => !selectedIds.includes(c.from) && !selectedIds.includes(c.to)))
                    setTerms(terms.filter(t => !selectedIds.includes(t.id)))
                    setSelectedIds([])
-                   setEditId(null)
+                   /* setEditId(null) removed from click */
                  }
                }}
                style={{ padding: '10px 14px', background: '#ffefef', border: '1px solid #ffccc7', color: '#f5222d', borderRadius: 8, cursor: 'pointer', fontWeight: 600, fontFamily: 'inherit' }}            >
@@ -2593,7 +2593,7 @@ function YzHaritasi() {
                           setConnections(connections.filter(c => c.from !== selectedTerm.id && c.to !== selectedTerm.id))
                           setTerms(terms.filter(t => t.id !== selectedTerm.id))
                           setSelectedIds([])
-                          setEditId(null)
+                          /* setEditId(null) removed from click */
                         }
                       }}
                       style={{ color: '#ff4d4f', fontSize: 11, background: 'none', border: 'none', cursor: 'pointer', textDecoration: 'underline' }}
@@ -5092,8 +5092,8 @@ function ReklamHiyerarsisiHaritasi() {
                     if (e.shiftKey) {
                        setSelectedIds(prev => prev.includes(term.id) ? prev.filter(id => id !== term.id) : [...prev, term.id])
                     } else {
-                       setSelectedIds(prev => prev.length === 1 && prev[0] === term.id ? [] : [term.id])
-                       if (!(selectedIds.length === 1 && selectedIds[0] === term.id)) setEditId(null)
+                       if (!selectedIds.includes(term.id)) setSelectedIds([term.id])
+                       if (!(selectedIds.length === 1 && selectedIds[0] === term.id)) /* setEditId(null) removed from click */
                     }
                   }}
                   onMouseDown={(e) => {
@@ -5108,7 +5108,7 @@ function ReklamHiyerarsisiHaritasi() {
                       } else {
                         currentSelected = [term.id]
                         setSelectedIds(currentSelected)
-                        setEditId(null)
+                        if (editId !== term.id) setEditId(null)
                       }
                     }
 
@@ -5182,7 +5182,7 @@ function ReklamHiyerarsisiHaritasi() {
                    setConnections(connections.filter(c => !selectedIds.includes(c.from) && !selectedIds.includes(c.to)))
                    setTerms(terms.filter(t => !selectedIds.includes(t.id)))
                    setSelectedIds([])
-                   setEditId(null)
+                   /* setEditId(null) removed from click */
                  }
                }}
                style={{ padding: '10px 14px', background: '#ffefef', border: '1px solid #ffccc7', color: '#f5222d', borderRadius: 8, cursor: 'pointer', fontWeight: 600, fontFamily: 'inherit' }}            >
@@ -5309,7 +5309,7 @@ function ReklamHiyerarsisiHaritasi() {
                           setConnections(connections.filter(c => c.from !== selectedTerm.id && c.to !== selectedTerm.id))
                           setTerms(terms.filter(t => t.id !== selectedTerm.id))
                           setSelectedIds([])
-                          setEditId(null)
+                          /* setEditId(null) removed from click */
                         }
                       }}
                       style={{ color: '#ff4d4f', fontSize: 11, background: 'none', border: 'none', cursor: 'pointer', textDecoration: 'underline' }}
