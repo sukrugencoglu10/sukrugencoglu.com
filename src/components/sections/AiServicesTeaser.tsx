@@ -5,12 +5,12 @@ import { useLanguage } from "@/context/LanguageContext";
 import Badge from "@/components/ui/Badge";
 import { getSlug } from "@/lib/slugs";
 
-export default function AiServicesTeaser({ inline = false, showCta = true }: { inline?: boolean; showCta?: boolean }) {
+export default function AiServicesTeaser({ inline = false, showCta = true, badge }: { inline?: boolean; showCta?: boolean; badge?: string }) {
   const { t, lang } = useLanguage();
 
   const content = (
     <div className={`flex flex-col items-center text-center gap-5 ${inline ? "" : "max-w-3xl mx-auto"}`}>
-      <Badge color="orange">{t.services.badge}</Badge>
+      <Badge color="orange">{badge ?? t.services.badge}</Badge>
 
       {/* Logolar */}
       <div className="flex justify-center items-center gap-4 sm:gap-6 flex-wrap opacity-90">
