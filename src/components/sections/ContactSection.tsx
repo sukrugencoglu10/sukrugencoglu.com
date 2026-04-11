@@ -59,11 +59,11 @@ export default function ContactSection({ pinnedAnons, mobileFirstRight }: { pinn
 
           <GrowthForm />
 
-          <p className="hidden lg:block text-ink-muted leading-relaxed max-w-md">
+          <p className="text-ink-muted leading-relaxed max-w-md">
             {t.contact.subtitle}
           </p>
 
-          <div className="hidden lg:flex flex-col gap-2">
+          <div className="flex flex-col gap-2">
             <p className="text-xs font-semibold uppercase tracking-wider text-ink-muted mb-2">
               {t.contact.or_reach}
             </p>

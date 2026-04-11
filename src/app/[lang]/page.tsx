@@ -60,7 +60,7 @@ export default function HomePage() {
       <div className="lg:hidden">
         <AiServicesTeaser />
       </div>
-      <ContactSection pinnedAnons={<PlusServicesWizard />} />
+      <ContactSection mobileFirstRight pinnedAnons={<PlusServicesWizard />} />
     </>
   );
 }
