@@ -111,7 +111,7 @@ export default function Footer() {
                   target="_blank"
                   rel="noopener noreferrer"
                   aria-label={s.name}
-                  className="p-2 rounded-lg text-ink-muted hover:text-accent hover:bg-accent/10 transition-all duration-200"
+                  className={`p-2 rounded-lg text-ink-muted hover:text-accent hover:bg-accent/10 transition-all duration-200 ${s.name === "LinkedIn" ? "md:hidden" : ""}`}
                 >
                   {s.icon}
                 </a>
