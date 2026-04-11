@@ -761,7 +761,6 @@ function GtmZihinHaritasi() {
   const [connDir, setConnDir] = useState('to') // 'to' (A->B) or 'from' (A<-B)
 
 
-  // Veriyi ilk yüklemede çek
   useEffect(() => {
     fetch('/api/gtm-ekosistemi')
       .then(res => res.json())
@@ -777,17 +776,6 @@ function GtmZihinHaritasi() {
       })
       .catch(err => console.error('GTM yükleme hatası:', err))
   }, [])
-  useEffect(() => {
-    if (!containerRef.current) return
-    const ro = new ResizeObserver(entries => {
-      for (let entry of entries) {
-        setCanvasDim({ w: entry.contentRect.width, h: entry.contentRect.height })
-      }
-    })
-    ro.observe(containerRef.current)
-    return () => ro.disconnect()
-  }, [])
-
 
   const handleSave = async () => {
     setSaving(true)
@@ -1083,6 +1071,7 @@ function GtmZihinHaritasi() {
                   display: 'flex', flexDirection: 'column', justifyContent: 'center',
                   cursor: isDragging ? 'grabbing' : 'grab',
                   userSelect: 'none',
+                  boxSizing: 'border-box', overflow: 'hidden',
                 }}
               >
                 <div style={{ fontSize: 14, fontWeight: 700, color: colors.stripe, lineHeight: 1.2, marginBottom: 2, whiteSpace: 'pre-line' }}>{term.abbr}</div>
@@ -1387,7 +1376,6 @@ function MantiKHaritasi() {
   const [connDir, setConnDir] = useState('to') // 'to' or 'from'
 
 
-  // Veriyi ilk yüklemede çek
   useEffect(() => {
     fetch('/api/reklam-terimleri')
       .then(res => res.json())
@@ -1401,16 +1389,6 @@ function MantiKHaritasi() {
         }
       })
       .catch(err => console.error('Reklam Terimleri yükleme hatası:', err))
-  }, [])
-  useEffect(() => {
-    if (!containerRef.current) return
-    const ro = new ResizeObserver(entries => {
-      for (let entry of entries) {
-        setCanvasDim({ w: entry.contentRect.width, h: entry.contentRect.height })
-      }
-    })
-    ro.observe(containerRef.current)
-    return () => ro.disconnect()
   }, [])
 
 
@@ -1708,6 +1686,7 @@ function MantiKHaritasi() {
                   zIndex: isDragging ? 4 : isSelected ? 3 : isHov ? 2 : 1,
                   display: 'flex', flexDirection: 'column', justifyContent: 'center',
                   userSelect: 'none', cursor: isDragging ? 'grabbing' : 'grab',
+                  boxSizing: 'border-box', overflow: 'hidden'
                 }}
               >
                 <div style={{ fontSize: 15, fontWeight: 700, color: colors.stripe, lineHeight: 1, marginBottom: 3 }}>{term.abbr}</div>
@@ -2091,7 +2070,6 @@ function YzHaritasi() {
   const [connDir, setConnDir] = useState('to') // 'to' or 'from'
 
 
-  // Veriyi ilk yüklemede çek
   useEffect(() => {
     fetch('/api/ai-terimleri')
       .then(res => res.json())
@@ -2105,16 +2083,6 @@ function YzHaritasi() {
         }
       })
       .catch(err => console.error('AI Terimleri yükleme hatası:', err))
-  }, [])
-  useEffect(() => {
-    if (!containerRef.current) return
-    const ro = new ResizeObserver(entries => {
-      for (let entry of entries) {
-        setCanvasDim({ w: entry.contentRect.width, h: entry.contentRect.height })
-      }
-    })
-    ro.observe(containerRef.current)
-    return () => ro.disconnect()
   }, [])
 
 
@@ -2411,6 +2379,7 @@ function YzHaritasi() {
                     zIndex: isDragging ? 4 : isSelected ? 3 : isHovered ? 2 : 1,
                     display: 'flex', flexDirection: 'column', justifyContent: 'center',
                     cursor: isDragging ? 'grabbing' : 'grab', userSelect: 'none',
+                    boxSizing: 'border-box', overflow: 'hidden',
                   }}
                 >
                   <div style={{ fontSize: 13, fontWeight: 700, color: colors.stripe, lineHeight: 1.2, marginBottom: 3, whiteSpace: 'pre-line' }}>{term.abbr}</div>
@@ -4821,16 +4790,6 @@ function ReklamHiyerarsisiHaritasi() {
       })
       .catch(err => console.error('Reklam Hiyerarsisi Haritası yükleme hatası:', err))
   }, [])
-  useEffect(() => {
-    if (!containerRef.current) return
-    const ro = new ResizeObserver(entries => {
-      for (let entry of entries) {
-        setCanvasDim({ w: entry.contentRect.width, h: entry.contentRect.height })
-      }
-    })
-    ro.observe(containerRef.current)
-    return () => ro.disconnect()
-  }, [])
 
 
   const handleSave = async () => {
@@ -5120,6 +5079,7 @@ function ReklamHiyerarsisiHaritasi() {
                     zIndex: isDragging ? 4 : isSelected ? 3 : isHovered ? 2 : 1,
                     display: 'flex', flexDirection: 'column', justifyContent: 'center',
                     cursor: isDragging ? 'grabbing' : 'grab', userSelect: 'none',
+                    boxSizing: 'border-box', overflow: 'hidden'
                   }}
                 >
                   <div style={{ fontSize: 13, fontWeight: 700, color: colors.stripe, lineHeight: 1.2, marginBottom: 3, whiteSpace: 'pre-line' }}>{term.abbr}</div>
