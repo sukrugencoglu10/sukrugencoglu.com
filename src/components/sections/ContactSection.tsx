@@ -39,56 +39,47 @@ const socialLinks = [
   },
 ];
 
-export default function ContactSection({ pinnedAnons, mobileFirstRight }: { pinnedAnons?: ReactNode; mobileFirstRight?: boolean }) {
+export default function ContactSection({ pinnedAnons, mobileFirstRight, noWrapper }: { pinnedAnons?: ReactNode; mobileFirstRight?: boolean; noWrapper?: boolean }) {
   const { t, lang } = useLanguage();
+
+  const inner = (
+    <div className="flex flex-col gap-6">
+      <Badge color="purple">{t.contact.badge}</Badge>
+      <h2 className="text-3xl sm:text-4xl font-extrabold text-ink tracking-tight">
+        {t.contact.title}{" "}
+        <span className="text-[#a855f7]">{t.contact.title_accent}</span>
+      </h2>
+      <div>
+        <p className="text-[10px] uppercase tracking-[0.25em] text-ink-subtle mb-1">{t.contact.free_analysis_label}</p>
+        <h3 className="text-lg font-bold text-ink">{t.contact.form_title}</h3>
+      </div>
+      <GrowthForm />
+      <p className="hidden lg:block text-ink-muted leading-relaxed max-w-md">{t.contact.subtitle}</p>
+      <div className="hidden lg:flex flex-col gap-2">
+        <p className="text-xs font-semibold uppercase tracking-wider text-ink-muted mb-2">{t.contact.or_reach}</p>
+        {socialLinks.map((s) => (
+          <a key={s.name} href={s.href} target="_blank" rel="noopener noreferrer"
+            className="flex items-center gap-3 group text-ink-secondary hover:text-[#a855f7] transition-colors">
+            <span className="p-2 rounded-lg bg-surface border border-border group-hover:bg-[#a855f7]/10 group-hover:border-[#a855f7]/30 transition-all">{s.icon}</span>
+            <span className="text-sm font-medium">{s.label}</span>
+          </a>
+        ))}
+      </div>
+    </div>
+  );
+
+  if (noWrapper) return inner;
 
   return (
     <section id={lang === "tr" ? "iletisim" : "contact"} className="section-padding bg-surface-secondary">
       <div className="container-site">
         <div className="grid lg:grid-cols-2 gap-12 lg:gap-20 items-start">
-        <div className={`flex flex-col gap-6 ${mobileFirstRight ? "order-2 lg:order-1" : ""}`}>
-          <Badge color="purple">{t.contact.badge}</Badge>
-          <h2 className="text-3xl sm:text-4xl font-extrabold text-ink tracking-tight">
-            {t.contact.title}{" "}
-            <span className="text-[#a855f7]">{t.contact.title_accent}</span>
-          </h2>
-          <div>
-            <p className="text-[10px] uppercase tracking-[0.25em] text-ink-subtle mb-1">{t.contact.free_analysis_label}</p>
-            <h3 className="text-lg font-bold text-ink">{t.contact.form_title}</h3>
-          </div>
-
-          <GrowthForm />
-
-          <p className="hidden lg:block text-ink-muted leading-relaxed max-w-md">
-            {t.contact.subtitle}
-          </p>
-
-          <div className="hidden lg:flex flex-col gap-2">
-            <p className="text-xs font-semibold uppercase tracking-wider text-ink-muted mb-2">
-              {t.contact.or_reach}
-            </p>
-            {socialLinks.map((s) => (
-              <a
-                key={s.name}
-                href={s.href}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center gap-3 group text-ink-secondary hover:text-[#a855f7] transition-colors"
-              >
-                <span className="p-2 rounded-lg bg-surface border border-border group-hover:bg-[#a855f7]/10 group-hover:border-[#a855f7]/30 transition-all">
-                  {s.icon}
-                </span>
-                <span className="text-sm font-medium">{s.label}</span>
-              </a>
-            ))}
-          </div>
-        </div>
-        {/* Sağ kolon — masaüstünde sağda, mobilde formun altında */}
-        {pinnedAnons && (
-          <div className={`lg:sticky lg:top-24 ${mobileFirstRight ? "order-1 lg:order-2" : ""}`}>
-            {pinnedAnons}
-          </div>
-        )}
+          <div className={mobileFirstRight ? "order-2 lg:order-1" : ""}>{inner}</div>
+          {pinnedAnons && (
+            <div className={`lg:sticky lg:top-24 ${mobileFirstRight ? "order-1 lg:order-2" : ""}`}>
+              {pinnedAnons}
+            </div>
+          )}
         </div>
       </div>
     </section>

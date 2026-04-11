@@ -56,8 +56,11 @@ export default function HomePage() {
       <div className="hidden lg:block">
         <AiServicesTeaser />
       </div>
-      <MantikhHaritasiSection />
-      <ContactSection />
+      <MantikhHaritasiSection belowDashboard={<ContactSection noWrapper />} />
+      {/* Mobilde standalone ContactSection */}
+      <div className="lg:hidden">
+        <ContactSection />
+      </div>
       {/* Masaüstünde iletişim formunun altında */}
       <div className="hidden lg:block section-padding">
         <div className="container-site">
