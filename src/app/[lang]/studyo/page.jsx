@@ -1026,12 +1026,11 @@ function GtmZihinHaritasi() {
               <div
                 key={term.id}
                 onClick={(e) => {
-                  // Eğer çok sürüklendiyse onClick'i yoksay
-                  if (dragging && (Math.abs(e.clientX - dragging.startMouseX) > 5 || Math.abs(e.clientY - dragging.startMouseY) > 5)) {
-                    return
-                  }
-                  if (!selectedIds.includes(term.id)) setSelectedIds([term.id])
-                }}
+                    e.stopPropagation()
+                    if (dragging && (Math.abs(e.clientX - dragging.startMouseX) > 5 || Math.abs(e.clientY - dragging.startMouseY) > 5)) {
+                      return
+                    }
+                  }}
                 onMouseEnter={() => setHovered(term.id)}
                 onMouseLeave={() => setHovered(null)}
                 onMouseDown={(e) => {
@@ -1115,7 +1114,7 @@ function GtmZihinHaritasi() {
                    setConnections(connections.filter(c => !selectedIds.includes(c.from) && !selectedIds.includes(c.to)))
                    setTerms(terms.filter(t => !selectedIds.includes(t.id)))
                    setSelectedIds([])
-                   /* setEditId(null) removed from click */
+                   if (editId !== term.id) setEditId(null)
                  }
                }}
                style={{ padding: '10px 14px', background: '#ffefef', border: '1px solid #ffccc7', color: '#f5222d', borderRadius: 8, cursor: 'pointer', fontWeight: 600, fontFamily: 'inherit' }}            >
@@ -1281,7 +1280,7 @@ function GtmZihinHaritasi() {
                           setConnections(connections.filter(c => c.from !== selectedTerm.id && c.to !== selectedTerm.id))
                           setTerms(terms.filter(t => t.id !== selectedTerm.id))
                           setSelectedIds([])
-                          /* setEditId(null) removed from click */
+                          if (editId !== term.id) setEditId(null)
                         }
                       }}
                       style={{ color: '#ff4d4f', fontSize: 12, background: 'none', border: 'none', cursor: 'pointer', textDecoration: 'underline' }}
@@ -1661,12 +1660,6 @@ function MantiKHaritasi() {
                     if (dragging && (Math.abs(e.clientX - dragging.startMouseX) > 5 || Math.abs(e.clientY - dragging.startMouseY) > 5)) {
                       return
                     }
-                    if (e.shiftKey) {
-                       setSelectedIds(prev => prev.includes(term.id) ? prev.filter(id => id !== term.id) : [...prev, term.id])
-                    } else {
-                       if (!selectedIds.includes(term.id)) setSelectedIds([term.id])
-                       if (!(selectedIds.length === 1 && selectedIds[0] === term.id)) /* setEditId(null) removed from click */
-                    }
                   }}
                 onMouseDown={(e) => {
                     if (e.button !== 0) return
@@ -1763,7 +1756,7 @@ function MantiKHaritasi() {
                    setConnections(connections.filter(c => !selectedIds.includes(c.from) && !selectedIds.includes(c.to)))
                    setTerms(terms.filter(t => !selectedIds.includes(t.id)))
                    setSelectedIds([])
-                   /* setEditId(null) removed from click */
+                   if (editId !== term.id) setEditId(null)
                  }
                }}
                style={{ padding: '10px 14px', background: '#ffefef', border: '1px solid #ffccc7', color: '#f5222d', borderRadius: 8, cursor: 'pointer', fontWeight: 600, fontFamily: 'inherit' }}            >
@@ -1938,7 +1931,7 @@ function MantiKHaritasi() {
                         setConnections(connections.filter(c => c.from !== selectedTerm.id && c.to !== selectedTerm.id))
                         setTerms(terms.filter(t => t.id !== selectedTerm.id))
                         setSelectedIds([])
-                        /* setEditId(null) removed from click */
+                        if (editId !== term.id) setEditId(null)
                       }
                     }}
                     style={{ color: '#ff4d4f', fontSize: 12, background: 'none', border: 'none', cursor: 'pointer', textDecoration: 'underline' }}
@@ -2372,12 +2365,6 @@ function YzHaritasi() {
                     if (dragging && (Math.abs(e.clientX - dragging.startMouseX) > 5 || Math.abs(e.clientY - dragging.startMouseY) > 5)) {
                       return
                     }
-                    if (e.shiftKey) {
-                       setSelectedIds(prev => prev.includes(term.id) ? prev.filter(id => id !== term.id) : [...prev, term.id])
-                    } else {
-                       if (!selectedIds.includes(term.id)) setSelectedIds([term.id])
-                       if (!(selectedIds.length === 1 && selectedIds[0] === term.id)) /* setEditId(null) removed from click */
-                    }
                   }}
                   onMouseDown={(e) => {
                     if (e.button !== 0) return
@@ -2466,7 +2453,7 @@ function YzHaritasi() {
                    setConnections(connections.filter(c => !selectedIds.includes(c.from) && !selectedIds.includes(c.to)))
                    setTerms(terms.filter(t => !selectedIds.includes(t.id)))
                    setSelectedIds([])
-                   /* setEditId(null) removed from click */
+                   if (editId !== term.id) setEditId(null)
                  }
                }}
                style={{ padding: '10px 14px', background: '#ffefef', border: '1px solid #ffccc7', color: '#f5222d', borderRadius: 8, cursor: 'pointer', fontWeight: 600, fontFamily: 'inherit' }}            >
@@ -2593,7 +2580,7 @@ function YzHaritasi() {
                           setConnections(connections.filter(c => c.from !== selectedTerm.id && c.to !== selectedTerm.id))
                           setTerms(terms.filter(t => t.id !== selectedTerm.id))
                           setSelectedIds([])
-                          /* setEditId(null) removed from click */
+                          if (editId !== term.id) setEditId(null)
                         }
                       }}
                       style={{ color: '#ff4d4f', fontSize: 11, background: 'none', border: 'none', cursor: 'pointer', textDecoration: 'underline' }}
@@ -5089,12 +5076,6 @@ function ReklamHiyerarsisiHaritasi() {
                     if (dragging && (Math.abs(e.clientX - dragging.startMouseX) > 5 || Math.abs(e.clientY - dragging.startMouseY) > 5)) {
                       return
                     }
-                    if (e.shiftKey) {
-                       setSelectedIds(prev => prev.includes(term.id) ? prev.filter(id => id !== term.id) : [...prev, term.id])
-                    } else {
-                       if (!selectedIds.includes(term.id)) setSelectedIds([term.id])
-                       if (!(selectedIds.length === 1 && selectedIds[0] === term.id)) /* setEditId(null) removed from click */
-                    }
                   }}
                   onMouseDown={(e) => {
                     if (e.button !== 0) return
@@ -5182,7 +5163,7 @@ function ReklamHiyerarsisiHaritasi() {
                    setConnections(connections.filter(c => !selectedIds.includes(c.from) && !selectedIds.includes(c.to)))
                    setTerms(terms.filter(t => !selectedIds.includes(t.id)))
                    setSelectedIds([])
-                   /* setEditId(null) removed from click */
+                   if (editId !== term.id) setEditId(null)
                  }
                }}
                style={{ padding: '10px 14px', background: '#ffefef', border: '1px solid #ffccc7', color: '#f5222d', borderRadius: 8, cursor: 'pointer', fontWeight: 600, fontFamily: 'inherit' }}            >
@@ -5309,7 +5290,7 @@ function ReklamHiyerarsisiHaritasi() {
                           setConnections(connections.filter(c => c.from !== selectedTerm.id && c.to !== selectedTerm.id))
                           setTerms(terms.filter(t => t.id !== selectedTerm.id))
                           setSelectedIds([])
-                          /* setEditId(null) removed from click */
+                          if (editId !== term.id) setEditId(null)
                         }
                       }}
                       style={{ color: '#ff4d4f', fontSize: 11, background: 'none', border: 'none', cursor: 'pointer', textDecoration: 'underline' }}
