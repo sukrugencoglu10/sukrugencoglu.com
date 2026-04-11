@@ -143,7 +143,7 @@ export const tr: Translations = {
     ],
   },
   plusServices: {
-    badge: "+Plus Hizmetlerimiz",
+    badge: "Birlikte Çalışalım",
     title: "Hangi sisteme ihtiyacınız var?",
     subtitle: "En yakın seçeneği seçin — en kısa sürede size dönelim.",
     categories: [
