@@ -82,9 +82,7 @@ export default function MantikhHaritasiSection() {
 
           {/* Right: Growth Dashboard (2/5) — mobilde birinci sıraya */}
           <div className="lg:col-span-2 order-1 lg:order-2">
-            <div className="sticky top-24">
-              <GrowthDashboard />
-            </div>
+            <GrowthDashboard />
           </div>
         </div>
       </div>
