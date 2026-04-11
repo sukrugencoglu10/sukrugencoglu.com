@@ -3,8 +3,9 @@
 import { useLanguage } from "@/context/LanguageContext";
 import Badge from "@/components/ui/Badge";
 import GrowthDashboard from "@/components/ui/GrowthDashboard";
+import type { ReactNode } from "react";
 
-export default function MantikhHaritasiSection() {
+export default function MantikhHaritasiSection({ belowDashboard }: { belowDashboard?: ReactNode }) {
   const { t } = useLanguage();
   const mh = t.mantikhHaritasi;
 
@@ -82,10 +83,13 @@ export default function MantikhHaritasiSection() {
           </div>
 
           {/* Right: Growth Dashboard (2/5) — mobilde birinci sıraya */}
-          <div className="lg:col-span-2 order-1 lg:order-2">
+          <div className="lg:col-span-2 order-1 lg:order-2 flex flex-col gap-8">
             <div className="sticky top-24">
               <GrowthDashboard />
             </div>
+            {belowDashboard && (
+              <div className="hidden lg:block">{belowDashboard}</div>
+            )}
           </div>
         </div>
       </div>
