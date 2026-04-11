@@ -41,7 +41,7 @@ export default function Footer() {
   return (
     <footer className="bg-surface-secondary border-t border-border">
       <div className="container-site py-12">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 md:gap-12">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-8 md:gap-12">
           {/* Logo + Tagline */}
           <div className="flex flex-col gap-4 items-center md:items-start">
             <div className="flex items-center gap-3">
@@ -81,7 +81,23 @@ export default function Footer() {
             </ul>
           </div>
 
-          {/* İletişim + Sosyal */}
+          {/* İletişim Bilgileri — sadece masaüstünde */}
+          <div className="hidden md:flex flex-col gap-3">
+            <p className="text-sm text-ink-muted leading-relaxed">{t.contact.subtitle}</p>
+            <p className="text-xs font-semibold uppercase tracking-wider text-ink-muted mt-1">{t.contact.or_reach}</p>
+            {[
+              { href: "https://linkedin.com/in/sukrugencoglu10", label: "linkedin.com/in/sukrugencoglu10" },
+              { href: "https://wa.me/905324072694", label: "+90 532 407 26 94" },
+              { href: "mailto:sukrugencoglu10@gmail.com", label: "sukrugencoglu10@gmail.com" },
+            ].map((s) => (
+              <a key={s.href} href={s.href} target="_blank" rel="noopener noreferrer"
+                className="text-sm text-ink-secondary hover:text-accent transition-colors">
+                {s.label}
+              </a>
+            ))}
+          </div>
+
+          {/* Sosyal */}
           <div className="flex flex-col items-center gap-3">
             <h4 className="text-xs font-semibold uppercase tracking-wider text-ink-muted text-center">
               {t.footer.contact_title}
