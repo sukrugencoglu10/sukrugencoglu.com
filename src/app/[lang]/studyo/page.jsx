@@ -747,7 +747,10 @@ function gtmEdgePoint(from, to) {
 }
 
 function GtmZihinHaritasi() {
-  const [selected, setSelected] = useState(null)
+  const containerRef = useRef(null)
+  const [canvasDim, setCanvasDim] = useState({ w: 880, h: 555 })
+  const [selectedIds, setSelectedIds] = useState([])
+  const [selectionBox, setSelectionBox] = useState(null)
   const [hovered, setHovered] = useState(null)
   const [terms, setTerms] = useState(GTM_TERMS)
   const [connections, setConnections] = useState(GTM_CONNECTIONS)
@@ -764,9 +767,9 @@ function GtmZihinHaritasi() {
       .then(res => res.json())
       .then(data => {
         if (data && !Array.isArray(data) && data.terms) {
-          // Gelişmiş format (nesne)
           setTerms(data.terms)
           setConnections(data.connections || [])
+          if (data.metadata?.w) setCanvasDim({ w: data.metadata.w, h: data.metadata.h || 600 })
         } else if (data && Array.isArray(data) && data.length > 0) {
           // Eski format (dizi)
           setTerms(data)
@@ -774,6 +777,17 @@ function GtmZihinHaritasi() {
       })
       .catch(err => console.error('GTM yükleme hatası:', err))
   }, [])
+  useEffect(() => {
+    if (!containerRef.current) return
+    const ro = new ResizeObserver(entries => {
+      for (let entry of entries) {
+        setCanvasDim({ w: entry.contentRect.width, h: entry.contentRect.height })
+      }
+    })
+    ro.observe(containerRef.current)
+    return () => ro.disconnect()
+  }, [])
+
 
   const handleSave = async () => {
     setSaving(true)
@@ -781,7 +795,7 @@ function GtmZihinHaritasi() {
       const res = await fetch('/api/gtm-ekosistemi', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ terms, connections }),
+        body: JSON.stringify({ terms, connections, metadata: canvasDim }),
       })
       if (res.ok) {
         setLastSaved(new Date().toLocaleTimeString())
@@ -800,8 +814,8 @@ function GtmZihinHaritasi() {
       const dx = e.clientX - dragging.startMouseX
       const dy = e.clientY - dragging.startMouseY
       setTerms(prev => prev.map(t => {
-        if (t.id === dragging.id) {
-          return { ...t, x: dragging.startNodeX + dx, y: dragging.startNodeY + dy }
+        if (dragging.startPositions && dragging.startPositions[t.id]) {
+          return { ...t, x: dragging.startPositions[t.id].x + dx, y: dragging.startPositions[t.id].y + dy }
         }
         return t
       }))
@@ -820,13 +834,14 @@ function GtmZihinHaritasi() {
   }, [dragging])
 
   const termMap = Object.fromEntries(terms.map(t => [t.id, t]))
-  const selectedTerm = selected ? termMap[selected] : null
+  const selectedTerm = selectedIds.length === 1 ? termMap[selectedIds[0]] : null
 
-  const activeId = hovered || selected
-  const connectedIds = activeId ? new Set([
-    activeId,
-    ...connections.filter(c => c.from === activeId).map(c => c.to),
-    ...connections.filter(c => c.to === activeId).map(c => c.from),
+  const activeIds = new Set(selectedIds)
+  if (hovered) activeIds.add(hovered)
+  const connectedIds = activeIds.size > 0 ? new Set([
+     ...activeIds,
+     ...connections.filter(c => activeIds.has(c.from)).map(c => c.to),
+     ...connections.filter(c => activeIds.has(c.to)).map(c => c.from),
   ]) : null
 
   const handleAddNode = () => {
@@ -841,25 +856,25 @@ function GtmZihinHaritasi() {
       desc: 'Bu kutu için açıklama yazın...'
     }
     setTerms([...terms, newNode])
-    setSelected(newId)
+    setSelectedIds([newId])
     setEditId(newId)
   }
 
   const handleAddConnection = (targetId) => {
-    if (!selected || !targetId || selected === targetId) return
-    const from = connDir === 'to' ? selected : targetId
-    const to = connDir === 'to' ? targetId : selected
+    if (selectedIds.length !== 1 || !targetId || selectedIds[0] === targetId) return
+    const from = connDir === 'to' ? selectedIds[0] : targetId
+    const to = connDir === 'to' ? targetId : selectedIds[0]
     if (connections.find(c => c.from === from && c.to === to)) return
     setConnections([...connections, { from, to }])
   }
 
 
   const handleRemoveConnection = (targetId) => {
-    setConnections(connections.filter(c => !(c.from === selected && c.to === targetId)))
+    setConnections(connections.filter(c => !(c.from === selectedIds[0] && c.to === targetId)))
   }
 
-  const CANVAS_W = 1000
-  const CANVAS_H = 500
+  
+  
 
   return (
     <div style={{ marginTop: '4rem', paddingTop: '2rem', borderTop: '1px solid #eee' }}>
@@ -894,11 +909,67 @@ function GtmZihinHaritasi() {
 
       {/* Canvas */}
       <div style={{ overflowX: 'auto', background: '#fafafa', border: '0.5px solid #e8e8e8', borderRadius: 12, padding: '12px 0' }}>
-        <div style={{ position: 'relative', width: CANVAS_W, height: CANVAS_H, margin: '0 auto' }}>
+        <div style={{ position: "relative", width: canvasDim.w, height: canvasDim.h, margin: 0 }}
+             onMouseDown={(e) => {
+               if (e.button !== 0) return
+               if (e.target !== e.currentTarget && e.target.tagName !== 'svg') return
+               const rect = e.currentTarget.getBoundingClientRect()
+               setSelectionBox({
+                 startX: e.clientX - rect.left,
+                 startY: e.clientY - rect.top,
+                 currX: e.clientX - rect.left,
+                 currY: e.clientY - rect.top
+               })
+               if (!e.shiftKey) setSelectedIds([])
+               setEditId(null)
+             }}
+             onMouseMove={(e) => {
+               if (selectionBox) {
+                 const rect = e.currentTarget.getBoundingClientRect()
+                 setSelectionBox({
+                   ...selectionBox,
+                   currX: e.clientX - rect.left,
+                   currY: e.clientY - rect.top
+                 })
+               }
+             }}
+             onMouseUp={(e) => {
+               if (selectionBox) {
+                 const minX = Math.min(selectionBox.startX, selectionBox.currX)
+                 const maxX = Math.max(selectionBox.startX, selectionBox.currX)
+                 const minY = Math.min(selectionBox.startY, selectionBox.currY)
+                 const maxY = Math.max(selectionBox.startY, selectionBox.currY)
+
+                 const newlySelected = terms.filter(t => {
+                   const halfW = GTM_NODE_W / 2
+                   const halfH = GTM_NODE_H / 2
+                   const nodeMinX = t.x - halfW
+                   const nodeMaxX = t.x + halfW
+                   const nodeMinY = t.y - halfH
+                   const nodeMaxY = t.y + halfH
+
+                   return (
+                     nodeMinX < maxX &&
+                     nodeMaxX > minX &&
+                     nodeMinY < maxY &&
+                     nodeMaxY > minY
+                   )
+                 }).map(t => t.id)
+
+                 if (e.shiftKey) {
+                   setSelectedIds(prev => Array.from(new Set([...prev, ...newlySelected])))
+                 } else {
+                   setSelectedIds(newlySelected)
+                 }
+                 setSelectionBox(null)
+               }
+             }}
+             onMouseLeave={() => setSelectionBox(null)}
+          >
 
           {/* SVG bağlantı çizgileri */}
           <svg
-            width={CANVAS_W} height={CANVAS_H}
+            width={canvasDim.w} height={canvasDim.h}
             style={{ position: 'absolute', top: 0, left: 0, pointerEvents: 'none' }}
           >
             <defs>
@@ -915,7 +986,7 @@ function GtmZihinHaritasi() {
               if (!from || !to) return null
               const p1 = gtmEdgePoint(from, to)
               const p2 = gtmEdgePoint(to, from)
-              const isActive = activeId && (conn.from === activeId || conn.to === activeId)
+              const isActive = activeIds.has(conn.from) || activeIds.has(conn.to)
               return (
                 <line
                   key={i}
@@ -927,11 +998,26 @@ function GtmZihinHaritasi() {
               )
             })}
           </svg>
+            {selectionBox && (
+              <div style={{
+                position: 'absolute',
+                border: '1px solid rgba(29, 158, 117, 0.5)',
+                background: 'rgba(29, 158, 117, 0.1)',
+                left: Math.min(selectionBox.startX, selectionBox.currX),
+                top: Math.min(selectionBox.startY, selectionBox.currY),
+                width: Math.abs(selectionBox.currX - selectionBox.startX),
+                height: Math.abs(selectionBox.currY - selectionBox.startY),
+                pointerEvents: 'none',
+                zIndex: 10,
+                borderRadius: 4
+              }} />
+            )}
+
 
           {/* Node'lar */}
           {terms.map(term => {
             const colors = GTM_CAT_COLORS[term.cat]
-            const isSelected = selected === term.id
+            const isSelected = selectedIds.includes(term.id)
             const isHov = hovered === term.id
             const isDimmed = connectedIds && !connectedIds.has(term.id)
             const isDragging = dragging?.id === term.id
@@ -949,15 +1035,34 @@ function GtmZihinHaritasi() {
                 onMouseEnter={() => setHovered(term.id)}
                 onMouseLeave={() => setHovered(null)}
                 onMouseDown={(e) => {
-                  if (e.button !== 0) return
-                  setDragging({
-                    id: term.id,
-                    startMouseX: e.clientX,
-                    startMouseY: e.clientY,
-                    startNodeX: term.x,
-                    startNodeY: term.y
-                  })
-                }}
+                    if (e.button !== 0) return
+                    e.stopPropagation()
+                    
+                    let currentSelected = selectedIds;
+                    if (!selectedIds.includes(term.id)) {
+                      if (e.shiftKey) {
+                        currentSelected = [...selectedIds, term.id]
+                        setSelectedIds(currentSelected)
+                      } else {
+                        currentSelected = [term.id]
+                        setSelectedIds(currentSelected)
+                        setEditId(null)
+                      }
+                    }
+
+                    const startPositions = {}
+                    terms.forEach(t => {
+                      if (currentSelected.includes(t.id)) {
+                        startPositions[t.id] = { x: t.x, y: t.y }
+                      }
+                    })
+
+                    setDragging({
+                      startMouseX: e.clientX,
+                      startMouseY: e.clientY,
+                      startPositions
+                    })
+                  }}
                 style={{
                   position: 'absolute',
                   left: term.x - GTM_NW / 2,
@@ -999,8 +1104,25 @@ function GtmZihinHaritasi() {
         minHeight: 80,
         transition: 'all 0.2s',
       }}>
-        {selectedTerm ? (
-          <>
+        {selectedIds.length > 1 ? (
+          <div style={{ padding: '2rem 1rem', textAlign: 'center', height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+            <div style={{ fontSize: 28, color: '#1D9E75', marginBottom: 12 }}>✓</div>
+            <div style={{ fontSize: 18, fontWeight: 700, marginBottom: 8 }}>{selectedIds.length} Kutu Seçili</div>
+            <div style={{ fontSize: 13, color: '#666', marginBottom: 24, lineHeight: 1.6 }}>Şu anda birden fazla terim seçtiniz. Bunları birlikte taşıyabilir veya toplu olarak silebilirsiniz.</div>
+            <button
+               onClick={() => {
+                 if (confirm(`Seçili ${selectedIds.length} kutuyu ve bağlantılarını silmek istediğinize emin misiniz?`)) {
+                   setConnections(connections.filter(c => !selectedIds.includes(c.from) && !selectedIds.includes(c.to)))
+                   setTerms(terms.filter(t => !selectedIds.includes(t.id)))
+                   setSelectedIds([])
+                   setEditId(null)
+                 }
+               }}
+               style={{ padding: '10px 14px', background: '#ffefef', border: '1px solid #ffccc7', color: '#f5222d', borderRadius: 8, cursor: 'pointer', fontWeight: 600, fontFamily: 'inherit' }}            >
+              Toplu Sil
+            </button>
+          </div>
+        ) : selectedTerm ? (          <>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                 <div style={{ width: 8, height: 8, borderRadius: 2, background: GTM_CAT_COLORS[selectedTerm.cat].stripe, flexShrink: 0 }} />
@@ -1254,7 +1376,10 @@ function edgePoint(from, to) {
 }
 
 function MantiKHaritasi() {
-  const [selected, setSelected] = useState(null)
+  const containerRef = useRef(null)
+  const [canvasDim, setCanvasDim] = useState({ w: 1000, h: 460 })
+  const [selectedIds, setSelectedIds] = useState([])
+  const [selectionBox, setSelectionBox] = useState(null)
   const [hovered, setHovered] = useState(null)
   const [terms, setTerms] = useState(AD_TERMS)
   const [connections, setConnections] = useState(CONNECTIONS)
@@ -1273,12 +1398,24 @@ function MantiKHaritasi() {
         if (data && !Array.isArray(data) && data.terms) {
           setTerms(data.terms)
           setConnections(data.connections || [])
+          if (data.metadata?.w) setCanvasDim({ w: data.metadata.w, h: data.metadata.h || 600 })
         } else if (data && Array.isArray(data) && data.length > 0) {
           setTerms(data)
         }
       })
       .catch(err => console.error('Reklam Terimleri yükleme hatası:', err))
   }, [])
+  useEffect(() => {
+    if (!containerRef.current) return
+    const ro = new ResizeObserver(entries => {
+      for (let entry of entries) {
+        setCanvasDim({ w: entry.contentRect.width, h: entry.contentRect.height })
+      }
+    })
+    ro.observe(containerRef.current)
+    return () => ro.disconnect()
+  }, [])
+
 
   const handleSave = async () => {
     setSaving(true)
@@ -1286,7 +1423,7 @@ function MantiKHaritasi() {
       const res = await fetch('/api/reklam-terimleri', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ terms, connections }),
+        body: JSON.stringify({ terms, connections, metadata: canvasDim }),
       })
       if (res.ok) {
         setLastSaved(new Date().toLocaleTimeString())
@@ -1305,8 +1442,8 @@ function MantiKHaritasi() {
       const dx = e.clientX - dragging.startMouseX
       const dy = e.clientY - dragging.startMouseY
       setTerms(prev => prev.map(t => {
-        if (t.id === dragging.id) {
-          return { ...t, x: dragging.startNodeX + dx, y: dragging.startNodeY + dy }
+        if (dragging.startPositions && dragging.startPositions[t.id]) {
+          return { ...t, x: dragging.startPositions[t.id].x + dx, y: dragging.startPositions[t.id].y + dy }
         }
         return t
       }))
@@ -1325,13 +1462,14 @@ function MantiKHaritasi() {
   }, [dragging])
 
   const termMap = Object.fromEntries(terms.map(t => [t.id, t]))
-  const selectedTerm = selected ? termMap[selected] : null
+  const selectedTerm = selectedIds.length === 1 ? termMap[selectedIds[0]] : null
 
-  const activeId = hovered || selected
-  const connectedIds = activeId ? new Set([
-    activeId,
-    ...connections.filter(c => c.from === activeId).map(c => c.to),
-    ...connections.filter(c => c.to === activeId).map(c => c.from),
+  const activeIds = new Set(selectedIds)
+  if (hovered) activeIds.add(hovered)
+  const connectedIds = activeIds.size > 0 ? new Set([
+     ...activeIds,
+     ...connections.filter(c => activeIds.has(c.from)).map(c => c.to),
+     ...connections.filter(c => activeIds.has(c.to)).map(c => c.from),
   ]) : null
 
   const handleAddNode = () => {
@@ -1347,25 +1485,25 @@ function MantiKHaritasi() {
       desc: 'Bu terim için detaylı açıklama yazın...'
     }
     setTerms([...terms, newNode])
-    setSelected(newId)
+    setSelectedIds([newId])
     setEditId(newId)
   }
 
   const handleAddConnection = (targetId) => {
-    if (!selected || !targetId || selected === targetId) return
-    const from = connDir === 'to' ? selected : targetId
-    const to = connDir === 'to' ? targetId : selected
+    if (selectedIds.length !== 1 || !targetId || selectedIds[0] === targetId) return
+    const from = connDir === 'to' ? selectedIds[0] : targetId
+    const to = connDir === 'to' ? targetId : selectedIds[0]
     if (connections.find(c => c.from === from && c.to === to)) return
     setConnections([...connections, { from, to }])
   }
 
 
   const handleRemoveConnection = (targetId) => {
-    setConnections(connections.filter(c => !(c.from === selected && c.to === targetId)))
+    setConnections(connections.filter(c => !(c.from === selectedIds[0] && c.to === targetId)))
   }
 
-  const CANVAS_W = 1000
-  const CANVAS_H = 460
+  
+  
 
   return (
     <div style={{ padding: '2rem 1.25rem', fontFamily: 'inherit' }}>
@@ -1401,11 +1539,67 @@ function MantiKHaritasi() {
 
       {/* Canvas */}
       <div style={{ overflowX: 'auto', background: '#fafafa', border: '0.5px solid #e8e8e8', borderRadius: 12, padding: '8px 0 12px' }}>
-        <div style={{ position: 'relative', width: CANVAS_W, height: CANVAS_H, margin: '0 auto' }}>
+        <div style={{ position: "relative", width: canvasDim.w, height: canvasDim.h, margin: 0 }}
+             onMouseDown={(e) => {
+               if (e.button !== 0) return
+               if (e.target !== e.currentTarget && e.target.tagName !== 'svg') return
+               const rect = e.currentTarget.getBoundingClientRect()
+               setSelectionBox({
+                 startX: e.clientX - rect.left,
+                 startY: e.clientY - rect.top,
+                 currX: e.clientX - rect.left,
+                 currY: e.clientY - rect.top
+               })
+               if (!e.shiftKey) setSelectedIds([])
+               setEditId(null)
+             }}
+             onMouseMove={(e) => {
+               if (selectionBox) {
+                 const rect = e.currentTarget.getBoundingClientRect()
+                 setSelectionBox({
+                   ...selectionBox,
+                   currX: e.clientX - rect.left,
+                   currY: e.clientY - rect.top
+                 })
+               }
+             }}
+             onMouseUp={(e) => {
+               if (selectionBox) {
+                 const minX = Math.min(selectionBox.startX, selectionBox.currX)
+                 const maxX = Math.max(selectionBox.startX, selectionBox.currX)
+                 const minY = Math.min(selectionBox.startY, selectionBox.currY)
+                 const maxY = Math.max(selectionBox.startY, selectionBox.currY)
+
+                 const newlySelected = terms.filter(t => {
+                   const halfW = NODE_W / 2
+                   const halfH = NODE_H / 2
+                   const nodeMinX = t.x - halfW
+                   const nodeMaxX = t.x + halfW
+                   const nodeMinY = t.y - halfH
+                   const nodeMaxY = t.y + halfH
+
+                   return (
+                     nodeMinX < maxX &&
+                     nodeMaxX > minX &&
+                     nodeMinY < maxY &&
+                     nodeMaxY > minY
+                   )
+                 }).map(t => t.id)
+
+                 if (e.shiftKey) {
+                   setSelectedIds(prev => Array.from(new Set([...prev, ...newlySelected])))
+                 } else {
+                   setSelectedIds(newlySelected)
+                 }
+                 setSelectionBox(null)
+               }
+             }}
+             onMouseLeave={() => setSelectionBox(null)}
+          >
 
           {/* SVG bağlantı çizgileri */}
           <svg
-            width={CANVAS_W} height={CANVAS_H}
+            width={canvasDim.w} height={canvasDim.h}
             style={{ position: 'absolute', top: 0, left: 0, pointerEvents: 'none' }}
           >
             <defs>
@@ -1422,7 +1616,7 @@ function MantiKHaritasi() {
               if (!from || !to) return null
               const p1 = edgePoint(from, to)
               const p2 = edgePoint(to, from)
-              const isActive = activeId && (conn.from === activeId || conn.to === activeId)
+              const isActive = activeIds.has(conn.from) || activeIds.has(conn.to)
               return (
                 <line
                   key={i}
@@ -1434,11 +1628,26 @@ function MantiKHaritasi() {
               )
             })}
           </svg>
+            {selectionBox && (
+              <div style={{
+                position: 'absolute',
+                border: '1px solid rgba(29, 158, 117, 0.5)',
+                background: 'rgba(29, 158, 117, 0.1)',
+                left: Math.min(selectionBox.startX, selectionBox.currX),
+                top: Math.min(selectionBox.startY, selectionBox.currY),
+                width: Math.abs(selectionBox.currX - selectionBox.startX),
+                height: Math.abs(selectionBox.currY - selectionBox.startY),
+                pointerEvents: 'none',
+                zIndex: 10,
+                borderRadius: 4
+              }} />
+            )}
+
 
           {/* Tüm node'lar */}
           {terms.map(term => {
             const colors = CAT_COLORS[term.cat]
-            const isSelected = selected === term.id
+            const isSelected = selectedIds.includes(term.id)
             const isHov = hovered === term.id
             const isDimmed = connectedIds && !connectedIds.has(term.id)
             const isDragging = dragging?.id === term.id
@@ -1448,21 +1657,46 @@ function MantiKHaritasi() {
                 onMouseEnter={() => setHovered(term.id)}
                 onMouseLeave={() => setHovered(null)}
                 onClick={(e) => {
-                  if (dragging && (Math.abs(e.clientX - dragging.startMouseX) > 5 || Math.abs(e.clientY - dragging.startMouseY) > 5)) {
-                    return
-                  }
-                  setSelected(prev => prev === term.id ? null : term.id)
-                }}
+                    e.stopPropagation()
+                    if (dragging && (Math.abs(e.clientX - dragging.startMouseX) > 5 || Math.abs(e.clientY - dragging.startMouseY) > 5)) {
+                      return
+                    }
+                    if (e.shiftKey) {
+                       setSelectedIds(prev => prev.includes(term.id) ? prev.filter(id => id !== term.id) : [...prev, term.id])
+                    } else {
+                       setSelectedIds(prev => prev.length === 1 && prev[0] === term.id ? [] : [term.id])
+                       if (!(selectedIds.length === 1 && selectedIds[0] === term.id)) setEditId(null)
+                    }
+                  }}
                 onMouseDown={(e) => {
-                  if (e.button !== 0) return
-                  setDragging({
-                    id: term.id,
-                    startMouseX: e.clientX,
-                    startMouseY: e.clientY,
-                    startNodeX: term.x,
-                    startNodeY: term.y
-                  })
-                }}
+                    if (e.button !== 0) return
+                    e.stopPropagation()
+                    
+                    let currentSelected = selectedIds;
+                    if (!selectedIds.includes(term.id)) {
+                      if (e.shiftKey) {
+                        currentSelected = [...selectedIds, term.id]
+                        setSelectedIds(currentSelected)
+                      } else {
+                        currentSelected = [term.id]
+                        setSelectedIds(currentSelected)
+                        setEditId(null)
+                      }
+                    }
+
+                    const startPositions = {}
+                    terms.forEach(t => {
+                      if (currentSelected.includes(t.id)) {
+                        startPositions[t.id] = { x: t.x, y: t.y }
+                      }
+                    })
+
+                    setDragging({
+                      startMouseX: e.clientX,
+                      startMouseY: e.clientY,
+                      startPositions
+                    })
+                  }}
                 style={{
                   position: 'absolute',
                   left: term.x - NODE_W / 2,
@@ -1518,8 +1752,25 @@ function MantiKHaritasi() {
         minHeight: 80,
         transition: 'all 0.2s',
       }}>
-        {selectedTerm ? (
-          <>
+        {selectedIds.length > 1 ? (
+          <div style={{ padding: '2rem 1rem', textAlign: 'center', height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+            <div style={{ fontSize: 28, color: '#1D9E75', marginBottom: 12 }}>✓</div>
+            <div style={{ fontSize: 18, fontWeight: 700, marginBottom: 8 }}>{selectedIds.length} Kutu Seçili</div>
+            <div style={{ fontSize: 13, color: '#666', marginBottom: 24, lineHeight: 1.6 }}>Şu anda birden fazla terim seçtiniz. Bunları birlikte taşıyabilir veya toplu olarak silebilirsiniz.</div>
+            <button
+               onClick={() => {
+                 if (confirm(`Seçili ${selectedIds.length} kutuyu ve bağlantılarını silmek istediğinize emin misiniz?`)) {
+                   setConnections(connections.filter(c => !selectedIds.includes(c.from) && !selectedIds.includes(c.to)))
+                   setTerms(terms.filter(t => !selectedIds.includes(t.id)))
+                   setSelectedIds([])
+                   setEditId(null)
+                 }
+               }}
+               style={{ padding: '10px 14px', background: '#ffefef', border: '1px solid #ffccc7', color: '#f5222d', borderRadius: 8, cursor: 'pointer', fontWeight: 600, fontFamily: 'inherit' }}            >
+              Toplu Sil
+            </button>
+          </div>
+        ) : selectedTerm ? (          <>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                 <div style={{ width: 8, height: 8, borderRadius: 2, background: CAT_COLORS[selectedTerm.cat].stripe, flexShrink: 0 }} />
@@ -1837,8 +2088,11 @@ const AI_CAT_LABELS = {
 }
 
 function YzHaritasi() {
+  const containerRef = useRef(null)
+  const [canvasDim, setCanvasDim] = useState({ w: 880, h: 555 })
   const [hovered, setHovered] = useState(null)
-  const [selected, setSelected] = useState(null)
+  const [selectedIds, setSelectedIds] = useState([])
+  const [selectionBox, setSelectionBox] = useState(null)
   const [terms, setTerms] = useState(AI_TERMS)
   const [connections, setConnections] = useState(AI_CONNECTIONS)
   const [dragging, setDragging] = useState(null)
@@ -1856,12 +2110,24 @@ function YzHaritasi() {
         if (data && !Array.isArray(data) && data.terms) {
           setTerms(data.terms)
           setConnections(data.connections || [])
+          if (data.metadata?.w) setCanvasDim({ w: data.metadata.w, h: data.metadata.h || 600 })
         } else if (data && Array.isArray(data) && data.length > 0) {
           setTerms(data)
         }
       })
       .catch(err => console.error('AI Terimleri yükleme hatası:', err))
   }, [])
+  useEffect(() => {
+    if (!containerRef.current) return
+    const ro = new ResizeObserver(entries => {
+      for (let entry of entries) {
+        setCanvasDim({ w: entry.contentRect.width, h: entry.contentRect.height })
+      }
+    })
+    ro.observe(containerRef.current)
+    return () => ro.disconnect()
+  }, [])
+
 
   const handleSave = async () => {
     setSaving(true)
@@ -1869,7 +2135,7 @@ function YzHaritasi() {
       const res = await fetch('/api/ai-terimleri', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ terms, connections }),
+        body: JSON.stringify({ terms, connections, metadata: canvasDim }),
       })
       if (res.ok) {
         setLastSaved(new Date().toLocaleTimeString())
@@ -1888,8 +2154,8 @@ function YzHaritasi() {
       const dx = e.clientX - dragging.startMouseX
       const dy = e.clientY - dragging.startMouseY
       setTerms(prev => prev.map(t => {
-        if (t.id === dragging.id) {
-          return { ...t, x: dragging.startNodeX + dx, y: dragging.startNodeY + dy }
+        if (dragging.startPositions && dragging.startPositions[t.id]) {
+          return { ...t, x: dragging.startPositions[t.id].x + dx, y: dragging.startPositions[t.id].y + dy }
         }
         return t
       }))
@@ -1908,13 +2174,14 @@ function YzHaritasi() {
   }, [dragging])
 
   const termMap = Object.fromEntries(terms.map(t => [t.id, t]))
-  const selectedTerm = selected ? termMap[selected] : null
+  const selectedTerm = selectedIds.length === 1 ? termMap[selectedIds[0]] : null
 
-  const activeId = hovered || selected
-  const connectedIds = activeId ? new Set([
-    activeId,
-    ...connections.filter(c => c.from === activeId).map(c => c.to),
-    ...connections.filter(c => c.to === activeId).map(c => c.from),
+  const activeIds = new Set(selectedIds)
+  if (hovered) activeIds.add(hovered)
+  const connectedIds = activeIds.size > 0 ? new Set([
+     ...activeIds,
+     ...connections.filter(c => activeIds.has(c.from)).map(c => c.to),
+     ...connections.filter(c => activeIds.has(c.to)).map(c => c.from),
   ]) : null
 
   const handleAddNode = () => {
@@ -1929,25 +2196,25 @@ function YzHaritasi() {
       desc: 'Bu AI kavramı için açıklama yazın...'
     }
     setTerms([...terms, newNode])
-    setSelected(newId)
+    setSelectedIds([newId])
     setEditId(newId)
   }
 
   const handleAddConnection = (targetId) => {
-    if (!selected || !targetId || selected === targetId) return
-    const from = connDir === 'to' ? selected : targetId
-    const to = connDir === 'to' ? targetId : selected
+    if (selectedIds.length !== 1 || !targetId || selectedIds[0] === targetId) return
+    const from = connDir === 'to' ? selectedIds[0] : targetId
+    const to = connDir === 'to' ? targetId : selectedIds[0]
     if (connections.find(c => c.from === from && c.to === to)) return
     setConnections([...connections, { from, to }])
   }
 
 
   const handleRemoveConnection = (targetId) => {
-    setConnections(connections.filter(c => !(c.from === selected && c.to === targetId)))
+    setConnections(connections.filter(c => !(c.from === selectedIds[0] && c.to === targetId)))
   }
 
-  const CANVAS_W = 880
-  const CANVAS_H = 555
+  
+  
 
   return (
     <div style={{ padding: '2rem 1.25rem', fontFamily: 'inherit' }}>
@@ -1984,11 +2251,67 @@ function YzHaritasi() {
       <div style={{ display: 'flex', gap: 16, alignItems: 'flex-start' }}>
 
         {/* Canvas */}
-        <div style={{ flex: 1, overflowX: 'auto', background: '#fafafa', border: '0.5px solid #e8e8e8', borderRadius: 12, padding: '8px 0 10px' }}>
-          <div style={{ position: 'relative', width: CANVAS_W, height: CANVAS_H, margin: '0 auto' }}>
+        <div ref={containerRef} style={{ flex: 1, overflow: "auto", resize: "both", minHeight: 400, background: '#fafafa', border: '0.5px solid #e8e8e8', borderRadius: 12, padding: '8px 0 10px' }}>
+          <div style={{ position: "relative", width: canvasDim.w, height: canvasDim.h, margin: 0 }}
+             onMouseDown={(e) => {
+               if (e.button !== 0) return
+               if (e.target !== e.currentTarget && e.target.tagName !== 'svg') return
+               const rect = e.currentTarget.getBoundingClientRect()
+               setSelectionBox({
+                 startX: e.clientX - rect.left,
+                 startY: e.clientY - rect.top,
+                 currX: e.clientX - rect.left,
+                 currY: e.clientY - rect.top
+               })
+               if (!e.shiftKey) setSelectedIds([])
+               setEditId(null)
+             }}
+             onMouseMove={(e) => {
+               if (selectionBox) {
+                 const rect = e.currentTarget.getBoundingClientRect()
+                 setSelectionBox({
+                   ...selectionBox,
+                   currX: e.clientX - rect.left,
+                   currY: e.clientY - rect.top
+                 })
+               }
+             }}
+             onMouseUp={(e) => {
+               if (selectionBox) {
+                 const minX = Math.min(selectionBox.startX, selectionBox.currX)
+                 const maxX = Math.max(selectionBox.startX, selectionBox.currX)
+                 const minY = Math.min(selectionBox.startY, selectionBox.currY)
+                 const maxY = Math.max(selectionBox.startY, selectionBox.currY)
+
+                 const newlySelected = terms.filter(t => {
+                   const halfW = AI_NODE_W / 2
+                   const halfH = AI_NODE_H / 2
+                   const nodeMinX = t.x - halfW
+                   const nodeMaxX = t.x + halfW
+                   const nodeMinY = t.y - halfH
+                   const nodeMaxY = t.y + halfH
+
+                   return (
+                     nodeMinX < maxX &&
+                     nodeMaxX > minX &&
+                     nodeMinY < maxY &&
+                     nodeMaxY > minY
+                   )
+                 }).map(t => t.id)
+
+                 if (e.shiftKey) {
+                   setSelectedIds(prev => Array.from(new Set([...prev, ...newlySelected])))
+                 } else {
+                   setSelectedIds(newlySelected)
+                 }
+                 setSelectionBox(null)
+               }
+             }}
+             onMouseLeave={() => setSelectionBox(null)}
+          >
 
             {/* SVG çizgiler */}
-            <svg width={CANVAS_W} height={CANVAS_H} style={{ position: 'absolute', top: 0, left: 0, pointerEvents: 'none' }}>
+            <svg width={canvasDim.w} height={canvasDim.h} style={{ position: 'absolute', top: 0, left: 0, pointerEvents: 'none' }}>
               <defs>
                 <marker id="ai-arr" markerWidth="7" markerHeight="7" refX="5" refY="3.5" orient="auto">
                   <path d="M0,0 L0,7 L7,3.5 z" fill="#ccc" />
@@ -2003,7 +2326,7 @@ function YzHaritasi() {
                 if (!from || !to) return null
                 const p1 = aiEdgePoint(from, to)
                 const p2 = aiEdgePoint(to, from)
-                const isActive = activeId && (conn.from === activeId || conn.to === activeId)
+                const isActive = activeIds.has(conn.from) || activeIds.has(conn.to)
                 return (
                   <line
                     key={i}
@@ -2015,12 +2338,27 @@ function YzHaritasi() {
                 )
               })}
             </svg>
+            {selectionBox && (
+              <div style={{
+                position: 'absolute',
+                border: '1px solid rgba(29, 158, 117, 0.5)',
+                background: 'rgba(29, 158, 117, 0.1)',
+                left: Math.min(selectionBox.startX, selectionBox.currX),
+                top: Math.min(selectionBox.startY, selectionBox.currY),
+                width: Math.abs(selectionBox.currX - selectionBox.startX),
+                height: Math.abs(selectionBox.currY - selectionBox.startY),
+                pointerEvents: 'none',
+                zIndex: 10,
+                borderRadius: 4
+              }} />
+            )}
+
 
             {/* Node'lar */}
             {terms.map(term => {
               const colors = AI_CAT_COLORS[term.cat]
               const isHovered = hovered === term.id
-              const isSelected = selected === term.id
+              const isSelected = selectedIds.includes(term.id)
               const isDimmed = connectedIds && !connectedIds.has(term.id)
               const isDragging = dragging?.id === term.id
 
@@ -2030,19 +2368,44 @@ function YzHaritasi() {
                   onMouseEnter={() => setHovered(term.id)}
                   onMouseLeave={() => setHovered(null)}
                   onClick={(e) => {
+                    e.stopPropagation()
                     if (dragging && (Math.abs(e.clientX - dragging.startMouseX) > 5 || Math.abs(e.clientY - dragging.startMouseY) > 5)) {
                       return
                     }
-                    setSelected(isSelected ? null : term.id)
+                    if (e.shiftKey) {
+                       setSelectedIds(prev => prev.includes(term.id) ? prev.filter(id => id !== term.id) : [...prev, term.id])
+                    } else {
+                       setSelectedIds(prev => prev.length === 1 && prev[0] === term.id ? [] : [term.id])
+                       if (!(selectedIds.length === 1 && selectedIds[0] === term.id)) setEditId(null)
+                    }
                   }}
                   onMouseDown={(e) => {
                     if (e.button !== 0) return
+                    e.stopPropagation()
+                    
+                    let currentSelected = selectedIds;
+                    if (!selectedIds.includes(term.id)) {
+                      if (e.shiftKey) {
+                        currentSelected = [...selectedIds, term.id]
+                        setSelectedIds(currentSelected)
+                      } else {
+                        currentSelected = [term.id]
+                        setSelectedIds(currentSelected)
+                        setEditId(null)
+                      }
+                    }
+
+                    const startPositions = {}
+                    terms.forEach(t => {
+                      if (currentSelected.includes(t.id)) {
+                        startPositions[t.id] = { x: t.x, y: t.y }
+                      }
+                    })
+
                     setDragging({
-                      id: term.id,
                       startMouseX: e.clientX,
                       startMouseY: e.clientY,
-                      startNodeX: term.x,
-                      startNodeY: term.y
+                      startPositions
                     })
                   }}
                   style={{
@@ -2092,8 +2455,25 @@ function YzHaritasi() {
           transition: 'all 0.2s',
           boxShadow: selectedTerm ? '0 8px 24px rgba(0,0,0,0.05)' : 'none'
         }}>
-          {selectedTerm ? (
-            <>
+          {selectedIds.length > 1 ? (
+          <div style={{ padding: '2rem 1rem', textAlign: 'center', height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+            <div style={{ fontSize: 28, color: '#1D9E75', marginBottom: 12 }}>✓</div>
+            <div style={{ fontSize: 18, fontWeight: 700, marginBottom: 8 }}>{selectedIds.length} Kutu Seçili</div>
+            <div style={{ fontSize: 13, color: '#666', marginBottom: 24, lineHeight: 1.6 }}>Şu anda birden fazla terim seçtiniz. Bunları birlikte taşıyabilir veya toplu olarak silebilirsiniz.</div>
+            <button
+               onClick={() => {
+                 if (confirm(`Seçili ${selectedIds.length} kutuyu ve bağlantılarını silmek istediğinize emin misiniz?`)) {
+                   setConnections(connections.filter(c => !selectedIds.includes(c.from) && !selectedIds.includes(c.to)))
+                   setTerms(terms.filter(t => !selectedIds.includes(t.id)))
+                   setSelectedIds([])
+                   setEditId(null)
+                 }
+               }}
+               style={{ padding: '10px 14px', background: '#ffefef', border: '1px solid #ffccc7', color: '#f5222d', borderRadius: 8, cursor: 'pointer', fontWeight: 600, fontFamily: 'inherit' }}            >
+              Toplu Sil
+            </button>
+          </div>
+        ) : selectedTerm ? (            <>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                   <div style={{ width: 8, height: 8, borderRadius: 2, background: AI_CAT_COLORS[selectedTerm.cat].stripe, flexShrink: 0 }} />
@@ -4411,8 +4791,11 @@ const RH_CAT_LABELS = {
 }
 
 function ReklamHiyerarsisiHaritasi() {
+  const containerRef = useRef(null)
+  const [canvasDim, setCanvasDim] = useState({ w: 880, h: 555 })
   const [hovered, setHovered] = useState(null)
-  const [selected, setSelected] = useState(null)
+  const [selectedIds, setSelectedIds] = useState([])
+  const [selectionBox, setSelectionBox] = useState(null)
   const [terms, setTerms] = useState(RH_TERMS)
   const [connections, setConnections] = useState(RH_CONNECTIONS)
   const [dragging, setDragging] = useState(null)
@@ -4428,12 +4811,24 @@ function ReklamHiyerarsisiHaritasi() {
         if (data && !Array.isArray(data) && data.terms) {
           setTerms(data.terms)
           setConnections(data.connections || [])
+          if (data.metadata?.w) setCanvasDim({ w: data.metadata.w, h: data.metadata.h || 600 })
         } else if (data && Array.isArray(data) && data.length > 0) {
           setTerms(data)
         }
       })
       .catch(err => console.error('Reklam Hiyerarsisi Haritası yükleme hatası:', err))
   }, [])
+  useEffect(() => {
+    if (!containerRef.current) return
+    const ro = new ResizeObserver(entries => {
+      for (let entry of entries) {
+        setCanvasDim({ w: entry.contentRect.width, h: entry.contentRect.height })
+      }
+    })
+    ro.observe(containerRef.current)
+    return () => ro.disconnect()
+  }, [])
+
 
   const handleSave = async () => {
     setSaving(true)
@@ -4441,7 +4836,7 @@ function ReklamHiyerarsisiHaritasi() {
       const res = await fetch('/api/reklam-hiyerarsisi-harita', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ terms, connections }),
+        body: JSON.stringify({ terms, connections, metadata: canvasDim }),
       })
       if (res.ok) {
         setLastSaved(new Date().toLocaleTimeString())
@@ -4460,8 +4855,8 @@ function ReklamHiyerarsisiHaritasi() {
       const dx = e.clientX - dragging.startMouseX
       const dy = e.clientY - dragging.startMouseY
       setTerms(prev => prev.map(t => {
-        if (t.id === dragging.id) {
-          return { ...t, x: dragging.startNodeX + dx, y: dragging.startNodeY + dy }
+        if (dragging.startPositions && dragging.startPositions[t.id]) {
+          return { ...t, x: dragging.startPositions[t.id].x + dx, y: dragging.startPositions[t.id].y + dy }
         }
         return t
       }))
@@ -4480,13 +4875,14 @@ function ReklamHiyerarsisiHaritasi() {
   }, [dragging])
 
   const termMap = Object.fromEntries(terms.map(t => [t.id, t]))
-  const selectedTerm = selected ? termMap[selected] : null
+  const selectedTerm = selectedIds.length === 1 ? termMap[selectedIds[0]] : null
 
-  const activeId = hovered || selected
-  const connectedIds = activeId ? new Set([
-    activeId,
-    ...connections.filter(c => c.from === activeId).map(c => c.to),
-    ...connections.filter(c => c.to === activeId).map(c => c.from),
+  const activeIds = new Set(selectedIds)
+  if (hovered) activeIds.add(hovered)
+  const connectedIds = activeIds.size > 0 ? new Set([
+     ...activeIds,
+     ...connections.filter(c => activeIds.has(c.from)).map(c => c.to),
+     ...connections.filter(c => activeIds.has(c.to)).map(c => c.from),
   ]) : null
 
   const handleAddNode = () => {
@@ -4501,24 +4897,24 @@ function ReklamHiyerarsisiHaritasi() {
       desc: 'Açıklama yazın...'
     }
     setTerms([...terms, newNode])
-    setSelected(newId)
+    setSelectedIds([newId])
     setEditId(newId)
   }
 
   const handleAddConnection = (targetId) => {
-    if (!selected || !targetId || selected === targetId) return
-    const from = connDir === 'to' ? selected : targetId
-    const to = connDir === 'to' ? targetId : selected
+    if (selectedIds.length !== 1 || !targetId || selectedIds[0] === targetId) return
+    const from = connDir === 'to' ? selectedIds[0] : targetId
+    const to = connDir === 'to' ? targetId : selectedIds[0]
     if (connections.find(c => c.from === from && c.to === to)) return
     setConnections([...connections, { from, to }])
   }
 
   const handleRemoveConnection = (targetId) => {
-    setConnections(connections.filter(c => !(c.from === selected && c.to === targetId)))
+    setConnections(connections.filter(c => !(c.from === selectedIds[0] && c.to === targetId)))
   }
 
-  const CANVAS_W = 880
-  const CANVAS_H = 555
+  
+  
 
   return (
     <div style={{ padding: '2rem 1.25rem', fontFamily: 'inherit' }}>
@@ -4552,10 +4948,66 @@ function ReklamHiyerarsisiHaritasi() {
 
       <div style={{ display: 'flex', gap: 16, alignItems: 'flex-start' }}>
 
-        <div style={{ flex: 1, overflowX: 'auto', background: '#fafafa', border: '0.5px solid #e8e8e8', borderRadius: 12, padding: '8px 0 10px' }}>
-          <div style={{ position: 'relative', width: CANVAS_W, height: CANVAS_H, margin: '0 auto' }}>
+        <div ref={containerRef} style={{ flex: 1, overflow: "auto", resize: "both", minHeight: 400, background: '#fafafa', border: '0.5px solid #e8e8e8', borderRadius: 12, padding: '8px 0 10px' }}>
+          <div style={{ position: "relative", width: canvasDim.w, height: canvasDim.h, margin: 0 }}
+             onMouseDown={(e) => {
+               if (e.button !== 0) return
+               if (e.target !== e.currentTarget && e.target.tagName !== 'svg') return
+               const rect = e.currentTarget.getBoundingClientRect()
+               setSelectionBox({
+                 startX: e.clientX - rect.left,
+                 startY: e.clientY - rect.top,
+                 currX: e.clientX - rect.left,
+                 currY: e.clientY - rect.top
+               })
+               if (!e.shiftKey) setSelectedIds([])
+               setEditId(null)
+             }}
+             onMouseMove={(e) => {
+               if (selectionBox) {
+                 const rect = e.currentTarget.getBoundingClientRect()
+                 setSelectionBox({
+                   ...selectionBox,
+                   currX: e.clientX - rect.left,
+                   currY: e.clientY - rect.top
+                 })
+               }
+             }}
+             onMouseUp={(e) => {
+               if (selectionBox) {
+                 const minX = Math.min(selectionBox.startX, selectionBox.currX)
+                 const maxX = Math.max(selectionBox.startX, selectionBox.currX)
+                 const minY = Math.min(selectionBox.startY, selectionBox.currY)
+                 const maxY = Math.max(selectionBox.startY, selectionBox.currY)
 
-            <svg width={CANVAS_W} height={CANVAS_H} style={{ position: 'absolute', top: 0, left: 0, pointerEvents: 'none' }}>
+                 const newlySelected = terms.filter(t => {
+                   const halfW = RH_NODE_W / 2
+                   const halfH = RH_NODE_H / 2
+                   const nodeMinX = t.x - halfW
+                   const nodeMaxX = t.x + halfW
+                   const nodeMinY = t.y - halfH
+                   const nodeMaxY = t.y + halfH
+
+                   return (
+                     nodeMinX < maxX &&
+                     nodeMaxX > minX &&
+                     nodeMinY < maxY &&
+                     nodeMaxY > minY
+                   )
+                 }).map(t => t.id)
+
+                 if (e.shiftKey) {
+                   setSelectedIds(prev => Array.from(new Set([...prev, ...newlySelected])))
+                 } else {
+                   setSelectedIds(newlySelected)
+                 }
+                 setSelectionBox(null)
+               }
+             }}
+             onMouseLeave={() => setSelectionBox(null)}
+          >
+
+            <svg width={canvasDim.w} height={canvasDim.h} style={{ position: 'absolute', top: 0, left: 0, pointerEvents: 'none' }}>
               <defs>
                 <marker id="rh-arr" markerWidth="7" markerHeight="7" refX="5" refY="3.5" orient="auto">
                   <path d="M0,0 L0,7 L7,3.5 z" fill="#ccc" />
@@ -4570,7 +5022,7 @@ function ReklamHiyerarsisiHaritasi() {
                 if (!from || !to) return null
                 const p1 = rhEdgePoint(from, to)
                 const p2 = rhEdgePoint(to, from)
-                const isActive = activeId && (conn.from === activeId || conn.to === activeId)
+                const isActive = activeIds.has(conn.from) || activeIds.has(conn.to)
                 return (
                   <line
                     key={i}
@@ -4582,11 +5034,26 @@ function ReklamHiyerarsisiHaritasi() {
                 )
               })}
             </svg>
+            {selectionBox && (
+              <div style={{
+                position: 'absolute',
+                border: '1px solid rgba(29, 158, 117, 0.5)',
+                background: 'rgba(29, 158, 117, 0.1)',
+                left: Math.min(selectionBox.startX, selectionBox.currX),
+                top: Math.min(selectionBox.startY, selectionBox.currY),
+                width: Math.abs(selectionBox.currX - selectionBox.startX),
+                height: Math.abs(selectionBox.currY - selectionBox.startY),
+                pointerEvents: 'none',
+                zIndex: 10,
+                borderRadius: 4
+              }} />
+            )}
+
 
             {terms.map(term => {
               const colors = RH_CAT_COLORS[term.cat] || RH_CAT_COLORS['web']
               const isHovered = hovered === term.id
-              const isSelected = selected === term.id
+              const isSelected = selectedIds.includes(term.id)
               const isDimmed = connectedIds && !connectedIds.has(term.id)
               const isDragging = dragging?.id === term.id
 
@@ -4596,19 +5063,44 @@ function ReklamHiyerarsisiHaritasi() {
                   onMouseEnter={() => setHovered(term.id)}
                   onMouseLeave={() => setHovered(null)}
                   onClick={(e) => {
+                    e.stopPropagation()
                     if (dragging && (Math.abs(e.clientX - dragging.startMouseX) > 5 || Math.abs(e.clientY - dragging.startMouseY) > 5)) {
                       return
                     }
-                    setSelected(isSelected ? null : term.id)
+                    if (e.shiftKey) {
+                       setSelectedIds(prev => prev.includes(term.id) ? prev.filter(id => id !== term.id) : [...prev, term.id])
+                    } else {
+                       setSelectedIds(prev => prev.length === 1 && prev[0] === term.id ? [] : [term.id])
+                       if (!(selectedIds.length === 1 && selectedIds[0] === term.id)) setEditId(null)
+                    }
                   }}
                   onMouseDown={(e) => {
                     if (e.button !== 0) return
+                    e.stopPropagation()
+                    
+                    let currentSelected = selectedIds;
+                    if (!selectedIds.includes(term.id)) {
+                      if (e.shiftKey) {
+                        currentSelected = [...selectedIds, term.id]
+                        setSelectedIds(currentSelected)
+                      } else {
+                        currentSelected = [term.id]
+                        setSelectedIds(currentSelected)
+                        setEditId(null)
+                      }
+                    }
+
+                    const startPositions = {}
+                    terms.forEach(t => {
+                      if (currentSelected.includes(t.id)) {
+                        startPositions[t.id] = { x: t.x, y: t.y }
+                      }
+                    })
+
                     setDragging({
-                      id: term.id,
                       startMouseX: e.clientX,
                       startMouseY: e.clientY,
-                      startNodeX: term.x,
-                      startNodeY: term.y
+                      startPositions
                     })
                   }}
                   style={{
@@ -4657,8 +5149,25 @@ function ReklamHiyerarsisiHaritasi() {
           transition: 'all 0.2s',
           boxShadow: selectedTerm ? '0 8px 24px rgba(0,0,0,0.05)' : 'none'
         }}>
-          {selectedTerm ? (
-            <>
+          {selectedIds.length > 1 ? (
+          <div style={{ padding: '2rem 1rem', textAlign: 'center', height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+            <div style={{ fontSize: 28, color: '#1D9E75', marginBottom: 12 }}>✓</div>
+            <div style={{ fontSize: 18, fontWeight: 700, marginBottom: 8 }}>{selectedIds.length} Kutu Seçili</div>
+            <div style={{ fontSize: 13, color: '#666', marginBottom: 24, lineHeight: 1.6 }}>Şu anda birden fazla terim seçtiniz. Bunları birlikte taşıyabilir veya toplu olarak silebilirsiniz.</div>
+            <button
+               onClick={() => {
+                 if (confirm(`Seçili ${selectedIds.length} kutuyu ve bağlantılarını silmek istediğinize emin misiniz?`)) {
+                   setConnections(connections.filter(c => !selectedIds.includes(c.from) && !selectedIds.includes(c.to)))
+                   setTerms(terms.filter(t => !selectedIds.includes(t.id)))
+                   setSelectedIds([])
+                   setEditId(null)
+                 }
+               }}
+               style={{ padding: '10px 14px', background: '#ffefef', border: '1px solid #ffccc7', color: '#f5222d', borderRadius: 8, cursor: 'pointer', fontWeight: 600, fontFamily: 'inherit' }}            >
+              Toplu Sil
+            </button>
+          </div>
+        ) : selectedTerm ? (            <>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                   <div style={{ width: 8, height: 8, borderRadius: 2, background: (RH_CAT_COLORS[selectedTerm.cat] || RH_CAT_COLORS['web']).stripe, flexShrink: 0 }} />
