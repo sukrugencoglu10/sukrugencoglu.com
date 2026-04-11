@@ -4374,6 +4374,480 @@ function Renkler() {
   )
 }
 
+// ─── Reklam Hiyerarşisi Zihin Haritası ───────────────────────────────────────
+const RH_NODE_W = 136
+const RH_NODE_H = 66
+
+const RH_CAT_COLORS = {
+  web: { bg: '#E3F2FD', border: '#1565C066', stripe: '#1565C0' },
+  seo: { bg: '#FFF8E1', border: '#F57F1766', stripe: '#F57F17' },
+  ads: { bg: '#E8F5E9', border: '#1B5E2066', stripe: '#1B5E20' },
+  sosyal: { bg: '#F3E5F5', border: '#6A1B9A66', stripe: '#6A1B9A' },
+}
+
+const RH_TERMS = [
+  {
+    id: 'web', abbr: 'Web', sub: 'web', cat: 'web', x: 400, y: 200,
+    desc: 'Web hiyerarşisi merkezi.',
+  }
+]
+
+const RH_CONNECTIONS = []
+
+function rhEdgePoint(from, to) {
+  const dx = to.x - from.x
+  const dy = to.y - from.y
+  if (Math.abs(dx) < 0.01 && Math.abs(dy) < 0.01) return { x: from.x, y: from.y }
+  const hw = RH_NODE_W / 2
+  const hh = RH_NODE_H / 2
+  const scaleX = Math.abs(dx) > 0.01 ? hw / Math.abs(dx) : Infinity
+  const scaleY = Math.abs(dy) > 0.01 ? hh / Math.abs(dy) : Infinity
+  const scale = Math.min(scaleX, scaleY)
+  return { x: from.x + dx * scale, y: from.y + dy * scale }
+}
+
+const RH_CAT_LABELS = {
+  web: 'Web Merkezi', seo: 'Organik Büyüme', ads: 'Ücretli Reklam', sosyal: 'Sosyal Medya',
+}
+
+function ReklamHiyerarsisiHaritasi() {
+  const [hovered, setHovered] = useState(null)
+  const [selected, setSelected] = useState(null)
+  const [terms, setTerms] = useState(RH_TERMS)
+  const [connections, setConnections] = useState(RH_CONNECTIONS)
+  const [dragging, setDragging] = useState(null)
+  const [editId, setEditId] = useState(null)
+  const [saving, setSaving] = useState(false)
+  const [lastSaved, setLastSaved] = useState(null)
+  const [connDir, setConnDir] = useState('to')
+
+  useEffect(() => {
+    fetch('/api/reklam-hiyerarsisi-harita')
+      .then(res => res.json())
+      .then(data => {
+        if (data && !Array.isArray(data) && data.terms) {
+          setTerms(data.terms)
+          setConnections(data.connections || [])
+        } else if (data && Array.isArray(data) && data.length > 0) {
+          setTerms(data)
+        }
+      })
+      .catch(err => console.error('Reklam Hiyerarsisi Haritası yükleme hatası:', err))
+  }, [])
+
+  const handleSave = async () => {
+    setSaving(true)
+    try {
+      const res = await fetch('/api/reklam-hiyerarsisi-harita', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ terms, connections }),
+      })
+      if (res.ok) {
+        setLastSaved(new Date().toLocaleTimeString())
+      } else {
+        alert('Kaydedilemedi')
+      }
+    } catch (err) {
+      alert('Hata: ' + err.message)
+    }
+    setSaving(false)
+  }
+
+  useEffect(() => {
+    const handleMouseMove = (e) => {
+      if (!dragging) return
+      const dx = e.clientX - dragging.startMouseX
+      const dy = e.clientY - dragging.startMouseY
+      setTerms(prev => prev.map(t => {
+        if (t.id === dragging.id) {
+          return { ...t, x: dragging.startNodeX + dx, y: dragging.startNodeY + dy }
+        }
+        return t
+      }))
+    }
+    
+    const handleMouseUp = () => setDragging(null)
+
+    if (dragging) {
+      window.addEventListener('mousemove', handleMouseMove)
+      window.addEventListener('mouseup', handleMouseUp)
+    }
+    return () => {
+      window.removeEventListener('mousemove', handleMouseMove)
+      window.removeEventListener('mouseup', handleMouseUp)
+    }
+  }, [dragging])
+
+  const termMap = Object.fromEntries(terms.map(t => [t.id, t]))
+  const selectedTerm = selected ? termMap[selected] : null
+
+  const activeId = hovered || selected
+  const connectedIds = activeId ? new Set([
+    activeId,
+    ...connections.filter(c => c.from === activeId).map(c => c.to),
+    ...connections.filter(c => c.to === activeId).map(c => c.from),
+  ]) : null
+
+  const handleAddNode = () => {
+    const newId = 'node_' + Math.random().toString(36).substr(2, 9)
+    const newNode = {
+      id: newId,
+      abbr: 'Yeni Öğe',
+      sub: 'Alt başlık...',
+      cat: 'web',
+      x: 300 + (Math.random() * 100),
+      y: 200 + (Math.random() * 100),
+      desc: 'Açıklama yazın...'
+    }
+    setTerms([...terms, newNode])
+    setSelected(newId)
+    setEditId(newId)
+  }
+
+  const handleAddConnection = (targetId) => {
+    if (!selected || !targetId || selected === targetId) return
+    const from = connDir === 'to' ? selected : targetId
+    const to = connDir === 'to' ? targetId : selected
+    if (connections.find(c => c.from === from && c.to === to)) return
+    setConnections([...connections, { from, to }])
+  }
+
+  const handleRemoveConnection = (targetId) => {
+    setConnections(connections.filter(c => !(c.from === selected && c.to === targetId)))
+  }
+
+  const CANVAS_W = 880
+  const CANVAS_H = 555
+
+  return (
+    <div style={{ padding: '2rem 1.25rem', fontFamily: 'inherit' }}>
+      <div style={{ marginBottom: '1.25rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <div>
+          <h1 style={{ fontSize: 22, fontWeight: 500, margin: 0 }}>Reklam Hiyerarşisi Haritası</h1>
+          <p style={{ fontSize: 13, color: '#888', marginTop: 4 }}>
+            Web ve reklam hiyerarşisi ilişkileri · Terime tıkla: açıklamayı gör
+          </p>
+        </div>
+        <button
+          onClick={handleAddNode}
+          style={{
+            background: '#fff', border: '1px solid #ddd', borderRadius: 8,
+            padding: '6px 12px', fontSize: 12, cursor: 'pointer', transition: 'all 0.2s',
+            display: 'flex', alignItems: 'center', gap: 6, color: '#444'
+          }}
+        >
+          <span style={{ fontSize: 16, fontWeight: 'bold' }}>+</span> Yeni Kutu Ekle
+        </button>
+      </div>
+
+      <div style={{ display: 'flex', gap: 14, marginBottom: '1.25rem', flexWrap: 'wrap' }}>
+        {Object.entries(RH_CAT_LABELS).map(([cat, label]) => (
+          <div key={cat} style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 12, color: '#555' }}>
+            <div style={{ width: 10, height: 10, borderRadius: 2, background: RH_CAT_COLORS[cat].stripe }} />
+            {label}
+          </div>
+        ))}
+      </div>
+
+      <div style={{ display: 'flex', gap: 16, alignItems: 'flex-start' }}>
+
+        <div style={{ flex: 1, overflowX: 'auto', background: '#fafafa', border: '0.5px solid #e8e8e8', borderRadius: 12, padding: '8px 0 10px' }}>
+          <div style={{ position: 'relative', width: CANVAS_W, height: CANVAS_H, margin: '0 auto' }}>
+
+            <svg width={CANVAS_W} height={CANVAS_H} style={{ position: 'absolute', top: 0, left: 0, pointerEvents: 'none' }}>
+              <defs>
+                <marker id="rh-arr" markerWidth="7" markerHeight="7" refX="5" refY="3.5" orient="auto">
+                  <path d="M0,0 L0,7 L7,3.5 z" fill="#ccc" />
+                </marker>
+                <marker id="rh-arr-hi" markerWidth="7" markerHeight="7" refX="5" refY="3.5" orient="auto">
+                  <path d="M0,0 L0,7 L7,3.5 z" fill="#777" />
+                </marker>
+              </defs>
+            {connections.map((conn, i) => {
+                const from = termMap[conn.from]
+                const to = termMap[conn.to]
+                if (!from || !to) return null
+                const p1 = rhEdgePoint(from, to)
+                const p2 = rhEdgePoint(to, from)
+                const isActive = activeId && (conn.from === activeId || conn.to === activeId)
+                return (
+                  <line
+                    key={i}
+                    x1={p1.x} y1={p1.y} x2={p2.x} y2={p2.y}
+                    stroke={isActive ? '#777' : '#ddd'}
+                    strokeWidth={isActive ? 2 : 1.5}
+                    markerEnd={isActive ? 'url(#rh-arr-hi)' : 'url(#rh-arr)'}
+                  />
+                )
+              })}
+            </svg>
+
+            {terms.map(term => {
+              const colors = RH_CAT_COLORS[term.cat] || RH_CAT_COLORS['web']
+              const isHovered = hovered === term.id
+              const isSelected = selected === term.id
+              const isDimmed = connectedIds && !connectedIds.has(term.id)
+              const isDragging = dragging?.id === term.id
+
+              return (
+                <div
+                  key={term.id}
+                  onMouseEnter={() => setHovered(term.id)}
+                  onMouseLeave={() => setHovered(null)}
+                  onClick={(e) => {
+                    if (dragging && (Math.abs(e.clientX - dragging.startMouseX) > 5 || Math.abs(e.clientY - dragging.startMouseY) > 5)) {
+                      return
+                    }
+                    setSelected(isSelected ? null : term.id)
+                  }}
+                  onMouseDown={(e) => {
+                    if (e.button !== 0) return
+                    setDragging({
+                      id: term.id,
+                      startMouseX: e.clientX,
+                      startMouseY: e.clientY,
+                      startNodeX: term.x,
+                      startNodeY: term.y
+                    })
+                  }}
+                  style={{
+                    position: 'absolute',
+                    left: term.x - RH_NODE_W / 2,
+                    top: term.y - RH_NODE_H / 2,
+                    width: RH_NODE_W,
+                    height: RH_NODE_H,
+                    background: isSelected ? colors.stripe + '18' : colors.bg,
+                    border: `${isSelected ? 2 : 1}px solid ${isSelected ? colors.stripe : (isHovered ? colors.stripe : colors.border)}`,
+                    borderRadius: 8,
+                    padding: '6px 10px 6px 12px',
+                    opacity: isDimmed && !isDragging ? 0.22 : 1,
+                    boxShadow: isSelected
+                      ? `inset 3px 0 0 ${colors.stripe}, 0 0 0 3px ${colors.stripe}33, 0 4px 16px ${colors.stripe}22`
+                      : isHovered
+                        ? `inset 3px 0 0 ${colors.stripe}, 0 3px 12px ${colors.stripe}33`
+                        : `inset 3px 0 0 ${colors.stripe}, 0 1px 3px rgba(0,0,0,0.06)`,
+                    transition: isDragging ? 'none' : 'all 0.13s',
+                    zIndex: isDragging ? 4 : isSelected ? 3 : isHovered ? 2 : 1,
+                    display: 'flex', flexDirection: 'column', justifyContent: 'center',
+                    cursor: isDragging ? 'grabbing' : 'grab', userSelect: 'none',
+                  }}
+                >
+                  <div style={{ fontSize: 13, fontWeight: 700, color: colors.stripe, lineHeight: 1.2, marginBottom: 3, whiteSpace: 'pre-line' }}>{term.abbr}</div>
+                  <div style={{ fontSize: 10, color: '#555', lineHeight: 1.3 }}>{term.sub}</div>
+                </div>
+              )
+            })}
+          </div>
+        </div>
+
+        <div style={{
+          width: 300,
+          flexShrink: 0,
+          background: '#fff',
+          border: '0.5px solid #e8e8e8',
+          borderRadius: 12,
+          padding: '1.25rem',
+          minHeight: 200,
+          maxHeight: '80vh',
+          overflowY: 'auto',
+          alignSelf: 'flex-start',
+          position: 'sticky',
+          top: 80,
+          transition: 'all 0.2s',
+          boxShadow: selectedTerm ? '0 8px 24px rgba(0,0,0,0.05)' : 'none'
+        }}>
+          {selectedTerm ? (
+            <>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <div style={{ width: 8, height: 8, borderRadius: 2, background: (RH_CAT_COLORS[selectedTerm.cat] || RH_CAT_COLORS['web']).stripe, flexShrink: 0 }} />
+                  <span style={{ fontSize: 11, color: (RH_CAT_COLORS[selectedTerm.cat] || RH_CAT_COLORS['web']).stripe, fontWeight: 600 }}>
+                    {(RH_CAT_LABELS[selectedTerm.cat] || 'Kategori').toUpperCase()}
+                  </span>
+                </div>
+                <button
+                  onClick={() => setEditId(prev => prev === selectedTerm.id ? null : selectedTerm.id)}
+                  style={{
+                    fontSize: 11, cursor: 'pointer', padding: '4px 10px',
+                    borderRadius: 6, border: '0.5px solid #d0d0d0', background: '#fff', color: '#555'
+                  }}
+                >
+                  {editId === selectedTerm.id ? 'Bitti' : 'Düzenle'}
+                </button>
+              </div>
+
+              {editId === selectedTerm.id ? (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+                  <div>
+                    <label style={{ fontSize: 11, color: '#888', display: 'block', marginBottom: 4 }}>Başlık</label>
+                    <input
+                      value={selectedTerm.abbr}
+                      onChange={e => setTerms(prev => prev.map(t => t.id === selectedTerm.id ? { ...t, abbr: e.target.value } : t))}
+                      style={{ width: '100%', padding: '6px 10px', fontSize: 13, border: '0.5px solid #ccc', borderRadius: 6, outline: 'none' }}
+                    />
+                  </div>
+                  <div>
+                    <label style={{ fontSize: 11, color: '#888', display: 'block', marginBottom: 4 }}>Alt Başlık</label>
+                    <input
+                      value={selectedTerm.sub}
+                      onChange={e => setTerms(prev => prev.map(t => t.id === selectedTerm.id ? { ...t, sub: e.target.value } : t))}
+                      style={{ width: '100%', padding: '6px 10px', fontSize: 13, border: '0.5px solid #ccc', borderRadius: 6, outline: 'none' }}
+                    />
+                  </div>
+                  <div>
+                    <label style={{ fontSize: 11, color: '#888', display: 'block', marginBottom: 4 }}>Kategori</label>
+                    <select
+                      value={selectedTerm.cat}
+                      onChange={e => setTerms(prev => prev.map(t => t.id === selectedTerm.id ? { ...t, cat: e.target.value } : t))}
+                      style={{ width: '100%', padding: '6px 10px', fontSize: 13, border: '0.5px solid #ccc', borderRadius: 6, outline: 'none' }}
+                    >
+                      {Object.entries(RH_CAT_LABELS).map(([val, label]) => (
+                        <option key={val} value={val}>{label}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <div>
+                    <label style={{ fontSize: 11, color: '#888', display: 'block', marginBottom: 4 }}>Açıklama</label>
+                    <textarea
+                      value={selectedTerm.desc}
+                      onChange={e => setTerms(prev => prev.map(t => t.id === selectedTerm.id ? { ...t, desc: e.target.value } : t))}
+                      onPaste={(e) => {
+                        e.preventDefault()
+                        const text = e.clipboardData.getData('text/plain')
+                        const cleanText = text.replace(/\r/g, '').replace(/\n{3,}/g, '\n\n')
+                        const target = e.target
+                        const start = target.selectionStart
+                        const end = target.selectionEnd
+                        const current = target.value
+                        const newValue = current.substring(0, start) + cleanText + current.substring(end)
+                        setTerms(prev => prev.map(t => t.id === selectedTerm.id ? { ...t, desc: newValue } : t))
+                        setTimeout(() => { target.selectionStart = target.selectionEnd = start + cleanText.length }, 0)
+                      }}
+                      style={{
+                        width: '100%', minHeight: 100, padding: 12, fontSize: 13, lineHeight: 1.7,
+                        color: '#333', border: '0.5px solid #ccc', borderRadius: 8,
+                        outline: 'none', resize: 'vertical', fontFamily: 'inherit'
+                      }}
+                    />
+                  </div>
+
+                  <div style={{ borderTop: '0.5px solid #eee', paddingTop: 12 }}>
+                    <label style={{ fontSize: 11, color: '#888', display: 'block', marginBottom: 8, fontWeight: 600 }}>BAĞLANTI YÖNETİMİ</label>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                      <div style={{ display: 'flex', border: '0.5px solid #ccc', borderRadius: 6, overflow: 'hidden', background: '#fff' }}>
+                        <button
+                          onClick={() => setConnDir('to')}
+                          title="Seçiliden Hedefe (A → B)"
+                          style={{
+                            flex: 1, padding: '6px 10px', fontSize: 12, border: 'none', cursor: 'pointer',
+                            background: connDir === 'to' ? '#f0f0f0' : '#fff',
+                            color: connDir === 'to' ? '#111' : '#aaa',
+                            borderRight: '0.5px solid #eee'
+                          }}
+                        >
+                          A → B
+                        </button>
+                        <button
+                          onClick={() => setConnDir('from')}
+                          title="Hedeften Seçiliye (A ← B)"
+                          style={{
+                            flex: 1, padding: '6px 10px', fontSize: 12, border: 'none', cursor: 'pointer',
+                            background: connDir === 'from' ? '#f0f0f0' : '#fff',
+                            color: connDir === 'from' ? '#111' : '#aaa'
+                          }}
+                        >
+                          A ← B
+                        </button>
+                      </div>
+                      <select
+                        id="rh-target-select"
+                        style={{ width: '100%', padding: '6px 10px', fontSize: 12, border: '0.5px solid #ccc', borderRadius: 6, outline: 'none', background: '#fff' }}
+                      >
+                        <option value="">Bağlanacak kutuyu seç...</option>
+                        {terms.filter(t => t.id !== selectedTerm.id).map(t => (
+                          <option key={t.id} value={t.id}>{t.abbr} ({t.sub})</option>
+                        ))}
+                      </select>
+                      <button
+                        onClick={() => {
+                          const sel = document.getElementById('rh-target-select')
+                          if (sel.value) handleAddConnection(sel.value)
+                        }}
+                        style={{ padding: '6px 14px', fontSize: 12, background: '#f5f5f5', border: '0.5px solid #ccc', borderRadius: 6, cursor: 'pointer' }}
+                      >
+                        Bağlantı Ekle
+                      </button>
+                    </div>
+
+                    <div style={{ marginTop: 12, display: 'flex', flexDirection: 'column', gap: 6 }}>
+                      {connections.filter(c => c.from === selectedTerm.id).map(c => {
+                        const target = termMap[c.to]
+                        if (!target) return null
+                        return (
+                          <div key={c.to} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '4px 8px', background: '#f9f9f9', border: '0.5px solid #eee', borderRadius: 6, fontSize: 11 }}>
+                            <span>→ {target.abbr}</span>
+                            <button onClick={() => handleRemoveConnection(c.to)} style={{ border: 'none', background: 'none', cursor: 'pointer', color: '#ff4d4f' }}>Kaldır</button>
+                          </div>
+                        )
+                      })}
+                    </div>
+                  </div>
+
+                  <div style={{ marginTop: 'auto', paddingTop: 12, borderTop: '0.5px solid #eee', display: 'flex', justifyContent: 'center' }}>
+                    <button
+                      onClick={() => {
+                        if (confirm('Bu kutuyu ve tüm bağlantılarını silmek istediğinize emin misiniz?')) {
+                          setConnections(connections.filter(c => c.from !== selectedTerm.id && c.to !== selectedTerm.id))
+                          setTerms(terms.filter(t => t.id !== selectedTerm.id))
+                          setSelected(null)
+                          setEditId(null)
+                        }
+                      }}
+                      style={{ color: '#ff4d4f', fontSize: 11, background: 'none', border: 'none', cursor: 'pointer', textDecoration: 'underline' }}
+                    >
+                      Kutuyu Tamamen Sil
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <>
+                  <div style={{ fontSize: 18, fontWeight: 700, color: (RH_CAT_COLORS[selectedTerm.cat] || RH_CAT_COLORS['web']).stripe, marginBottom: 4, whiteSpace: 'pre-line' }}>
+                    {selectedTerm.abbr}
+                  </div>
+                  <div style={{ fontSize: 12, color: '#888', marginBottom: 12 }}>{selectedTerm.sub}</div>
+                  <div style={{ fontSize: 13, color: '#333', lineHeight: 1.7, whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>{selectedTerm.desc}</div>
+                </>
+              )}
+            </>
+          ) : (
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: 160, gap: 8, color: '#ccc', textAlign: 'center' }}>
+              <div style={{ fontSize: 28 }}>◎</div>
+              <div style={{ fontSize: 12 }}>Bir terime tıkla,<br />açıklamasını gör</div>
+            </div>
+          )}
+        </div>
+
+      </div>
+
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: 12, marginTop: 12 }}>
+        {lastSaved && <span style={{ fontSize: 11, color: '#1D9E75' }}>Kaydedildi: {lastSaved}</span>}
+        <button
+          onClick={handleSave}
+          disabled={saving}
+          style={{
+            background: '#111', color: '#fff', border: 'none', borderRadius: 8,
+            padding: '6px 14px', fontSize: 13, cursor: saving ? 'not-allowed' : 'pointer',
+            opacity: saving ? 0.7 : 1, transition: 'all 0.2s'
+          }}
+        >
+          {saving ? 'Kaydediliyor...' : 'Değişiklikleri Kaydet'}
+        </button>
+      </div>
+    </div>
+  )
+}
+
 // ─── Araç listesi ─────────────────────────────────────────────────────────────
 const TOOLS = [
   {
@@ -4388,6 +4862,13 @@ const TOOLS = [
     icon: '◐',
     component: ReklamHiyerarsisi,
   },
+  {
+    id: 'reklam-hiyerarsisi-harita',
+    label: 'Reklam Hiy. Haritası',
+    icon: '⬡',
+    component: ReklamHiyerarsisiHaritasi,
+  },
+
   {
     id: 'rsa-ureticisi',
     label: 'RSA Üreticisi',

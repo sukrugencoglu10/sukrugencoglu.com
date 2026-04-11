@@ -8,12 +8,11 @@ function getClient() {
   )
 }
 
-// GET — herkese açık; hizmetler sayfası bu veriyi okur
 export async function GET() {
   try {
     const supabase = getClient()
     const { data, error } = await supabase
-      .from('reklam_hiyerarsisi')
+      .from('reklam_hiyerarsisi_harita')
       .select('items')
       .eq('id', 1)
       .single()
@@ -25,7 +24,6 @@ export async function GET() {
   }
 }
 
-// POST — sadece studyo admin panelinden çağrılır
 export async function POST(req) {
   try {
     const items = await req.json()
@@ -35,7 +33,7 @@ export async function POST(req) {
 
     const supabase = getClient()
     const { error } = await supabase
-      .from('reklam_hiyerarsisi')
+      .from('reklam_hiyerarsisi_harita')
       .upsert({ id: 1, items, updated_at: new Date().toISOString() })
 
     if (error) return NextResponse.json({ error: error.message }, { status: 500 })
