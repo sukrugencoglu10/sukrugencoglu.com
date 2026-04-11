@@ -1030,7 +1030,7 @@ function GtmZihinHaritasi() {
                   if (dragging && (Math.abs(e.clientX - dragging.startMouseX) > 5 || Math.abs(e.clientY - dragging.startMouseY) > 5)) {
                     return
                   }
-                  setSelected(prev => prev === term.id ? null : term.id)
+                  setSelectedIds(prev => prev.includes(term.id) ? [] : [term.id])
                 }}
                 onMouseEnter={() => setHovered(term.id)}
                 onMouseLeave={() => setHovered(null)}
@@ -1280,7 +1280,7 @@ function GtmZihinHaritasi() {
                         if (confirm('Bu kutuyu ve tüm bağlantılarını silmek istediğinize emin misiniz?')) {
                           setConnections(connections.filter(c => c.from !== selectedTerm.id && c.to !== selectedTerm.id))
                           setTerms(terms.filter(t => t.id !== selectedTerm.id))
-                          setSelected(null)
+                          setSelectedIds([])
                           setEditId(null)
                         }
                       }}
@@ -1937,7 +1937,7 @@ function MantiKHaritasi() {
                       if (confirm('Bu kutuyu ve tüm bağlantılarını silmek istediğinize emin misiniz?')) {
                         setConnections(connections.filter(c => c.from !== selectedTerm.id && c.to !== selectedTerm.id))
                         setTerms(terms.filter(t => t.id !== selectedTerm.id))
-                        setSelected(null)
+                        setSelectedIds([])
                         setEditId(null)
                       }
                     }}
@@ -2615,7 +2615,7 @@ function YzHaritasi() {
                         if (confirm('Bu kutuyu ve tüm bağlantılarını silmek istediğinize emin misiniz?')) {
                           setConnections(connections.filter(c => c.from !== selectedTerm.id && c.to !== selectedTerm.id))
                           setTerms(terms.filter(t => t.id !== selectedTerm.id))
-                          setSelected(null)
+                          setSelectedIds([])
                           setEditId(null)
                         }
                       }}
@@ -5309,7 +5309,7 @@ function ReklamHiyerarsisiHaritasi() {
                         if (confirm('Bu kutuyu ve tüm bağlantılarını silmek istediğinize emin misiniz?')) {
                           setConnections(connections.filter(c => c.from !== selectedTerm.id && c.to !== selectedTerm.id))
                           setTerms(terms.filter(t => t.id !== selectedTerm.id))
-                          setSelected(null)
+                          setSelectedIds([])
                           setEditId(null)
                         }
                       }}
