@@ -52,16 +52,16 @@ export default function HomePage() {
         <MarqueeText />
       </div>
       <WorkSection />
-      {/* Masaüstünde vaka çalışmalarının hemen altında */}
+      <MantikhHaritasiSection belowDashboard={<ContactSection noWrapper />} />
+      {/* Masaüstünde mantık haritasının altında */}
       <div className="hidden lg:block">
         <AiServicesTeaser />
       </div>
-      <MantikhHaritasiSection belowDashboard={<ContactSection noWrapper />} />
       {/* Mobilde standalone ContactSection */}
       <div className="lg:hidden">
         <ContactSection />
       </div>
-      {/* Masaüstünde iletişim formunun altında */}
+      {/* Masaüstünde AiServicesTeaser'ın altında */}
       <div className="hidden lg:block section-padding">
         <div className="container-site">
           <PlusServicesWizard />
