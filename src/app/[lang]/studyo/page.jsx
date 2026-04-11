@@ -901,23 +901,22 @@ function GtmZihinHaritasi() {
              onMouseDown={(e) => {
                if (e.button !== 0) return
                if (e.target !== e.currentTarget && e.target.tagName !== 'svg') return
+               const zoom = parseFloat(getComputedStyle(document.documentElement).zoom) || 1
                const rect = e.currentTarget.getBoundingClientRect()
-               setSelectionBox({
-                 startX: e.clientX - rect.left,
-                 startY: e.clientY - rect.top,
-                 currX: e.clientX - rect.left,
-                 currY: e.clientY - rect.top
-               })
+               const x = e.clientX / zoom - rect.left
+               const y = e.clientY / zoom - rect.top
+               setSelectionBox({ startX: x, startY: y, currX: x, currY: y })
                if (!e.shiftKey) setSelectedIds([])
                setEditId(null)
              }}
              onMouseMove={(e) => {
                if (selectionBox) {
+                 const zoom = parseFloat(getComputedStyle(document.documentElement).zoom) || 1
                  const rect = e.currentTarget.getBoundingClientRect()
                  setSelectionBox({
                    ...selectionBox,
-                   currX: e.clientX - rect.left,
-                   currY: e.clientY - rect.top
+                   currX: e.clientX / zoom - rect.left,
+                   currY: e.clientY / zoom - rect.top
                  })
                }
              }}
@@ -1518,23 +1517,22 @@ function MantiKHaritasi() {
              onMouseDown={(e) => {
                if (e.button !== 0) return
                if (e.target !== e.currentTarget && e.target.tagName !== 'svg') return
+               const zoom = parseFloat(getComputedStyle(document.documentElement).zoom) || 1
                const rect = e.currentTarget.getBoundingClientRect()
-               setSelectionBox({
-                 startX: e.clientX - rect.left,
-                 startY: e.clientY - rect.top,
-                 currX: e.clientX - rect.left,
-                 currY: e.clientY - rect.top
-               })
+               const x = e.clientX / zoom - rect.left
+               const y = e.clientY / zoom - rect.top
+               setSelectionBox({ startX: x, startY: y, currX: x, currY: y })
                if (!e.shiftKey) setSelectedIds([])
                setEditId(null)
              }}
              onMouseMove={(e) => {
                if (selectionBox) {
+                 const zoom = parseFloat(getComputedStyle(document.documentElement).zoom) || 1
                  const rect = e.currentTarget.getBoundingClientRect()
                  setSelectionBox({
                    ...selectionBox,
-                   currX: e.clientX - rect.left,
-                   currY: e.clientY - rect.top
+                   currX: e.clientX / zoom - rect.left,
+                   currY: e.clientY / zoom - rect.top
                  })
                }
              }}
@@ -2213,23 +2211,22 @@ function YzHaritasi() {
              onMouseDown={(e) => {
                if (e.button !== 0) return
                if (e.target !== e.currentTarget && e.target.tagName !== 'svg') return
+               const zoom = parseFloat(getComputedStyle(document.documentElement).zoom) || 1
                const rect = e.currentTarget.getBoundingClientRect()
-               setSelectionBox({
-                 startX: e.clientX - rect.left,
-                 startY: e.clientY - rect.top,
-                 currX: e.clientX - rect.left,
-                 currY: e.clientY - rect.top
-               })
+               const x = e.clientX / zoom - rect.left
+               const y = e.clientY / zoom - rect.top
+               setSelectionBox({ startX: x, startY: y, currX: x, currY: y })
                if (!e.shiftKey) setSelectedIds([])
                setEditId(null)
              }}
              onMouseMove={(e) => {
                if (selectionBox) {
+                 const zoom = parseFloat(getComputedStyle(document.documentElement).zoom) || 1
                  const rect = e.currentTarget.getBoundingClientRect()
                  setSelectionBox({
                    ...selectionBox,
-                   currX: e.clientX - rect.left,
-                   currY: e.clientY - rect.top
+                   currX: e.clientX / zoom - rect.left,
+                   currY: e.clientY / zoom - rect.top
                  })
                }
              }}
@@ -4929,23 +4926,22 @@ function ReklamHiyerarsisiHaritasi() {
              onMouseDown={(e) => {
                if (e.button !== 0) return
                if (e.target !== e.currentTarget && e.target.tagName !== 'svg') return
+               const zoom = parseFloat(getComputedStyle(document.documentElement).zoom) || 1
                const rect = e.currentTarget.getBoundingClientRect()
-               setSelectionBox({
-                 startX: e.clientX - rect.left,
-                 startY: e.clientY - rect.top,
-                 currX: e.clientX - rect.left,
-                 currY: e.clientY - rect.top
-               })
+               const x = e.clientX / zoom - rect.left
+               const y = e.clientY / zoom - rect.top
+               setSelectionBox({ startX: x, startY: y, currX: x, currY: y })
                if (!e.shiftKey) setSelectedIds([])
                setEditId(null)
              }}
              onMouseMove={(e) => {
                if (selectionBox) {
+                 const zoom = parseFloat(getComputedStyle(document.documentElement).zoom) || 1
                  const rect = e.currentTarget.getBoundingClientRect()
                  setSelectionBox({
                    ...selectionBox,
-                   currX: e.clientX - rect.left,
-                   currY: e.clientY - rect.top
+                   currX: e.clientX / zoom - rect.left,
+                   currY: e.clientY / zoom - rect.top
                  })
                }
              }}
