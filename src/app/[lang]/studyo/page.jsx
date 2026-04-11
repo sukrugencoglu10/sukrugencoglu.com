@@ -2522,30 +2522,7 @@ function YzHaritasi() {
                       ))}
                     </select>
                   </div>
-                  <div>
-                    <label style={{ fontSize: 11, color: '#888', display: 'block', marginBottom: 4 }}>Açıklama</label>
-                    <textarea
-                      value={selectedTerm.desc}
-                      onChange={e => setTerms(prev => prev.map(t => t.id === selectedTerm.id ? { ...t, desc: e.target.value } : t))}
-                      onPaste={(e) => {
-                        e.preventDefault()
-                        const text = e.clipboardData.getData('text/plain')
-                        const cleanText = text.replace(/\r/g, '').replace(/\n{3,}/g, '\n\n')
-                        const target = e.target
-                        const start = target.selectionStart
-                        const end = target.selectionEnd
-                        const current = target.value
-                        const newValue = current.substring(0, start) + cleanText + current.substring(end)
-                        setTerms(prev => prev.map(t => t.id === selectedTerm.id ? { ...t, desc: newValue } : t))
-                        setTimeout(() => { target.selectionStart = target.selectionEnd = start + cleanText.length }, 0)
-                      }}
-                      style={{
-                        width: '100%', minHeight: 100, padding: 12, fontSize: 13, lineHeight: 1.7,
-                        color: '#333', border: '0.5px solid #ccc', borderRadius: 8,
-                        outline: 'none', resize: 'vertical', fontFamily: 'inherit'
-                      }}
-                    />
-                  </div>
+                  <!-- TEXTAREA_MOVED -->
 
                   <div style={{ borderTop: '0.5px solid #eee', paddingTop: 12 }}>
                     <label style={{ fontSize: 11, color: '#888', display: 'block', marginBottom: 8, fontWeight: 600 }}>BAĞLANTI YÖNETİMİ</label>
@@ -2631,7 +2608,7 @@ function YzHaritasi() {
                     {selectedTerm.abbr}
                   </div>
                   <div style={{ fontSize: 12, color: '#888', marginBottom: 12 }}>{selectedTerm.sub}</div>
-                  <div style={{ fontSize: 13, color: '#333', lineHeight: 1.7, whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>{selectedTerm.desc}</div>
+                  <!-- PREVIEW_MOVED -->
                 </>
               )}
             </>
@@ -2646,6 +2623,51 @@ function YzHaritasi() {
       </div>
 
       {/* Kaydet butonu — sağ alt */}
+
+      {selectedTerm && (
+        <div style={{ 
+          marginTop: 20, 
+          padding: 20, 
+          background: "#fff", 
+          border: "1px solid #e8e8e8", 
+          borderRadius: 12,
+          boxShadow: "0 4px 12px rgba(0,0,0,0.03)"
+        }}>
+          <div style={{ fontSize: 13, fontWeight: 700, color: "#888", marginBottom: 12, display: "flex", alignItems: "center", gap: 8 }}>
+            <span style={{ width: 12, height: 12, borderRadius: 3, background: (AI_CAT_COLORS[selectedTerm.cat] || AI_CAT_COLORS['web'] || AI_CAT_COLORS[Object.keys(AI_CAT_COLORS)[0]]).stripe }}></span>
+            AÇIKLAMA DÜZENLEME & DETAY
+          </div>
+          {editId === selectedTerm.id ? (
+            <div>
+                    <label style={{ fontSize: 11, color: '#888', display: 'block', marginBottom: 4 }}>Açıklama</label>
+                    <textarea
+                      value={selectedTerm.desc}
+                      onChange={e => setTerms(prev => prev.map(t => t.id === selectedTerm.id ? { ...t, desc: e.target.value } : t))}
+                      onPaste={(e) => {
+                        e.preventDefault()
+                        const text = e.clipboardData.getData('text/plain')
+                        const cleanText = text.replace(/\r/g, '').replace(/\n{3,}/g, '\n\n')
+                        const target = e.target
+                        const start = target.selectionStart
+                        const end = target.selectionEnd
+                        const current = target.value
+                        const newValue = current.substring(0, start) + cleanText + current.substring(end)
+                        setTerms(prev => prev.map(t => t.id === selectedTerm.id ? { ...t, desc: newValue } : t))
+                        setTimeout(() => { target.selectionStart = target.selectionEnd = start + cleanText.length }, 0)
+                      }}
+                      style={{
+                        width: '100%', minHeight: 300, padding: 12, fontSize: 15, lineHeight: 1.7,
+                        color: '#333', border: '0.5px solid #ccc', borderRadius: 8,
+                        outline: 'none', resize: 'vertical', fontFamily: 'inherit'
+                      }}
+                    />
+                  </div>
+          ) : (
+            <div style={{ fontSize: 13, color: '#333', lineHeight: 1.7, whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>{selectedTerm.desc}</div>
+          )}
+        </div>
+      )}
+
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: 12, marginTop: 12 }}>
         {lastSaved && <span style={{ fontSize: 11, color: '#1D9E75' }}>Kaydedildi: {lastSaved}</span>}
         <button
@@ -5216,30 +5238,7 @@ function ReklamHiyerarsisiHaritasi() {
                       ))}
                     </select>
                   </div>
-                  <div>
-                    <label style={{ fontSize: 11, color: '#888', display: 'block', marginBottom: 4 }}>Açıklama</label>
-                    <textarea
-                      value={selectedTerm.desc}
-                      onChange={e => setTerms(prev => prev.map(t => t.id === selectedTerm.id ? { ...t, desc: e.target.value } : t))}
-                      onPaste={(e) => {
-                        e.preventDefault()
-                        const text = e.clipboardData.getData('text/plain')
-                        const cleanText = text.replace(/\r/g, '').replace(/\n{3,}/g, '\n\n')
-                        const target = e.target
-                        const start = target.selectionStart
-                        const end = target.selectionEnd
-                        const current = target.value
-                        const newValue = current.substring(0, start) + cleanText + current.substring(end)
-                        setTerms(prev => prev.map(t => t.id === selectedTerm.id ? { ...t, desc: newValue } : t))
-                        setTimeout(() => { target.selectionStart = target.selectionEnd = start + cleanText.length }, 0)
-                      }}
-                      style={{
-                        width: '100%', minHeight: 100, padding: 12, fontSize: 13, lineHeight: 1.7,
-                        color: '#333', border: '0.5px solid #ccc', borderRadius: 8,
-                        outline: 'none', resize: 'vertical', fontFamily: 'inherit'
-                      }}
-                    />
-                  </div>
+                  <!-- TEXTAREA_MOVED -->
 
                   <div style={{ borderTop: '0.5px solid #eee', paddingTop: 12 }}>
                     <label style={{ fontSize: 11, color: '#888', display: 'block', marginBottom: 8, fontWeight: 600 }}>BAĞLANTI YÖNETİMİ</label>
@@ -5325,7 +5324,7 @@ function ReklamHiyerarsisiHaritasi() {
                     {selectedTerm.abbr}
                   </div>
                   <div style={{ fontSize: 12, color: '#888', marginBottom: 12 }}>{selectedTerm.sub}</div>
-                  <div style={{ fontSize: 13, color: '#333', lineHeight: 1.7, whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>{selectedTerm.desc}</div>
+                  <!-- PREVIEW_MOVED -->
                 </>
               )}
             </>
@@ -5338,6 +5337,51 @@ function ReklamHiyerarsisiHaritasi() {
         </div>
 
       </div>
+
+
+      {selectedTerm && (
+        <div style={{ 
+          marginTop: 20, 
+          padding: 20, 
+          background: "#fff", 
+          border: "1px solid #e8e8e8", 
+          borderRadius: 12,
+          boxShadow: "0 4px 12px rgba(0,0,0,0.03)"
+        }}>
+          <div style={{ fontSize: 13, fontWeight: 700, color: "#888", marginBottom: 12, display: "flex", alignItems: "center", gap: 8 }}>
+            <span style={{ width: 12, height: 12, borderRadius: 3, background: (RH_CAT_COLORS[selectedTerm.cat] || RH_CAT_COLORS['web'] || RH_CAT_COLORS[Object.keys(RH_CAT_COLORS)[0]]).stripe }}></span>
+            AÇIKLAMA DÜZENLEME & DETAY
+          </div>
+          {editId === selectedTerm.id ? (
+            <div>
+                    <label style={{ fontSize: 11, color: '#888', display: 'block', marginBottom: 4 }}>Açıklama</label>
+                    <textarea
+                      value={selectedTerm.desc}
+                      onChange={e => setTerms(prev => prev.map(t => t.id === selectedTerm.id ? { ...t, desc: e.target.value } : t))}
+                      onPaste={(e) => {
+                        e.preventDefault()
+                        const text = e.clipboardData.getData('text/plain')
+                        const cleanText = text.replace(/\r/g, '').replace(/\n{3,}/g, '\n\n')
+                        const target = e.target
+                        const start = target.selectionStart
+                        const end = target.selectionEnd
+                        const current = target.value
+                        const newValue = current.substring(0, start) + cleanText + current.substring(end)
+                        setTerms(prev => prev.map(t => t.id === selectedTerm.id ? { ...t, desc: newValue } : t))
+                        setTimeout(() => { target.selectionStart = target.selectionEnd = start + cleanText.length }, 0)
+                      }}
+                      style={{
+                        width: '100%', minHeight: 300, padding: 12, fontSize: 15, lineHeight: 1.7,
+                        color: '#333', border: '0.5px solid #ccc', borderRadius: 8,
+                        outline: 'none', resize: 'vertical', fontFamily: 'inherit'
+                      }}
+                    />
+                  </div>
+          ) : (
+            <div style={{ fontSize: 13, color: '#333', lineHeight: 1.7, whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>{selectedTerm.desc}</div>
+          )}
+        </div>
+      )}
 
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: 12, marginTop: 12 }}>
         {lastSaved && <span style={{ fontSize: 11, color: '#1D9E75' }}>Kaydedildi: {lastSaved}</span>}
