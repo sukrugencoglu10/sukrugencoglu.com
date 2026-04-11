@@ -56,11 +56,8 @@ export default function Navbar() {
       (entries) => {
         entries.forEach((e) => {
           if (e.isIntersecting) {
-            // Section ID'sini nav key'e çevir
             const idToKey: Record<string, string> = {
               home: "home",
-              work: "work",
-              calismalar: "work",
               contact: "contact",
               iletisim: "contact",
             };
@@ -70,8 +67,7 @@ export default function Navbar() {
       },
       { rootMargin: "-80px 0px -60% 0px" }
     );
-    // Hem TR hem EN ID'leri gözlemle
-    ["home", "work", "calismalar", "contact", "iletisim"].forEach((id) => {
+    ["home", "contact", "iletisim"].forEach((id) => {
       const el = document.getElementById(id);
       if (el) observer.observe(el);
     });
