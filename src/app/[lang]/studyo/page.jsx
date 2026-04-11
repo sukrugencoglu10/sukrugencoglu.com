@@ -5283,11 +5283,11 @@ function ReklamHiyerarsisiHaritasi() {
 
 
       {selectedTerm && (
-        <div style={{ 
-          marginTop: 20, 
-          padding: 20, 
-          background: "#fff", 
-          border: "1px solid #e8e8e8", 
+        <div style={{
+          marginTop: 20,
+          padding: 20,
+          background: "#fff",
+          border: "1px solid #e8e8e8",
           borderRadius: 12,
           boxShadow: "0 4px 12px rgba(0,0,0,0.03)"
         }}>
@@ -5326,6 +5326,11 @@ function ReklamHiyerarsisiHaritasi() {
         </div>
       )}
 
+      {/* Reklam Hiyerarşisi içerik editörü — haritanın altında */}
+      <div style={{ marginTop: 32, borderTop: '1px solid #eee', paddingTop: 24 }}>
+        <ReklamHiyerarsisi />
+      </div>
+
     </div>
   )
 }
@@ -5339,14 +5344,8 @@ const TOOLS = [
     component: StudyoContent,
   },
   {
-    id: 'reklam-hiyerarsisi',
-    label: 'Reklam Hiyerarşisi',
-    icon: '◐',
-    component: ReklamHiyerarsisi,
-  },
-  {
     id: 'reklam-hiyerarsisi-harita',
-    label: 'Reklam Hiy. Haritası',
+    label: 'Reklam Hiyerarşisi',
     icon: '⬡',
     component: ReklamHiyerarsisiHaritasi,
   },
