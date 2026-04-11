@@ -56,8 +56,14 @@ export default function HomePage() {
       <div className="hidden lg:block">
         <AiServicesTeaser />
       </div>
-      <MantikhHaritasiSection belowDashboard={<PlusServicesWizard />} />
+      <MantikhHaritasiSection />
       <ContactSection />
+      {/* Masaüstünde iletişim formunun altında */}
+      <div className="hidden lg:block section-padding">
+        <div className="container-site">
+          <PlusServicesWizard />
+        </div>
+      </div>
       {/* Mobilde mantık haritasının altında */}
       <div className="lg:hidden">
         <AiServicesTeaser showCta={false} />
