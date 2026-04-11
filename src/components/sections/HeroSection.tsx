@@ -61,7 +61,7 @@ export default function HeroSection() {
           </a>
 
           <Link
-            href={`/${lang}/${getSlug(lang, "services")}`}
+            href="#hizmetlerimiz"
             className="text-[#666] underline text-[0.85rem] font-medium transition-colors duration-200 hover:text-[#111]"
           >
             {t.hero.cta_secondary}
