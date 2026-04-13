@@ -38,7 +38,6 @@ export default function AdvertisingHierarchyLiveMap() {
   const [hovered, setHovered] = useState<string | null>(null);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [zoom, setZoom] = useState(1);
-  const [isMobile, setIsMobile] = useState(false);
   const canvasAreaRef = useRef<HTMLDivElement>(null);
   const infoPanelRef = useRef<HTMLDivElement>(null);
 
@@ -46,21 +45,12 @@ export default function AdvertisingHierarchyLiveMap() {
   const [isPanning, setIsPanning] = useState(false);
   const [panStart, setPanStart] = useState({ x: 0, y: 0, scrollLeft: 0, scrollTop: 0 });
 
-  // Mobile detection (lg breakpoint = 1024px)
+  // Scroll into view when a term is selected
   useEffect(() => {
-    const mql = window.matchMedia('(max-width: 1023px)');
-    setIsMobile(mql.matches);
-    const handler = (e: MediaQueryListEvent) => setIsMobile(e.matches);
-    mql.addEventListener('change', handler);
-    return () => mql.removeEventListener('change', handler);
-  }, []);
-
-  // Auto-scroll to info panel on desktop when a term is selected
-  useEffect(() => {
-    if (selectedId && !isMobile && infoPanelRef.current) {
+    if (selectedId && infoPanelRef.current) {
       infoPanelRef.current.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
     }
-  }, [selectedId, isMobile]);
+  }, [selectedId]);
 
   useEffect(() => {
     fetch('/api/reklam-hiyerarsisi-harita')
@@ -198,9 +188,9 @@ export default function AdvertisingHierarchyLiveMap() {
         </div>
       </div>
 
-      <div className="flex flex-col lg:flex-row relative">
+      <div className="flex flex-col relative">
         {/* Main View Area */}
-        <div className="flex-1 relative bg-[#fafafa]">
+        <div className="relative bg-[#fafafa]">
           {/* Scrollable Container */}
           <div 
             ref={canvasAreaRef}
@@ -327,66 +317,40 @@ export default function AdvertisingHierarchyLiveMap() {
           </div>
         </div>
 
-        {/* Mobile Bottom Sheet Overlay */}
-        {isMobile && selectedTerm && (
+        {/* Info Panel — below map */}
+        {selectedTerm ? (
           <div
             ref={infoPanelRef}
-            className="absolute bottom-0 left-0 right-0 z-50 bg-white rounded-t-2xl shadow-[0_-4px_24px_rgba(0,0,0,0.12)] border-t border-gray-100 p-5"
-            style={{ maxHeight: '60vh', overflowY: 'auto', animation: 'rhSlideUp 0.25s ease-out' }}
+            className="w-full bg-white border-t border-gray-100 p-6"
+            style={{ animation: 'rhSlideUp 0.2s ease-out' }}
           >
-            <div className="flex justify-center mb-3">
-              <div className="w-10 h-1 rounded-full bg-gray-300" />
-            </div>
-            <button
-              onClick={() => setSelectedId(null)}
-              className="absolute top-4 right-4 w-8 h-8 flex items-center justify-center rounded-full bg-gray-100 hover:bg-gray-200 text-gray-500 transition-colors"
-              aria-label="Kapat"
-            >
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
-                <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
-              </svg>
-            </button>
-            <div className="flex items-center gap-2">
-              <div style={{ width: 10, height: 10, borderRadius: 3, background: (RH_CAT_COLORS[selectedTerm.cat] || RH_CAT_COLORS.web).stripe }} />
-              <span className="text-[10px] font-bold tracking-wider text-gray-400 uppercase">
-                {RH_CAT_LABELS[selectedTerm.cat] || 'Kategori'}
-              </span>
-            </div>
-            <h4 className="text-xl font-extrabold text-gray-900 leading-tight mt-2">{selectedTerm.abbr}</h4>
-            <p className="text-sm font-medium text-gray-500 mt-1">{selectedTerm.sub}</p>
-            <div className="h-px bg-gray-100 my-3" />
-            <div className="text-sm text-gray-600 leading-relaxed font-normal italic">
-              {selectedTerm.desc || <span className="text-gray-400 not-italic">Açıklama yakında eklenecektir.</span>}
-            </div>
-          </div>
-        )}
-
-        {/* Desktop Info Panel */}
-        {!isMobile && (
-          <div ref={infoPanelRef} className="w-full lg:w-80 bg-white p-6 border-l border-gray-50 flex flex-col gap-4">
-            {selectedTerm ? (
-              <>
-                <div className="flex items-center gap-2">
+            <div className="flex items-start justify-between gap-4">
+              <div className="flex-1">
+                <div className="flex items-center gap-2 mb-2">
                   <div style={{ width: 10, height: 10, borderRadius: 3, background: (RH_CAT_COLORS[selectedTerm.cat] || RH_CAT_COLORS.web).stripe }} />
                   <span className="text-[10px] font-bold tracking-wider text-gray-400 uppercase">
                     {RH_CAT_LABELS[selectedTerm.cat] || 'Kategori'}
                   </span>
                 </div>
                 <h4 className="text-xl font-extrabold text-gray-900 leading-tight">{selectedTerm.abbr}</h4>
-                <p className="text-sm font-medium text-gray-500">{selectedTerm.sub}</p>
-                <div className="h-px bg-gray-100 my-2" />
+                <p className="text-sm font-medium text-gray-500 mt-1">{selectedTerm.sub}</p>
+                <div className="h-px bg-gray-100 my-3" />
                 <div className="text-sm text-gray-600 leading-relaxed font-normal italic">
                   {selectedTerm.desc || <span className="text-gray-400 not-italic">Açıklama yakında eklenecektir.</span>}
                 </div>
-              </>
-            ) : (
-              <div className="flex-1 flex flex-col items-center justify-center text-center py-12 gap-3 text-gray-300">
-                <div className="text-4xl">◎</div>
-                <p className="text-sm font-medium">Strateji detaylarını görmek için<br/>bir kutuya tıklayın</p>
               </div>
-            )}
+              <button
+                onClick={() => setSelectedId(null)}
+                className="shrink-0 w-8 h-8 flex items-center justify-center rounded-full bg-gray-100 hover:bg-gray-200 text-gray-500 transition-colors"
+                aria-label="Kapat"
+              >
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+                  <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
+                </svg>
+              </button>
+            </div>
           </div>
-        )}
+        ) : null}
       </div>
     </div>
     </>
