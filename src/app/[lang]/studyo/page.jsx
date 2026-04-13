@@ -5471,12 +5471,6 @@ const TOOLS = [
     component: DijitalAnons,
   },
   {
-    id: 'sss',
-    label: 'SSS',
-    icon: '?',
-    component: SSS,
-  },
-  {
     id: 'vaka-calismalari',
     label: 'Vaka Çalışmaları',
     icon: '◆',
@@ -5487,6 +5481,12 @@ const TOOLS = [
     label: 'Renkler',
     icon: '◕',
     component: Renkler,
+  },
+  {
+    id: 'sss',
+    label: 'SSS',
+    icon: '?',
+    component: SSS,
   },
 ]
 
