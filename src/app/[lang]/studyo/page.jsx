@@ -685,6 +685,14 @@ const GTM_CAT_COLORS = {
   merkez:    { bg: '#E8F5E9', border: '#2E7D3266', stripe: '#2E7D32' },
   bileşen:   { bg: '#E3F2FD', border: '#1565C066', stripe: '#1565C0' },
   hedef:     { bg: '#F3E5F5', border: '#6A1B9A66', stripe: '#6A1B9A' },
+  kirmizi:   { bg: '#FFEBEE', border: '#C6282866', stripe: '#C62828' },
+  pembe:     { bg: '#FCE4EC', border: '#AD145766', stripe: '#AD1457' },
+  lacivert:  { bg: '#E8EAF6', border: '#28359366', stripe: '#283593' },
+  gumus:     { bg: '#F5F5F5', border: '#61616166', stripe: '#616161' },
+}
+const GTM_CAT_LABELS = {
+  veri: 'Veri Kaynağı', merkez: 'Merkez', 'bileşen': 'GTM Bileşeni', hedef: 'Hedef Platform',
+  kirmizi: 'Kırmızı', pembe: 'Pembe', lacivert: 'Lacivert', gumus: 'Gümüş',
 }
 
 const GTM_TERMS = [
@@ -887,7 +895,7 @@ function GtmZihinHaritasi() {
 
       {/* Legenda */}
       <div style={{ display: 'flex', gap: 16, marginBottom: '1rem', flexWrap: 'wrap' }}>
-        {[['veri', 'Veri Kaynağı'], ['merkez', 'Merkez'], ['bileşen', 'GTM Bileşeni'], ['hedef', 'Hedef Platform']].map(([cat, label]) => (
+        {Object.entries(GTM_CAT_LABELS).map(([cat, label]) => (
           <div key={cat} style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 12, color: '#555' }}>
             <div style={{ width: 10, height: 10, borderRadius: 2, background: GTM_CAT_COLORS[cat].stripe }} />
             {label}
@@ -1147,17 +1155,26 @@ function GtmZihinHaritasi() {
                     />
                   </div>
                   <div style={{ flex: 1 }}>
-                    <label style={{ fontSize: 11, color: '#888', display: 'block', marginBottom: 4 }}>Kategori</label>
-                    <select
-                      value={selectedTerm.cat}
-                      onChange={e => setTerms(prev => prev.map(t => t.id === selectedTerm.id ? { ...t, cat: e.target.value } : t))}
-                      style={{ width: '100%', padding: '6px 10px', fontSize: 13, border: '0.5px solid #ccc', borderRadius: 6, outline: 'none' }}
-                    >
-                      <option value="veri">Veri Kaynağı</option>
-                      <option value="merkez">Merkez</option>
-                      <option value="bileşen">GTM Bileşeni</option>
-                      <option value="hedef">Hedef Platform</option>
-                    </select>
+                    <label style={{ fontSize: 11, color: '#888', display: 'block', marginBottom: 4 }}>Renk</label>
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 5 }}>
+                      {Object.entries(GTM_CAT_COLORS).map(([cat, colors]) => (
+                        <div
+                          key={cat}
+                          onClick={() => setTerms(prev => prev.map(t => t.id === selectedTerm.id ? { ...t, cat } : t))}
+                          title={GTM_CAT_LABELS[cat] || cat}
+                          style={{
+                            width: 26, height: 26, borderRadius: 6, cursor: 'pointer',
+                            background: colors.bg,
+                            border: selectedTerm.cat === cat ? `2.5px solid ${colors.stripe}` : `1.5px solid ${colors.border}`,
+                            boxShadow: selectedTerm.cat === cat ? `0 0 0 2px ${colors.stripe}44` : 'none',
+                            display: 'flex', alignItems: 'flex-end', padding: '0 3px 3px',
+                            transition: 'all 0.1s', boxSizing: 'border-box',
+                          }}
+                        >
+                          <div style={{ width: '100%', height: 3, borderRadius: 2, background: colors.stripe }} />
+                        </div>
+                      ))}
+                    </div>
                   </div>
                 </div>
 
@@ -1317,6 +1334,14 @@ const CAT_COLORS = {
   olcum:    { bg: '#E3F2FD', border: '#1565C066', stripe: '#1565C0' },
   strateji: { bg: '#F3E5F5', border: '#6A1B9A66', stripe: '#6A1B9A' },
   eylem:    { bg: '#E8F5E9', border: '#2E7D3266', stripe: '#2E7D32' },
+  kirmizi:  { bg: '#FFEBEE', border: '#C6282866', stripe: '#C62828' },
+  pembe:    { bg: '#FCE4EC', border: '#AD145766', stripe: '#AD1457' },
+  lacivert: { bg: '#E8EAF6', border: '#28359366', stripe: '#283593' },
+  gumus:    { bg: '#F5F5F5', border: '#61616166', stripe: '#616161' },
+}
+const CAT_LABELS = {
+  maliyet: 'Maliyet', olcum: 'Ölçüm', strateji: 'Strateji', eylem: 'Eylem',
+  kirmizi: 'Kırmızı', pembe: 'Pembe', lacivert: 'Lacivert', gumus: 'Gümüş',
 }
 const CAT_COLORS_DEFAULT = { bg: '#F5F5F5', border: '#99999966', stripe: '#999999' }
 function getCatColors(cat) { return CAT_COLORS[cat] ?? CAT_COLORS_DEFAULT }
@@ -1504,7 +1529,7 @@ function MantiKHaritasi() {
 
       {/* Legenda */}
       <div style={{ display: 'flex', gap: 16, marginBottom: '1.25rem', flexWrap: 'wrap' }}>
-        {[['maliyet', 'Maliyet'], ['olcum', 'Ölçüm'], ['strateji', 'Strateji'], ['eylem', 'Eylem']].map(([cat, label]) => (
+        {Object.entries(CAT_LABELS).map(([cat, label]) => (
           <div key={cat} style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 12, color: '#555' }}>
             <div style={{ width: 10, height: 10, borderRadius: 2, background: getCatColors(cat).stripe }} />
             {label}
@@ -1787,17 +1812,26 @@ function MantiKHaritasi() {
                     />
                   </div>
                   <div style={{ flex: 1 }}>
-                    <label style={{ fontSize: 11, color: '#888', display: 'block', marginBottom: 4 }}>Kategori</label>
-                    <select
-                      value={selectedTerm.cat}
-                      onChange={e => setTerms(prev => prev.map(t => t.id === selectedTerm.id ? { ...t, cat: e.target.value } : t))}
-                      style={{ width: '100%', padding: '6px 10px', fontSize: 13, border: '0.5px solid #ccc', borderRadius: 6, outline: 'none' }}
-                    >
-                      <option value="maliyet">Maliyet</option>
-                      <option value="olcum">Ölçüm</option>
-                      <option value="strateji">Strateji</option>
-                      <option value="eylem">Eylem</option>
-                    </select>
+                    <label style={{ fontSize: 11, color: '#888', display: 'block', marginBottom: 4 }}>Renk</label>
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 5 }}>
+                      {Object.entries(CAT_COLORS).map(([cat, colors]) => (
+                        <div
+                          key={cat}
+                          onClick={() => setTerms(prev => prev.map(t => t.id === selectedTerm.id ? { ...t, cat } : t))}
+                          title={CAT_LABELS[cat] || cat}
+                          style={{
+                            width: 26, height: 26, borderRadius: 6, cursor: 'pointer',
+                            background: colors.bg,
+                            border: selectedTerm.cat === cat ? `2.5px solid ${colors.stripe}` : `1.5px solid ${colors.border}`,
+                            boxShadow: selectedTerm.cat === cat ? `0 0 0 2px ${colors.stripe}44` : 'none',
+                            display: 'flex', alignItems: 'flex-end', padding: '0 3px 3px',
+                            transition: 'all 0.1s', boxSizing: 'border-box',
+                          }}
+                        >
+                          <div style={{ width: '100%', height: 3, borderRadius: 2, background: colors.stripe }} />
+                        </div>
+                      ))}
+                    </div>
                   </div>
                 </div>
 
@@ -1956,6 +1990,10 @@ const AI_CAT_COLORS = {
   iletisim:  { bg: '#FFF8E1', border: '#F57F1766', stripe: '#F57F17' },
   otomasyon: { bg: '#E8F5E9', border: '#1B5E2066', stripe: '#1B5E20' },
   bilgi:     { bg: '#E0F2F1', border: '#004D4066', stripe: '#004D40' },
+  kirmizi:   { bg: '#FFEBEE', border: '#C6282866', stripe: '#C62828' },
+  pembe:     { bg: '#FCE4EC', border: '#AD145766', stripe: '#AD1457' },
+  lacivert:  { bg: '#E8EAF6', border: '#28359366', stripe: '#283593' },
+  gumus:     { bg: '#F5F5F5', border: '#61616166', stripe: '#616161' },
 }
 
 const AI_TERMS = [
@@ -2053,6 +2091,7 @@ function aiEdgePoint(from, to) {
 
 const AI_CAT_LABELS = {
   temel: 'Temel', arayuz: 'Arayüz', iletisim: 'İletişim', otomasyon: 'Otomasyon', bilgi: 'Bilgi',
+  kirmizi: 'Kırmızı', pembe: 'Pembe', lacivert: 'Lacivert', gumus: 'Gümüş',
 }
 
 function YzHaritasi() {
@@ -2461,16 +2500,26 @@ function YzHaritasi() {
                     />
                   </div>
                   <div>
-                    <label style={{ fontSize: 11, color: '#888', display: 'block', marginBottom: 4 }}>Kategori</label>
-                    <select
-                      value={selectedTerm.cat}
-                      onChange={e => setTerms(prev => prev.map(t => t.id === selectedTerm.id ? { ...t, cat: e.target.value } : t))}
-                      style={{ width: '100%', padding: '6px 10px', fontSize: 13, border: '0.5px solid #ccc', borderRadius: 6, outline: 'none' }}
-                    >
-                      {Object.entries(AI_CAT_LABELS).map(([val, label]) => (
-                        <option key={val} value={val}>{label}</option>
+                    <label style={{ fontSize: 11, color: '#888', display: 'block', marginBottom: 4 }}>Renk</label>
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 5 }}>
+                      {Object.entries(AI_CAT_COLORS).map(([cat, colors]) => (
+                        <div
+                          key={cat}
+                          onClick={() => setTerms(prev => prev.map(t => t.id === selectedTerm.id ? { ...t, cat } : t))}
+                          title={AI_CAT_LABELS[cat] || cat}
+                          style={{
+                            width: 26, height: 26, borderRadius: 6, cursor: 'pointer',
+                            background: colors.bg,
+                            border: selectedTerm.cat === cat ? `2.5px solid ${colors.stripe}` : `1.5px solid ${colors.border}`,
+                            boxShadow: selectedTerm.cat === cat ? `0 0 0 2px ${colors.stripe}44` : 'none',
+                            display: 'flex', alignItems: 'flex-end', padding: '0 3px 3px',
+                            transition: 'all 0.1s', boxSizing: 'border-box',
+                          }}
+                        >
+                          <div style={{ width: '100%', height: 3, borderRadius: 2, background: colors.stripe }} />
+                        </div>
                       ))}
-                    </select>
+                    </div>
                   </div>
                   {/* TEXTAREA_MOVED */}
 
@@ -4730,10 +4779,14 @@ const RH_NODE_W = 136
 const RH_NODE_H = 66
 
 const RH_CAT_COLORS = {
-  web: { bg: '#E3F2FD', border: '#1565C066', stripe: '#1565C0' },
-  seo: { bg: '#FFF8E1', border: '#F57F1766', stripe: '#F57F17' },
-  ads: { bg: '#E8F5E9', border: '#1B5E2066', stripe: '#1B5E20' },
-  sosyal: { bg: '#F3E5F5', border: '#6A1B9A66', stripe: '#6A1B9A' },
+  web:      { bg: '#E3F2FD', border: '#1565C066', stripe: '#1565C0' },
+  seo:      { bg: '#FFF8E1', border: '#F57F1766', stripe: '#F57F17' },
+  ads:      { bg: '#E8F5E9', border: '#1B5E2066', stripe: '#1B5E20' },
+  sosyal:   { bg: '#F3E5F5', border: '#6A1B9A66', stripe: '#6A1B9A' },
+  kirmizi:  { bg: '#FFEBEE', border: '#C6282866', stripe: '#C62828' },
+  pembe:    { bg: '#FCE4EC', border: '#AD145766', stripe: '#AD1457' },
+  lacivert: { bg: '#E8EAF6', border: '#28359366', stripe: '#283593' },
+  gumus:    { bg: '#F5F5F5', border: '#61616166', stripe: '#616161' },
 }
 
 const RH_TERMS = [
@@ -4759,6 +4812,7 @@ function rhEdgePoint(from, to) {
 
 const RH_CAT_LABELS = {
   web: 'Web Merkezi', seo: 'Organik Büyüme', ads: 'Ücretli Reklam', sosyal: 'Sosyal Medya',
+  kirmizi: 'Kırmızı', pembe: 'Pembe', lacivert: 'Lacivert', gumus: 'Gümüş',
 }
 
 function ReklamHiyerarsisiHaritasi() {
@@ -5204,16 +5258,26 @@ function ReklamHiyerarsisiHaritasi() {
                     />
                   </div>
                   <div>
-                    <label style={{ fontSize: 11, color: '#888', display: 'block', marginBottom: 4 }}>Kategori</label>
-                    <select
-                      value={selectedTerm.cat}
-                      onChange={e => setTerms(prev => prev.map(t => t.id === selectedTerm.id ? { ...t, cat: e.target.value } : t))}
-                      style={{ width: '100%', padding: '6px 10px', fontSize: 13, border: '0.5px solid #ccc', borderRadius: 6, outline: 'none' }}
-                    >
-                      {Object.entries(RH_CAT_LABELS).map(([val, label]) => (
-                        <option key={val} value={val}>{label}</option>
+                    <label style={{ fontSize: 11, color: '#888', display: 'block', marginBottom: 4 }}>Renk</label>
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 5 }}>
+                      {Object.entries(RH_CAT_COLORS).map(([cat, colors]) => (
+                        <div
+                          key={cat}
+                          onClick={() => setTerms(prev => prev.map(t => t.id === selectedTerm.id ? { ...t, cat } : t))}
+                          title={RH_CAT_LABELS[cat] || cat}
+                          style={{
+                            width: 26, height: 26, borderRadius: 6, cursor: 'pointer',
+                            background: colors.bg,
+                            border: selectedTerm.cat === cat ? `2.5px solid ${colors.stripe}` : `1.5px solid ${colors.border}`,
+                            boxShadow: selectedTerm.cat === cat ? `0 0 0 2px ${colors.stripe}44` : 'none',
+                            display: 'flex', alignItems: 'flex-end', padding: '0 3px 3px',
+                            transition: 'all 0.1s', boxSizing: 'border-box',
+                          }}
+                        >
+                          <div style={{ width: '100%', height: 3, borderRadius: 2, background: colors.stripe }} />
+                        </div>
                       ))}
-                    </select>
+                    </div>
                   </div>
                   {/* TEXTAREA_MOVED */}
 
