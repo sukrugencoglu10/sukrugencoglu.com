@@ -1381,7 +1381,7 @@ function MantiKHaritasi() {
     fetch('/api/reklam-terimleri')
       .then(res => res.json())
       .then(data => {
-        if (data && !Array.isArray(data) && data.terms) {
+        if (data && !Array.isArray(data) && Array.isArray(data.terms) && data.terms.length > 0) {
           setTerms(data.terms)
           setConnections(data.connections || [])
           if (data.metadata?.w) setCanvasDim({ w: data.metadata.w, h: data.metadata.h || 600 })
