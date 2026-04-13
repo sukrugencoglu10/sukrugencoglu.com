@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import WorkSection from "@/components/sections/WorkSection";
 
 const baseUrl = "https://www.sukrugencoglu.com";
 

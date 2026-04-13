@@ -1510,7 +1510,7 @@ function MantiKHaritasi() {
     <div style={{ padding: '2rem 1.25rem', fontFamily: 'inherit' }}>
       <div style={{ marginBottom: '1.25rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <div>
-          <h1 style={{ fontSize: 22, fontWeight: 500, margin: 0 }}>Reklam Terimleri</h1>
+          <h1 style={{ fontSize: 22, fontWeight: 500, margin: 0 }}>Reklam KPI</h1>
           <p style={{ fontSize: 13, color: '#888', marginTop: 4 }}>
             Dijital reklamcılık kısaltmaları ve funnel içindeki hiyerarşik ilişkileri
           </p>
@@ -5442,7 +5442,7 @@ const TOOLS = [
   },
   {
     id: 'mantik-haritasi',
-    label: 'Reklamlama Terimleri',
+    label: 'Reklam KPI',
     icon: '⬡',
     component: MantiKHaritasi,
   },
