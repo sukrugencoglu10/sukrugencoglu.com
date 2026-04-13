@@ -28,15 +28,15 @@ export async function GET() {
 // POST — Veriyi kaydeder (Upsert)
 export async function POST(req) {
   try {
-    const items = await req.json()
-    if (!Array.isArray(items)) {
+    const body = await req.json()
+    if (!body || typeof body !== 'object') {
       return NextResponse.json({ error: 'Geçersiz veri formatı' }, { status: 400 })
     }
 
     const supabase = getClient()
     const { error } = await supabase
       .from('reklam_terimleri')
-      .upsert({ id: 1, items, updated_at: new Date().toISOString() })
+      .upsert({ id: 1, items: body, updated_at: new Date().toISOString() })
 
     if (error) return NextResponse.json({ error: error.message }, { status: 500 })
     return NextResponse.json({ ok: true })
