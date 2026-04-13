@@ -1318,6 +1318,8 @@ const CAT_COLORS = {
   strateji: { bg: '#F3E5F5', border: '#6A1B9A66', stripe: '#6A1B9A' },
   eylem:    { bg: '#E8F5E9', border: '#2E7D3266', stripe: '#2E7D32' },
 }
+const CAT_COLORS_DEFAULT = { bg: '#F5F5F5', border: '#99999966', stripe: '#999999' }
+function getCatColors(cat) { return CAT_COLORS[cat] ?? CAT_COLORS_DEFAULT }
 
 const AD_TERMS = [
   { id: 'kpi',  abbr: 'KPI',  tr: 'Temel Performans Göstergesi', en: 'Key Performance Indicator', cat: 'strateji', x: 480, y: 55  },
@@ -1504,7 +1506,7 @@ function MantiKHaritasi() {
       <div style={{ display: 'flex', gap: 16, marginBottom: '1.25rem', flexWrap: 'wrap' }}>
         {[['maliyet', 'Maliyet'], ['olcum', 'Ölçüm'], ['strateji', 'Strateji'], ['eylem', 'Eylem']].map(([cat, label]) => (
           <div key={cat} style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 12, color: '#555' }}>
-            <div style={{ width: 10, height: 10, borderRadius: 2, background: CAT_COLORS[cat].stripe }} />
+            <div style={{ width: 10, height: 10, borderRadius: 2, background: getCatColors(cat).stripe }} />
             {label}
           </div>
         ))}
@@ -1619,7 +1621,7 @@ function MantiKHaritasi() {
 
           {/* Tüm node'lar */}
           {terms.map(term => {
-            const colors = CAT_COLORS[term.cat]
+            const colors = getCatColors(term.cat)
             const isSelected = selectedIds.includes(term.id)
             const isHov = hovered === term.id
             const isDimmed = connectedIds && !connectedIds.has(term.id)
@@ -1714,7 +1716,7 @@ function MantiKHaritasi() {
       <div style={{
         marginTop: 16,
         background: selectedTerm ? '#fff' : '#fafafa',
-        border: `0.5px solid ${selectedTerm ? CAT_COLORS[selectedTerm.cat].stripe + '44' : '#e8e8e8'}`,
+        border: `0.5px solid ${selectedTerm ? getCatColors(selectedTerm.cat).stripe + '44' : '#e8e8e8'}`,
         borderRadius: 12,
         padding: '1.25rem 1.5rem',
         minHeight: 80,
@@ -1740,8 +1742,8 @@ function MantiKHaritasi() {
         ) : selectedTerm ? (          <>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                <div style={{ width: 8, height: 8, borderRadius: 2, background: CAT_COLORS[selectedTerm.cat].stripe, flexShrink: 0 }} />
-                <span style={{ fontSize: 18, fontWeight: 700, color: CAT_COLORS[selectedTerm.cat].stripe }}>
+                <div style={{ width: 8, height: 8, borderRadius: 2, background: getCatColors(selectedTerm.cat).stripe, flexShrink: 0 }} />
+                <span style={{ fontSize: 18, fontWeight: 700, color: getCatColors(selectedTerm.cat).stripe }}>
                   {selectedTerm.abbr}
                 </span>
                 <span style={{ fontSize: 12, color: '#aaa', marginLeft: 4 }}>{selectedTerm.tr} / {selectedTerm.en}</span>
@@ -4944,7 +4946,7 @@ function ReklamHiyerarsisiHaritasi() {
           style={{ flex: 1, overflow: "auto", resize: "both", minHeight: 400, background: '#fafafa', border: '0.5px solid #e8e8e8', borderRadius: 12, padding: '8px 0 10px', cursor: isPanning ? 'grabbing' : 'grab' }}
           onMouseDownCapture={(e) => {
             const target = e.target
-            const isNode = target.closest('div[style*="cursor: pointer"]') !== null
+            const isNode = target.closest('div[style*="cursor: grab"]') !== null || target.closest('div[style*="cursor: grabbing"]') !== null
             const isButton = target.closest('button') !== null
             if (!isNode && !isButton) {
               panStart.current = { x: e.clientX, y: e.clientY, sl: containerRef.current?.scrollLeft || 0, st: containerRef.current?.scrollTop || 0 }
