@@ -5338,16 +5338,16 @@ function ReklamHiyerarsisiHaritasi() {
 // ─── Araç listesi ─────────────────────────────────────────────────────────────
 const TOOLS = [
   {
-    id: 'icerik-studyosu',
-    label: 'İçerik Stüdyosu',
-    icon: '✦',
-    component: StudyoContent,
-  },
-  {
     id: 'reklam-hiyerarsisi-harita',
     label: 'Reklam Hiyerarşisi',
     icon: '⬡',
     component: ReklamHiyerarsisiHaritasi,
+  },
+  {
+    id: 'icerik-studyosu',
+    label: 'İçerik Stüdyosu',
+    icon: '✦',
+    component: StudyoContent,
   },
 
   {
