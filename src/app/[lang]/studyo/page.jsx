@@ -5358,7 +5358,7 @@ const TOOLS = [
   },
   {
     id: 'mantik-haritasi',
-    label: 'Terimler',
+    label: 'Reklamlama Terimleri',
     icon: '⬡',
     component: MantiKHaritasi,
   },
