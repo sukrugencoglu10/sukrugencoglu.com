@@ -32,8 +32,8 @@ export default function WorkPage() {
       <div className="container-site">
         <div className="flex flex-col items-center gap-4 text-center mb-12">
           <Badge color="blue">Strategy Studio</Badge>
-          <h1 className="text-4xl font-extrabold text-ink tracking-tight">Live Ad & Web Hierarchy</h1>
-          <p className="text-ink-muted max-w-2xl">
+          <h1 className="text-2xl sm:text-4xl font-extrabold text-ink tracking-tight">Live Ad & Web Hierarchy</h1>
+          <p className="text-sm sm:text-base text-ink-muted max-w-2xl">
             The following map shows the digital growth strategy created and updated in real-time 
              by Şükrü Gençoğlu in the Studio.
           </p>

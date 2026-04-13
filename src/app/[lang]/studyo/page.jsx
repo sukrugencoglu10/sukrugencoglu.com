@@ -766,7 +766,6 @@ function GtmZihinHaritasi() {
   const [editId, setEditId] = useState(null)
   const [saving, setSaving] = useState(false)
   const [lastSaved, setLastSaved] = useState(null)
-  const [connDir, setConnDir] = useState('to') // 'to' (A->B) or 'from' (A<-B)
 
 
   useEffect(() => {
@@ -858,19 +857,17 @@ function GtmZihinHaritasi() {
 
   const handleAddConnection = (targetId) => {
     if (selectedIds.length !== 1 || !targetId || selectedIds[0] === targetId) return
-    const from = connDir === 'to' ? selectedIds[0] : targetId
-    const to = connDir === 'to' ? targetId : selectedIds[0]
+    const from = selectedIds[0]
+    const to = targetId
     if (connections.find(c => c.from === from && c.to === to)) return
     setConnections([...connections, { from, to }])
   }
-
 
   const handleRemoveConnection = (targetId) => {
     setConnections(connections.filter(c => !(c.from === selectedIds[0] && c.to === targetId)))
   }
 
-  
-  
+
 
   return (
     <div style={{ marginTop: '4rem', paddingTop: '2rem', borderTop: '1px solid #eee' }}>
@@ -1207,37 +1204,16 @@ function GtmZihinHaritasi() {
                   <label style={{ fontSize: 11, color: '#888', display: 'block', marginBottom: 8, fontWeight: 600 }}>BAĞLANTI YÖNETİMİ</label>
                   
                   {/* Yeni bağlantı ekle */}
-                  <div style={{ display: 'flex', gap: 10, alignItems: 'center', marginBottom: 16 }}>
-                    <div style={{ display: 'flex', border: '0.5px solid #ccc', borderRadius: 6, overflow: 'hidden', background: '#fff' }}>
-                      <button
-                        onClick={() => setConnDir('to')}
-                        title="Seçiliden Hedefe (A → B)"
-                        style={{
-                          padding: '6px 10px', fontSize: 13, border: 'none', cursor: 'pointer',
-                          background: connDir === 'to' ? '#f0f0f0' : '#fff',
-                          color: connDir === 'to' ? '#111' : '#aaa',
-                          borderRight: '0.5px solid #eee'
-                        }}
-                      >
-                        A → B
-                      </button>
-                      <button
-                        onClick={() => setConnDir('from')}
-                        title="Hedeften Seçiliye (A ← B)"
-                        style={{
-                          padding: '6px 10px', fontSize: 13, border: 'none', cursor: 'pointer',
-                          background: connDir === 'from' ? '#f0f0f0' : '#fff',
-                          color: connDir === 'from' ? '#111' : '#aaa'
-                        }}
-                      >
-                        A ← B
-                      </button>
+                  <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginBottom: 16 }}>
+                    <div style={{ padding: '5px 10px', fontSize: 12, background: '#f0f0f0', border: '0.5px solid #ccc', borderRadius: 6, fontWeight: 700, whiteSpace: 'nowrap', color: '#333' }}>
+                      A: {selectedTerm.abbr}
                     </div>
+                    <span style={{ fontSize: 16, color: '#999' }}>→</span>
                     <select
                       id="target-node-select"
                       style={{ flex: 1, padding: '6px 10px', fontSize: 12, border: '0.5px solid #ccc', borderRadius: 6, outline: 'none', background: '#fff' }}
                     >
-                      <option value="">Bağlanacak kutuyu seç...</option>
+                      <option value="">B kutusunu seç...</option>
                       {terms.filter(t => t.id !== selectedTerm.id).map(t => (
                         <option key={t.id} value={t.id}>{t.abbr} ({t.sub})</option>
                       ))}
@@ -1249,7 +1225,7 @@ function GtmZihinHaritasi() {
                       }}
                       style={{ padding: '6px 14px', fontSize: 12, background: '#f5f5f5', border: '0.5px solid #ccc', borderRadius: 6, cursor: 'pointer' }}
                     >
-                      Bağla
+                      Ekle
                     </button>
                   </div>
 
@@ -1399,8 +1375,6 @@ function MantiKHaritasi() {
   const [editId, setEditId] = useState(null)
   const [saving, setSaving] = useState(false)
   const [lastSaved, setLastSaved] = useState(null)
-  const [connDir, setConnDir] = useState('to') // 'to' or 'from'
-
 
   useEffect(() => {
     fetch('/api/reklam-terimleri')
@@ -1492,19 +1466,17 @@ function MantiKHaritasi() {
 
   const handleAddConnection = (targetId) => {
     if (selectedIds.length !== 1 || !targetId || selectedIds[0] === targetId) return
-    const from = connDir === 'to' ? selectedIds[0] : targetId
-    const to = connDir === 'to' ? targetId : selectedIds[0]
+    const from = selectedIds[0]
+    const to = targetId
     if (connections.find(c => c.from === from && c.to === to)) return
     setConnections([...connections, { from, to }])
   }
-
 
   const handleRemoveConnection = (targetId) => {
     setConnections(connections.filter(c => !(c.from === selectedIds[0] && c.to === targetId)))
   }
 
-  
-  
+
 
   return (
     <div style={{ padding: '2rem 1.25rem', fontFamily: 'inherit' }}>
@@ -1864,37 +1836,16 @@ function MantiKHaritasi() {
                   <label style={{ fontSize: 11, color: '#888', display: 'block', marginBottom: 8, fontWeight: 600 }}>BAĞLANTI YÖNETİMİ</label>
                   
                   {/* Yeni bağlantı ekle */}
-                  <div style={{ display: 'flex', gap: 10, alignItems: 'center', marginBottom: 16 }}>
-                    <div style={{ display: 'flex', border: '0.5px solid #ccc', borderRadius: 6, overflow: 'hidden', background: '#fff' }}>
-                      <button
-                        onClick={() => setConnDir('to')}
-                        title="Seçiliden Hedefe (A → B)"
-                        style={{
-                          padding: '6px 10px', fontSize: 13, border: 'none', cursor: 'pointer',
-                          background: connDir === 'to' ? '#f0f0f0' : '#fff',
-                          color: connDir === 'to' ? '#111' : '#aaa',
-                          borderRight: '0.5px solid #eee'
-                        }}
-                      >
-                        A → B
-                      </button>
-                      <button
-                        onClick={() => setConnDir('from')}
-                        title="Hedeften Seçiliye (A ← B)"
-                        style={{
-                          padding: '6px 10px', fontSize: 13, border: 'none', cursor: 'pointer',
-                          background: connDir === 'from' ? '#f0f0f0' : '#fff',
-                          color: connDir === 'from' ? '#111' : '#aaa'
-                        }}
-                      >
-                        A ← B
-                      </button>
+                  <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginBottom: 16 }}>
+                    <div style={{ padding: '5px 10px', fontSize: 12, background: '#f0f0f0', border: '0.5px solid #ccc', borderRadius: 6, fontWeight: 700, whiteSpace: 'nowrap', color: '#333' }}>
+                      A: {selectedTerm.abbr}
                     </div>
+                    <span style={{ fontSize: 16, color: '#999' }}>→</span>
                     <select
                       id="reklam-target-select"
                       style={{ flex: 1, padding: '6px 10px', fontSize: 12, border: '0.5px solid #ccc', borderRadius: 6, outline: 'none', background: '#fff' }}
                     >
-                      <option value="">Bağlanacak kutuyu seç...</option>
+                      <option value="">B kutusunu seç...</option>
                       {terms.filter(t => t.id !== selectedTerm.id).map(t => (
                         <option key={t.id} value={t.id}>{t.abbr} ({t.tr})</option>
                       ))}
@@ -1906,7 +1857,7 @@ function MantiKHaritasi() {
                       }}
                       style={{ padding: '6px 14px', fontSize: 12, background: '#f5f5f5', border: '0.5px solid #ccc', borderRadius: 6, cursor: 'pointer' }}
                     >
-                      Bağla
+                      Ekle
                     </button>
                   </div>
 
@@ -2106,8 +2057,6 @@ function YzHaritasi() {
   const [editId, setEditId] = useState(null)
   const [saving, setSaving] = useState(false)
   const [lastSaved, setLastSaved] = useState(null)
-  const [connDir, setConnDir] = useState('to') // 'to' or 'from'
-
 
   useEffect(() => {
     fetch('/api/ai-terimleri')
@@ -2198,19 +2147,17 @@ function YzHaritasi() {
 
   const handleAddConnection = (targetId) => {
     if (selectedIds.length !== 1 || !targetId || selectedIds[0] === targetId) return
-    const from = connDir === 'to' ? selectedIds[0] : targetId
-    const to = connDir === 'to' ? targetId : selectedIds[0]
+    const from = selectedIds[0]
+    const to = targetId
     if (connections.find(c => c.from === from && c.to === to)) return
     setConnections([...connections, { from, to }])
   }
-
 
   const handleRemoveConnection = (targetId) => {
     setConnections(connections.filter(c => !(c.from === selectedIds[0] && c.to === targetId)))
   }
 
-  
-  
+
 
   return (
     <div style={{ padding: '2rem 1.25rem', fontFamily: 'inherit' }}>
@@ -2525,50 +2472,31 @@ function YzHaritasi() {
 
                   <div style={{ borderTop: '0.5px solid #eee', paddingTop: 12 }}>
                     <label style={{ fontSize: 11, color: '#888', display: 'block', marginBottom: 8, fontWeight: 600 }}>BAĞLANTI YÖNETİMİ</label>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-                      <div style={{ display: 'flex', border: '0.5px solid #ccc', borderRadius: 6, overflow: 'hidden', background: '#fff' }}>
-                        <button
-                          onClick={() => setConnDir('to')}
-                          title="Seçiliden Hedefe (A → B)"
-                          style={{
-                            flex: 1, padding: '6px 10px', fontSize: 12, border: 'none', cursor: 'pointer',
-                            background: connDir === 'to' ? '#f0f0f0' : '#fff',
-                            color: connDir === 'to' ? '#111' : '#aaa',
-                            borderRight: '0.5px solid #eee'
-                          }}
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                      <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                        <div style={{ padding: '5px 10px', fontSize: 12, background: '#f0f0f0', border: '0.5px solid #ccc', borderRadius: 6, fontWeight: 700, whiteSpace: 'nowrap', color: '#333' }}>
+                          A: {selectedTerm.abbr}
+                        </div>
+                        <span style={{ fontSize: 16, color: '#999' }}>→</span>
+                        <select
+                          id="ai-target-select"
+                          style={{ flex: 1, padding: '6px 10px', fontSize: 12, border: '0.5px solid #ccc', borderRadius: 6, outline: 'none', background: '#fff' }}
                         >
-                          A → B
-                        </button>
+                          <option value="">B kutusunu seç...</option>
+                          {terms.filter(t => t.id !== selectedTerm.id).map(t => (
+                            <option key={t.id} value={t.id}>{t.abbr} ({t.sub})</option>
+                          ))}
+                        </select>
                         <button
-                          onClick={() => setConnDir('from')}
-                          title="Hedeften Seçiliye (A ← B)"
-                          style={{
-                            flex: 1, padding: '6px 10px', fontSize: 12, border: 'none', cursor: 'pointer',
-                            background: connDir === 'from' ? '#f0f0f0' : '#fff',
-                            color: connDir === 'from' ? '#111' : '#aaa'
+                          onClick={() => {
+                            const sel = document.getElementById('ai-target-select')
+                            if (sel.value) handleAddConnection(sel.value)
                           }}
+                          style={{ padding: '6px 14px', fontSize: 12, background: '#f5f5f5', border: '0.5px solid #ccc', borderRadius: 6, cursor: 'pointer' }}
                         >
-                          A ← B
+                          Ekle
                         </button>
                       </div>
-                      <select
-                        id="ai-target-select"
-                        style={{ width: '100%', padding: '6px 10px', fontSize: 12, border: '0.5px solid #ccc', borderRadius: 6, outline: 'none', background: '#fff' }}
-                      >
-                        <option value="">Bağlanacak kutuyu seç...</option>
-                        {terms.filter(t => t.id !== selectedTerm.id).map(t => (
-                          <option key={t.id} value={t.id}>{t.abbr} ({t.sub})</option>
-                        ))}
-                      </select>
-                      <button
-                        onClick={() => {
-                          const sel = document.getElementById('ai-target-select')
-                          if (sel.value) handleAddConnection(sel.value)
-                        }}
-                        style={{ padding: '6px 14px', fontSize: 12, background: '#f5f5f5', border: '0.5px solid #ccc', borderRadius: 6, cursor: 'pointer' }}
-                      >
-                        Bağlantı Ekle
-                      </button>
                     </div>
 
                     <div style={{ marginTop: 12, display: 'flex', flexDirection: 'column', gap: 6 }}>
@@ -4827,7 +4755,6 @@ function ReklamHiyerarsisiHaritasi() {
   const [editId, setEditId] = useState(null)
   const [saving, setSaving] = useState(false)
   const [lastSaved, setLastSaved] = useState(null)
-  const [connDir, setConnDir] = useState('to')
   const [isPanning, setIsPanning] = useState(false)
   const panStart = useRef({ x: 0, y: 0, sl: 0, st: 0 })
 
@@ -4937,8 +4864,8 @@ function ReklamHiyerarsisiHaritasi() {
 
   const handleAddConnection = (targetId) => {
     if (selectedIds.length !== 1 || !targetId || selectedIds[0] === targetId) return
-    const from = connDir === 'to' ? selectedIds[0] : targetId
-    const to = connDir === 'to' ? targetId : selectedIds[0]
+    const from = selectedIds[0]
+    const to = targetId
     if (connections.find(c => c.from === from && c.to === to)) return
     setConnections([...connections, { from, to }])
   }
@@ -4947,8 +4874,7 @@ function ReklamHiyerarsisiHaritasi() {
     setConnections(connections.filter(c => !(c.from === selectedIds[0] && c.to === targetId)))
   }
 
-  
-  
+
 
   return (
     <div style={{ padding: '2rem 1.25rem', fontFamily: 'inherit' }}>
@@ -5283,50 +5209,31 @@ function ReklamHiyerarsisiHaritasi() {
 
                   <div style={{ borderTop: '0.5px solid #eee', paddingTop: 12 }}>
                     <label style={{ fontSize: 11, color: '#888', display: 'block', marginBottom: 8, fontWeight: 600 }}>BAĞLANTI YÖNETİMİ</label>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-                      <div style={{ display: 'flex', border: '0.5px solid #ccc', borderRadius: 6, overflow: 'hidden', background: '#fff' }}>
-                        <button
-                          onClick={() => setConnDir('to')}
-                          title="Seçiliden Hedefe (A → B)"
-                          style={{
-                            flex: 1, padding: '6px 10px', fontSize: 12, border: 'none', cursor: 'pointer',
-                            background: connDir === 'to' ? '#f0f0f0' : '#fff',
-                            color: connDir === 'to' ? '#111' : '#aaa',
-                            borderRight: '0.5px solid #eee'
-                          }}
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                      <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                        <div style={{ padding: '5px 10px', fontSize: 12, background: '#f0f0f0', border: '0.5px solid #ccc', borderRadius: 6, fontWeight: 700, whiteSpace: 'nowrap', color: '#333' }}>
+                          A: {selectedTerm.abbr}
+                        </div>
+                        <span style={{ fontSize: 16, color: '#999' }}>→</span>
+                        <select
+                          id="rh-target-select"
+                          style={{ flex: 1, padding: '6px 10px', fontSize: 12, border: '0.5px solid #ccc', borderRadius: 6, outline: 'none', background: '#fff' }}
                         >
-                          A → B
-                        </button>
+                          <option value="">B kutusunu seç...</option>
+                          {terms.filter(t => t.id !== selectedTerm.id).map(t => (
+                            <option key={t.id} value={t.id}>{t.abbr} ({t.sub})</option>
+                          ))}
+                        </select>
                         <button
-                          onClick={() => setConnDir('from')}
-                          title="Hedeften Seçiliye (A ← B)"
-                          style={{
-                            flex: 1, padding: '6px 10px', fontSize: 12, border: 'none', cursor: 'pointer',
-                            background: connDir === 'from' ? '#f0f0f0' : '#fff',
-                            color: connDir === 'from' ? '#111' : '#aaa'
+                          onClick={() => {
+                            const sel = document.getElementById('rh-target-select')
+                            if (sel.value) handleAddConnection(sel.value)
                           }}
+                          style={{ padding: '6px 14px', fontSize: 12, background: '#f5f5f5', border: '0.5px solid #ccc', borderRadius: 6, cursor: 'pointer' }}
                         >
-                          A ← B
+                          Ekle
                         </button>
                       </div>
-                      <select
-                        id="rh-target-select"
-                        style={{ width: '100%', padding: '6px 10px', fontSize: 12, border: '0.5px solid #ccc', borderRadius: 6, outline: 'none', background: '#fff' }}
-                      >
-                        <option value="">Bağlanacak kutuyu seç...</option>
-                        {terms.filter(t => t.id !== selectedTerm.id).map(t => (
-                          <option key={t.id} value={t.id}>{t.abbr} ({t.sub})</option>
-                        ))}
-                      </select>
-                      <button
-                        onClick={() => {
-                          const sel = document.getElementById('rh-target-select')
-                          if (sel.value) handleAddConnection(sel.value)
-                        }}
-                        style={{ padding: '6px 14px', fontSize: 12, background: '#f5f5f5', border: '0.5px solid #ccc', borderRadius: 6, cursor: 'pointer' }}
-                      >
-                        Bağlantı Ekle
-                      </button>
                     </div>
 
                     <div style={{ marginTop: 12, display: 'flex', flexDirection: 'column', gap: 6 }}>
@@ -5460,7 +5367,7 @@ const TOOLS = [
   },
   {
     id: 'yz-haritasi',
-    label: 'YZ Haritası',
+    label: 'Organizasyon',
     icon: '◉',
     component: YzHaritasi,
   },

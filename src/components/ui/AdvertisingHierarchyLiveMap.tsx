@@ -155,7 +155,7 @@ export default function AdvertisingHierarchyLiveMap() {
     `}</style>
     <div className="w-full mt-12 bg-white border border-gray-100 rounded-2xl overflow-hidden shadow-sm">
       {/* Header */}
-      <div className="p-6 border-bottom border-gray-50 flex items-center justify-between bg-gray-50/50">
+      <div className="p-4 sm:p-6 border-b border-gray-100 flex flex-wrap items-start gap-2 justify-between bg-gray-50/50">
         <div>
           <h3 className="text-lg font-bold text-gray-900 flex items-center gap-2">
             <span className="relative flex h-3 w-3">
@@ -165,26 +165,26 @@ export default function AdvertisingHierarchyLiveMap() {
             Canlı Reklam Hiyerarşisi Haritası
           </h3>
           <p className="text-sm text-gray-500 mt-1">Stüdyo'da hazırlanan güncel reklam stratejisi ve web hiyerarşisi</p>
-          <div className="flex flex-wrap gap-4 mt-3">
-             <p className="text-[10px] text-gray-400 font-medium uppercase tracking-wider flex items-center gap-1">
+          <div className="flex flex-wrap gap-3 mt-3">
+             <p className="text-xs text-gray-400 font-medium uppercase tracking-wider flex items-center gap-1">
                <span className="bg-gray-200 px-1 rounded text-gray-600">Sürükle</span> Haritayı Kaydır
              </p>
-             <p className="text-[10px] text-gray-400 font-medium uppercase tracking-wider flex items-center gap-1">
+             <p className="text-xs text-gray-400 font-medium uppercase tracking-wider flex items-center gap-1">
                <span className="bg-gray-200 px-1 rounded text-gray-600">CTRL + Kaydır</span> Yakınlaş
              </p>
-             <p className="text-[10px] text-gray-400 font-medium uppercase tracking-wider flex items-center gap-1">
+             <p className="text-xs text-gray-400 font-medium uppercase tracking-wider flex items-center gap-1">
                <span className="bg-gray-200 px-1 rounded text-gray-600">Tıkla</span> Detay Gör
              </p>
           </div>
         </div>
-        <div className="hidden sm:flex gap-4 items-center">
+        <div className="flex flex-wrap gap-2 sm:gap-4 items-center mt-3 sm:mt-0">
           {Object.entries(RH_CAT_LABELS).map(([cat, label]) => (
-            <div key={cat} className="flex items-center gap-2 text-xs font-medium text-gray-600">
+            <div key={cat} className="flex items-center gap-1.5 text-[10px] sm:text-xs font-medium text-gray-600">
               <div style={{ width: 8, height: 8, borderRadius: 2, background: (RH_CAT_COLORS[cat] || RH_CAT_COLORS.web).stripe }} />
               {label}
             </div>
           ))}
-          <div className="ml-4 pl-4 border-l border-gray-200 flex items-center gap-1 font-mono text-[11px] text-gray-400">
+          <div className="w-full sm:w-auto sm:ml-4 sm:pl-4 sm:border-l border-gray-200 flex items-center gap-1 font-mono text-[11px] text-gray-400">
              <span>%{Math.round(zoom * 100)}</span>
           </div>
         </div>
@@ -200,8 +200,8 @@ export default function AdvertisingHierarchyLiveMap() {
             onMouseMove={handleMouseMove}
             onMouseUp={handleMouseUp}
             onMouseLeave={handleMouseUp}
-            className={`w-full overflow-auto p-12 transition-all ${isPanning ? 'cursor-grabbing select-none' : 'cursor-grab'}`}
-            style={{ maxHeight: '78vh', minHeight: '540px' }}
+            className={`w-full overflow-auto p-3 sm:p-6 md:p-12 transition-all ${isPanning ? 'cursor-grabbing select-none' : 'cursor-grab'}`}
+            style={{ maxHeight: '78vh', minHeight: '320px' }}
           >
             {/* Zoomable Canvas */}
             <div style={{ 
@@ -343,7 +343,7 @@ export default function AdvertisingHierarchyLiveMap() {
               </div>
               <button
                 onClick={() => setSelectedId(null)}
-                className="shrink-0 w-8 h-8 flex items-center justify-center rounded-full bg-gray-100 hover:bg-gray-200 text-gray-500 transition-colors"
+                className="shrink-0 w-10 h-10 flex items-center justify-center rounded-full bg-gray-100 hover:bg-gray-200 text-gray-500 transition-colors"
                 aria-label="Kapat"
               >
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">

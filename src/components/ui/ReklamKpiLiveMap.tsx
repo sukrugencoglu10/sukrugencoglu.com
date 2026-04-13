@@ -157,7 +157,7 @@ export default function ReklamKpiLiveMap() {
     `}</style>
     <div className="w-full mt-12 bg-white border border-gray-100 rounded-2xl overflow-hidden shadow-sm">
       {/* Header */}
-      <div className="p-6 border-b border-gray-100 flex items-center justify-between bg-gray-50/50">
+      <div className="p-4 sm:p-6 border-b border-gray-100 flex flex-wrap items-start gap-2 justify-between bg-gray-50/50">
         <div>
           <h3 className="text-lg font-bold text-gray-900 flex items-center gap-2">
             <span className="relative flex h-3 w-3">
@@ -167,26 +167,26 @@ export default function ReklamKpiLiveMap() {
             Canlı Reklam KPI Haritası
           </h3>
           <p className="text-sm text-gray-500 mt-1">Dijital reklamcılık kısaltmaları ve funnel içindeki hiyerarşik ilişkiler</p>
-          <div className="flex flex-wrap gap-4 mt-3">
-            <p className="text-[10px] text-gray-400 font-medium uppercase tracking-wider flex items-center gap-1">
+          <div className="flex flex-wrap gap-3 mt-3">
+            <p className="text-xs text-gray-400 font-medium uppercase tracking-wider flex items-center gap-1">
               <span className="bg-gray-200 px-1 rounded text-gray-600">Sürükle</span> Haritayı Kaydır
             </p>
-            <p className="text-[10px] text-gray-400 font-medium uppercase tracking-wider flex items-center gap-1">
+            <p className="text-xs text-gray-400 font-medium uppercase tracking-wider flex items-center gap-1">
               <span className="bg-gray-200 px-1 rounded text-gray-600">CTRL + Kaydır</span> Yakınlaş
             </p>
-            <p className="text-[10px] text-gray-400 font-medium uppercase tracking-wider flex items-center gap-1">
+            <p className="text-xs text-gray-400 font-medium uppercase tracking-wider flex items-center gap-1">
               <span className="bg-gray-200 px-1 rounded text-gray-600">Tıkla</span> Detay Gör
             </p>
           </div>
         </div>
-        <div className="hidden sm:flex flex-wrap gap-3 items-center max-w-xs justify-end">
+        <div className="flex flex-wrap gap-1.5 sm:gap-3 items-center mt-2 sm:mt-0 justify-start sm:justify-end">
           {Object.entries(CAT_LABELS).map(([cat, label]) => (
-            <div key={cat} className="flex items-center gap-1.5 text-xs font-medium text-gray-600">
+            <div key={cat} className="flex items-center gap-1.5 text-[10px] sm:text-xs font-medium text-gray-600">
               <div style={{ width: 8, height: 8, borderRadius: 2, background: getColors(cat).stripe }} />
               {label}
             </div>
           ))}
-          <div className="ml-3 pl-3 border-l border-gray-200 font-mono text-[11px] text-gray-400">
+          <div className="w-full sm:w-auto sm:ml-3 sm:pl-3 sm:border-l border-gray-200 font-mono text-[11px] text-gray-400">
             %{Math.round(zoom * 100)}
           </div>
         </div>
@@ -200,8 +200,8 @@ export default function ReklamKpiLiveMap() {
             onMouseMove={handleMouseMove}
             onMouseUp={handleMouseUp}
             onMouseLeave={handleMouseUp}
-            className={`w-full overflow-auto p-12 transition-all ${isPanning ? 'cursor-grabbing select-none' : 'cursor-grab'}`}
-            style={{ maxHeight: '78vh', minHeight: '540px' }}
+            className={`w-full overflow-auto p-3 sm:p-6 md:p-12 transition-all ${isPanning ? 'cursor-grabbing select-none' : 'cursor-grab'}`}
+            style={{ maxHeight: '78vh', minHeight: '320px' }}
           >
             <div style={{
               position: 'relative',
@@ -316,14 +316,15 @@ export default function ReklamKpiLiveMap() {
                   </span>
                 </div>
                 <h4 className="text-xl font-extrabold text-gray-900 leading-tight">{selectedTerm.abbr}</h4>
-                <p className="text-sm font-medium text-gray-500 mt-1">{selectedTerm.tr} <span className="text-gray-300 mx-1">/</span> {selectedTerm.en}</p>
+                <p className="text-sm font-medium text-gray-500 mt-1">{selectedTerm.tr}</p>
+                <p className="text-xs text-gray-400 mt-0.5">{selectedTerm.en}</p>
                 <div className="h-px bg-gray-100 my-3" />
                 <div className="text-sm text-gray-600 leading-relaxed font-normal italic" style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
                   {selectedTerm.desc || <span className="text-gray-400 not-italic">Açıklama yakında eklenecektir.</span>}
                 </div>
               </div>
               <button onClick={() => setSelectedId(null)}
-                className="shrink-0 w-8 h-8 flex items-center justify-center rounded-full bg-gray-100 hover:bg-gray-200 text-gray-500 transition-colors">
+                className="shrink-0 w-10 h-10 flex items-center justify-center rounded-full bg-gray-100 hover:bg-gray-200 text-gray-500 transition-colors">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
                   <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
                 </svg>
