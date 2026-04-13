@@ -90,9 +90,11 @@ export default function AdvertisingHierarchyLiveMap() {
 
   // Panning Handlers
   const handleMouseDown = (e: React.MouseEvent) => {
-    // Only pan if clicking on empty space (not a node/button)
-    // We check if the clicked element is the background container
-    if (e.target === e.currentTarget || (e.target as any).tagName === 'svg' || (e.target as any).tagName === 'line') {
+    // Pan everywhere except node divs (position:absolute with cursor:pointer) and buttons
+    const target = e.target as HTMLElement;
+    const isNode = target.closest('div[style*="cursor: pointer"]') !== null;
+    const isButton = target.closest('button') !== null;
+    if (!isNode && !isButton) {
       setIsPanning(true);
       if (canvasAreaRef.current) {
         setPanStart({
