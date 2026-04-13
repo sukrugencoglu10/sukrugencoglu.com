@@ -5354,6 +5354,12 @@ const TOOLS = [
     component: MantiKHaritasi,
   },
   {
+    id: 'yz-haritasi',
+    label: 'Şablonlar',
+    icon: '◉',
+    component: YzHaritasi,
+  },
+  {
     id: 'icerik-studyosu',
     label: 'İçerik Stüdyosu',
     icon: '✦',
@@ -5364,12 +5370,6 @@ const TOOLS = [
     label: 'RSA Üreticisi',
     icon: '◈',
     component: RsaUreticisi,
-  },
-  {
-    id: 'yz-haritasi',
-    label: 'Organizasyon',
-    icon: '◉',
-    component: YzHaritasi,
   },
   {
     id: 'dijital-anons',
