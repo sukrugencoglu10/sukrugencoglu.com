@@ -23,6 +23,7 @@ export const metadata: Metadata = {
 };
 
 import AdvertisingHierarchyLiveMap from "@/components/ui/AdvertisingHierarchyLiveMap";
+import ReklamKpiLiveMap from "@/components/ui/ReklamKpiLiveMap";
 import Badge from "@/components/ui/Badge";
 
 export default function CalisimalarPage() {
@@ -38,6 +39,7 @@ export default function CalisimalarPage() {
           </p>
         </div>
         <AdvertisingHierarchyLiveMap />
+        <ReklamKpiLiveMap />
       </div>
     </div>
   );
