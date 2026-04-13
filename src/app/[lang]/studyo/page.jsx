@@ -5344,23 +5344,22 @@ const TOOLS = [
     component: ReklamHiyerarsisiHaritasi,
   },
   {
+    id: 'mantik-haritasi',
+    label: 'Reklamlama Terimleri',
+    icon: '⬡',
+    component: MantiKHaritasi,
+  },
+  {
     id: 'icerik-studyosu',
     label: 'İçerik Stüdyosu',
     icon: '✦',
     component: StudyoContent,
   },
-
   {
     id: 'rsa-ureticisi',
     label: 'RSA Üreticisi',
     icon: '◈',
     component: RsaUreticisi,
-  },
-  {
-    id: 'mantik-haritasi',
-    label: 'Reklamlama Terimleri',
-    icon: '⬡',
-    component: MantiKHaritasi,
   },
   {
     id: 'yz-haritasi',
