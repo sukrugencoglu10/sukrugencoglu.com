@@ -337,7 +337,7 @@ export default function AdvertisingHierarchyLiveMap() {
                 <h4 className="text-xl font-extrabold text-gray-900 leading-tight">{selectedTerm.abbr}</h4>
                 <p className="text-sm font-medium text-gray-500 mt-1">{selectedTerm.sub}</p>
                 <div className="h-px bg-gray-100 my-3" />
-                <div className="text-sm text-gray-600 leading-relaxed font-normal italic">
+                <div className="text-sm text-gray-600 leading-relaxed font-normal italic" style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
                   {selectedTerm.desc || <span className="text-gray-400 not-italic">Açıklama yakında eklenecektir.</span>}
                 </div>
               </div>
