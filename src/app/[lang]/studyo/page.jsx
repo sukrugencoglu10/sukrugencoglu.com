@@ -5,7 +5,7 @@
 // Giriş korumalı — STUDYO_USER + STUDYO_PASS env var'larıyla
 
 import { useState, useEffect, useRef } from 'react'
-
+import { createPortal } from 'react-dom'
 // ─── Login ekranı ─────────────────────────────────────────────────────────────
 function LoginScreen({ onSuccess }) {
   const [username, setUsername] = useState('')
@@ -5200,14 +5200,14 @@ function KisaNotlar() {
       </div>
 
       {/* MODAL / GENİŞ EKRAN */}
-      {expandedId && (
+      {expandedId && typeof window !== 'undefined' && createPortal(
         <div 
           onClick={() => { setExpandedId(null); saveNotes(notes); }}
           style={{
             position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh',
-            background: 'rgba(0,0,0,0.4)', zIndex: 9999,
+            background: 'transparent', zIndex: 999999,
             display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1.5rem',
-            backdropFilter: 'blur(3px)'
+            pointerEvents: 'auto'
           }}
         >
           {(() => {
@@ -5218,9 +5218,10 @@ function KisaNotlar() {
                 onClick={e => e.stopPropagation()}
                 style={{
                   width: '100%', maxWidth: 640, background: activeNote.color || '#fff',
-                  borderRadius: 16, padding: '2rem', boxShadow: '0 12px 48px rgba(0,0,0,0.2)',
+                  borderRadius: 16, padding: '2rem', boxShadow: '0 24px 64px rgba(0,0,0,0.25)',
                   display: 'flex', flexDirection: 'column', position: 'relative',
-                  maxHeight: '90vh', overflowY: 'auto'
+                  maxHeight: '90vh', overflowY: 'auto',
+                  border: '1px solid rgba(0,0,0,0.08)'
                 }}
               >
                 <input 
@@ -5253,7 +5254,8 @@ function KisaNotlar() {
               </div>
             )
           })()}
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   )
