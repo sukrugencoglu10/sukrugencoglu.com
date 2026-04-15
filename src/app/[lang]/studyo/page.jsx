@@ -5086,6 +5086,118 @@ function ReklamHiyerarsisiHaritasi() {
       </div>
 
     </div>
+}
+
+// ─── Kısa Notlar Aracı ────────────────────────────────────────────────────────
+function KisaNotlar() {
+  const [notes, setNotes] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [saving, setSaving] = useState(false)
+
+  useEffect(() => {
+    fetch('/api/kisa-notlar')
+      .then(res => res.json())
+      .then(data => {
+        if (Array.isArray(data)) setNotes(data)
+        setLoading(false)
+      })
+  }, [])
+
+  const saveNotes = async (newNotes) => {
+    setSaving(true)
+    try {
+      await fetch('/api/kisa-notlar', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(newNotes)
+      })
+    } catch {}
+    setSaving(false)
+  }
+
+  const addNote = () => {
+    const newNote = {
+      id: Date.now().toString(),
+      title: '',
+      content: '',
+      color: '#ffffff'
+    }
+    const newNotes = [newNote, ...notes]
+    setNotes(newNotes)
+    saveNotes(newNotes)
+  }
+
+  const updateNote = (id, key, value) => {
+    const newNotes = notes.map(n => n.id === id ? { ...n, [key]: value } : n)
+    setNotes(newNotes)
+    saveNotes(newNotes)
+  }
+
+  const deleteNote = (id) => {
+    if(!confirm('Bu notu silmek istediğinize emin misiniz?')) return;
+    const newNotes = notes.filter(n => n.id !== id)
+    setNotes(newNotes)
+    saveNotes(newNotes)
+  }
+
+  const COLORS = ['#ffffff', '#f28b82', '#fbbc04', '#fff475', '#ccff90', '#a7ffeb', '#cbf0f8', '#aecbfa', '#d7aefb', '#fdcfe8', '#e6c9a8', '#e8eaed']
+
+  if (loading) return <div style={{ padding: '2rem', color: '#888' }}>Yükleniyor...</div>
+
+  return (
+    <div style={{ padding: '2rem 1.25rem', fontFamily: 'inherit' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
+        <div>
+          <h1 style={{ fontSize: 22, fontWeight: 500, margin: 0 }}>Kısa Notlar</h1>
+          <p style={{ fontSize: 13, color: '#888', marginTop: 4 }}>Renk kodlu hızlı notlar al, düzenle, kaydet &middot; Yaptığın değişiklikler arkada otomatik kaydedilir.</p>
+        </div>
+        <button onClick={addNote} disabled={saving} style={{ padding: '8px 16px', background: '#111', color: '#fff', border: 'none', borderRadius: 8, cursor: 'pointer', transition: 'opacity 0.2s', opacity: saving ? 0.7 : 1 }}>
+          {saving ? 'Kaydediliyor...' : '+ Yeni Not Ekle'}
+        </button>
+      </div>
+
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 16 }}>
+        {notes.length === 0 && <div style={{ color: '#aaa', fontSize: 13, minHeight: 160, display: 'flex', alignItems: 'center' }}>Henüz not eklenmedi. Sağ üstten yeni not oluşturabilirsiniz.</div>}
+        {notes.map(note => (
+          <div key={note.id} style={{
+            width: 250, background: note.color || '#fff', 
+            border: '1px solid #e0e0e0', borderRadius: 12, 
+            padding: 16, display: 'flex', flexDirection: 'column',
+            boxShadow: '0 2px 6px rgba(0,0,0,0.04)',
+            position: 'relative'
+          }}>
+            <input 
+              value={note.title} 
+              onChange={e => {
+                const newNotes = notes.map(n => n.id === note.id ? { ...n, title: e.target.value } : n)
+                setNotes(newNotes)
+              }}
+              onBlur={() => saveNotes(notes)}
+              placeholder="Başlık..."
+              style={{ width: '100%', background: 'transparent', border: 'none', outline: 'none', fontWeight: 700, fontSize: 16, marginBottom: 8, fontFamily: 'inherit', color: '#222' }}
+            />
+            <textarea 
+              value={note.content} 
+              onChange={e => {
+                const newNotes = notes.map(n => n.id === note.id ? { ...n, content: e.target.value } : n)
+                setNotes(newNotes)
+              }}
+              onBlur={() => saveNotes(notes)}
+              placeholder="Notunu buraya yaz..."
+              style={{ width: '100%', background: 'transparent', border: 'none', outline: 'none', resize: 'none', minHeight: 180, fontSize: 14, lineHeight: 1.6, fontFamily: 'inherit', color: '#444' }}
+            />
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 12, borderTop: '1px solid rgba(0,0,0,0.06)', paddingTop: 12 }}>
+              <div style={{ display: 'flex', gap: 5, flexWrap: 'wrap', width: 170 }}>
+                {COLORS.map(c => (
+                  <button key={c} onClick={() => updateNote(note.id, 'color', c)} title="Renk Değiştir" style={{ width: 18, height: 18, borderRadius: '50%', background: c, border: note.color === c ? '2.5px solid #555' : '1px solid #ccc', cursor: 'pointer', padding: 0 }} />
+                ))}
+              </div>
+              <button onClick={() => deleteNote(note.id)} title="Notu sil" style={{ background: 'none', border: 'none', color: '#ff4d4f', cursor: 'pointer', fontSize: 12, fontWeight: 500 }}>Sil</button>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
   )
 }
 
@@ -5138,6 +5250,12 @@ const TOOLS = [
     label: 'SSS',
     icon: '?',
     component: SSS,
+  },
+  {
+    id: 'kisa-notlar',
+    label: 'Kısa Notlar',
+    icon: '📝',
+    component: KisaNotlar,
   },
 ]
 
