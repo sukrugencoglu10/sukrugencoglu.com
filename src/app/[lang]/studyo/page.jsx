@@ -5208,12 +5208,14 @@ function KisaNotlar() {
             <div style={{ fontWeight: 700, fontSize: 16, marginBottom: 8, fontFamily: 'inherit', color: '#222', minHeight: 22 }}>
               {note.title || <span style={{color:'#bbb', fontStyle:'italic'}}>Başlıksız</span>}
             </div>
-            <div style={{ 
-              fontSize: 14, lineHeight: 1.6, fontFamily: 'inherit', color: '#444', 
-              flex: 1, minHeight: 180, whiteSpace: 'pre-wrap', overflow: 'hidden',
-              display: '-webkit-box', WebkitLineClamp: 8, WebkitBoxOrient: 'vertical'
-            }}
-            dangerouslySetInnerHTML={{ __html: note.content || '<span style="color:#bbb; font-style:italic">Notunuz boştur...</span>' }} />
+            <div 
+              className="kisa-notlar-preview"
+              style={{ 
+                fontSize: 14, lineHeight: 1.6, fontFamily: 'inherit', color: '#444', 
+                flex: 1, minHeight: 180, whiteSpace: 'pre-wrap', overflow: 'hidden',
+                display: '-webkit-box', WebkitLineClamp: 8, WebkitBoxOrient: 'vertical'
+              }}
+              dangerouslySetInnerHTML={{ __html: note.content || '<span style="color:#bbb; font-style:italic">Notunuz boştur...</span>' }} />
             <div onClick={e => e.stopPropagation()} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 12, borderTop: '1px solid rgba(0,0,0,0.06)', paddingTop: 12 }}>
               <div style={{ display: 'flex', gap: 5, flexWrap: 'wrap', width: 170 }}>
                 {COLORS.map(c => (
@@ -5240,6 +5242,20 @@ function KisaNotlar() {
           <style>{`
             .kisa-notlar-modal::-webkit-scrollbar { display: none !important; width: 0 !important; height: 0 !important; }
             .kisa-notlar-modal { scrollbar-width: none !important; -ms-overflow-style: none !important; }
+            
+            .kisa-notlar-modal h1 { font-size: 2em; font-weight: 800; margin: 0.6em 0; line-height: 1.2; }
+            .kisa-notlar-modal h2 { font-size: 1.5em; font-weight: 700; margin: 0.7em 0; line-height: 1.3; }
+            .kisa-notlar-modal h3 { font-size: 1.17em; font-weight: 600; margin: 0.8em 0; line-height: 1.4; }
+            .kisa-notlar-modal ul { list-style-type: disc; padding-left: 2em; margin: 1em 0; }
+            .kisa-notlar-modal b, .kisa-notlar-modal strong { font-weight: 800; }
+            .kisa-notlar-modal i, .kisa-notlar-modal em { font-style: italic; }
+            
+            .kisa-notlar-preview h1 { font-size: 1.25em; font-weight: bold; margin: 0.2em 0; line-height: 1.2; }
+            .kisa-notlar-preview h2 { font-size: 1.1em; font-weight: bold; margin: 0.2em 0; line-height: 1.2; }
+            .kisa-notlar-preview h3 { font-size: 1em; font-weight: bold; margin: 0.2em 0; line-height: 1.2; }
+            .kisa-notlar-preview ul { list-style-type: disc; padding-left: 1.5em; margin: 0.2em 0; }
+            .kisa-notlar-preview b, .kisa-notlar-preview strong { font-weight: 800; }
+            .kisa-notlar-preview i, .kisa-notlar-preview em { font-style: italic; }
           `}</style>
           {(() => {
             const activeNote = notes.find(n => n.id === expandedId)
@@ -5285,6 +5301,13 @@ function KisaNotlar() {
                     const html = e.currentTarget.innerHTML;
                     setNotes(notes.map(n => n.id === activeNote.id ? { ...n, content: html } : n));
                     saveNotes(notes.map(n => n.id === activeNote.id ? { ...n, content: html } : n));
+                  }}
+                  onPaste={(e) => {
+                    e.preventDefault();
+                    const text = e.clipboardData.getData('text/plain');
+                    // HTML tag'lerini escape edip \n karakterlerini <br>'ye dönüştürüyoruz (Temiz yapıştırma)
+                    const html = text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/\n/g, '<br>');
+                    document.execCommand('insertHTML', false, html);
                   }}
                   dangerouslySetInnerHTML={{ __html: activeNote.content }}
                   className="kisa-notlar-modal"
