@@ -3281,7 +3281,8 @@ function KodBloklariHaritasi() {
     fetch('/api/kod-bloklari')
       .then(res => res.json())
       .then(data => {
-        if (data && !Array.isArray(data) && data.terms) {
+        console.log('Kod Blokları Yüklenen Veri:', data)
+        if (data && data.terms) {
           setTerms(data.terms)
           setConnections(data.connections || [])
           if (data.metadata?.w) setCanvasDim({ w: data.metadata.w, h: data.metadata.h || 600 })
@@ -3293,17 +3294,25 @@ function KodBloklariHaritasi() {
   const handleSave = async () => {
     setSaving(true)
     try {
+      const payload = { terms, connections, metadata: canvasDim }
+      console.log('Kod Blokları Kaydedilecek veri:', payload)
+
       const res = await fetch('/api/kod-bloklari', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ terms, connections, metadata: canvasDim }),
+        body: JSON.stringify(payload),
       })
-      if (res.ok) {
+      
+      const result = await res.json()
+
+      if (res.ok && result.ok) {
         setLastSaved(new Date().toLocaleTimeString())
       } else {
-        alert('Kaydedilemedi')
+        console.error('Kod Blokları sunucu hatası:', result)
+        alert('Kaydedilemedi: ' + (result.error || 'Bilinmeyen hata'))
       }
     } catch (err) {
+      console.error('Kod Blokları bağlantı hatası:', err)
       alert('Hata: ' + err.message)
     }
     setSaving(false)
