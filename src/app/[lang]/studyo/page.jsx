@@ -5266,10 +5266,9 @@ function KisaNotlar() {
                 onClick={e => e.stopPropagation()}
                 style={{
                   width: '100%', maxWidth: 960, background: activeNote.color || '#fff',
-                  borderRadius: 16, padding: '2.5rem', boxShadow: '0 24px 64px rgba(0,0,0,0.25)',
+                  borderRadius: 16, padding: '2rem', boxShadow: '0 24px 64px rgba(0,0,0,0.25)',
                   display: 'flex', flexDirection: 'column', position: 'relative',
-                  maxHeight: '94vh', overflowY: 'auto',
-                  scrollbarWidth: 'none', msOverflowStyle: 'none',
+                  maxHeight: '92vh', overflow: 'hidden',
                   border: '1px solid rgba(0,0,0,0.08)'
                 }}
               >
@@ -5278,21 +5277,8 @@ function KisaNotlar() {
                   onChange={e => setNotes(notes.map(n => n.id === activeNote.id ? { ...n, title: e.target.value } : n))}
                   onBlur={() => saveNotes(notes)}
                   placeholder="Başlık..."
-                  style={{ width: '100%', background: 'transparent', border: 'none', outline: 'none', fontWeight: 700, fontSize: 24, margin: '0 0 1rem 0', fontFamily: 'inherit', color: '#111' }}
+                  style={{ flexShrink: 0, width: '100%', background: 'transparent', border: 'none', outline: 'none', fontWeight: 700, fontSize: 24, margin: '0 0 1rem 0', fontFamily: 'inherit', color: '#111' }}
                 />
-
-                {/* ZENGİN METİN ARAÇ ÇUBUĞU */}
-                <div style={{ display: 'flex', gap: 6, marginBottom: 12, borderBottom: '1px solid rgba(0,0,0,0.08)', paddingBottom: 12, flexWrap: 'wrap' }}>
-                  <button onMouseDown={e => { e.preventDefault(); document.execCommand('formatBlock', false, 'H1') }} style={{ padding: '6px 12px', fontSize: 13, fontWeight: 700, background: 'rgba(0,0,0,0.06)', border: 'none', borderRadius: 6, cursor: 'pointer', color: '#111' }}>H1 Büyük</button>
-                  <button onMouseDown={e => { e.preventDefault(); document.execCommand('formatBlock', false, 'H2') }} style={{ padding: '6px 12px', fontSize: 13, fontWeight: 600, background: 'rgba(0,0,0,0.06)', border: 'none', borderRadius: 6, cursor: 'pointer', color: '#222' }}>H2 Orta</button>
-                  <button onMouseDown={e => { e.preventDefault(); document.execCommand('formatBlock', false, 'H3') }} style={{ padding: '6px 12px', fontSize: 13, fontWeight: 500, background: 'rgba(0,0,0,0.06)', border: 'none', borderRadius: 6, cursor: 'pointer', color: '#333' }}>H3 Küçük</button>
-                  <button onMouseDown={e => { e.preventDefault(); document.execCommand('formatBlock', false, 'DIV') }} style={{ padding: '6px 12px', fontSize: 13, background: 'rgba(0,0,0,0.06)', border: 'none', borderRadius: 6, cursor: 'pointer', color: '#444' }}>Normal Metin</button>
-                  <div style={{ width: 1, background: 'rgba(0,0,0,0.1)', margin: '0 4px' }} />
-                  <button onMouseDown={e => { e.preventDefault(); document.execCommand('bold', false, null) }} style={{ padding: '6px 12px', fontSize: 13, fontWeight: 'bold', background: 'rgba(0,0,0,0.06)', border: 'none', borderRadius: 6, cursor: 'pointer' }}>K</button>
-                  <button onMouseDown={e => { e.preventDefault(); document.execCommand('italic', false, null) }} style={{ padding: '6px 12px', fontSize: 13, fontStyle: 'italic', background: 'rgba(0,0,0,0.06)', border: 'none', borderRadius: 6, cursor: 'pointer' }}>İ</button>
-                  <button onMouseDown={e => { e.preventDefault(); document.execCommand('underline', false, null) }} style={{ padding: '6px 12px', fontSize: 13, textDecoration: 'underline', background: 'rgba(0,0,0,0.06)', border: 'none', borderRadius: 6, cursor: 'pointer' }}>A</button>
-                  <button onMouseDown={e => { e.preventDefault(); document.execCommand('insertUnorderedList', false, null) }} style={{ padding: '6px 12px', fontSize: 13, background: 'rgba(0,0,0,0.06)', border: 'none', borderRadius: 6, cursor: 'pointer' }}>• Liste</button>
-                </div>
 
                 <div 
                   contentEditable
@@ -5305,23 +5291,44 @@ function KisaNotlar() {
                   onPaste={(e) => {
                     e.preventDefault();
                     const text = e.clipboardData.getData('text/plain');
-                    // HTML tag'lerini escape edip \n karakterlerini <br>'ye dönüştürüyoruz (Temiz yapıştırma)
                     const html = text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/\n/g, '<br>');
                     document.execCommand('insertHTML', false, html);
                   }}
                   dangerouslySetInnerHTML={{ __html: activeNote.content }}
                   className="kisa-notlar-modal"
-                  style={{ width: '100%', background: 'transparent', border: 'none', outline: 'none', minHeight: 450, fontSize: 16, lineHeight: 1.8, fontFamily: 'inherit', color: '#333', scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+                  style={{ 
+                    flex: 1, overflowY: 'auto', 
+                    width: '100%', background: 'transparent', border: 'none', outline: 'none', 
+                    minHeight: 200, fontSize: 16, lineHeight: 1.8, fontFamily: 'inherit', color: '#333', 
+                    scrollbarWidth: 'none', msOverflowStyle: 'none' 
+                  }}
                 />
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '2rem', borderTop: '1px solid rgba(0,0,0,0.06)', paddingTop: '1.5rem' }}>
-                  <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', maxWidth: 400 }}>
-                    {COLORS.map(c => (
-                      <button key={c} onClick={() => changeNoteColor(activeNote.id, c)} title="Renk Değiştir" style={{ width: 24, height: 24, borderRadius: '50%', background: c, border: activeNote.color === c ? '2.5px solid #555' : '1px solid #ccc', cursor: 'pointer', padding: 0 }} />
-                    ))}
+
+                <div style={{ flexShrink: 0, display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '1.5rem', borderTop: '1px solid rgba(0,0,0,0.06)', paddingTop: '1.5rem' }}>
+                  <div style={{ display: 'flex', gap: 16, alignItems: 'center', flexWrap: 'wrap' }}>
+                    {/* Renkler */}
+                    <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+                      {COLORS.map(c => (
+                        <button key={c} onClick={() => changeNoteColor(activeNote.id, c)} title="Renk Değiştir" style={{ width: 22, height: 22, borderRadius: '50%', background: c, border: activeNote.color === c ? '2.5px solid #555' : '1px solid #ccc', cursor: 'pointer', padding: 0 }} />
+                      ))}
+                    </div>
+
+                    <div style={{ width: 1, height: 24, background: 'rgba(0,0,0,0.1)' }} />
+
+                    {/* Zengin Metin Menüsü */}
+                    <div style={{ display: 'flex', gap: 5 }}>
+                      <button onMouseDown={e => { e.preventDefault(); document.execCommand('formatBlock', false, 'H1') }} style={{ padding: '6px 12px', fontSize: 14, fontWeight: 700, background: 'rgba(0,0,0,0.05)', border: 'none', borderRadius: 4, cursor: 'pointer', color: '#111' }}>h1</button>
+                      <button onMouseDown={e => { e.preventDefault(); document.execCommand('formatBlock', false, 'H2') }} style={{ padding: '6px 12px', fontSize: 14, fontWeight: 600, background: 'rgba(0,0,0,0.05)', border: 'none', borderRadius: 4, cursor: 'pointer', color: '#222' }}>h2</button>
+                      <button onMouseDown={e => { e.preventDefault(); document.execCommand('formatBlock', false, 'DIV') }} style={{ padding: '6px 12px', fontSize: 14, background: 'rgba(0,0,0,0.05)', border: 'none', borderRadius: 4, cursor: 'pointer', color: '#444' }}>p</button>
+                      <button onMouseDown={e => { e.preventDefault(); document.execCommand('bold', false, null) }} style={{ padding: '6px 12px', fontSize: 14, fontWeight: 'bold', background: 'rgba(0,0,0,0.05)', border: 'none', borderRadius: 4, cursor: 'pointer' }}>B</button>
+                      <button onMouseDown={e => { e.preventDefault(); document.execCommand('italic', false, null) }} style={{ padding: '6px 12px', fontSize: 14, fontStyle: 'italic', background: 'rgba(0,0,0,0.05)', border: 'none', borderRadius: 4, cursor: 'pointer' }}>I</button>
+                      <button onMouseDown={e => { e.preventDefault(); document.execCommand('insertUnorderedList', false, null) }} style={{ padding: '6px 12px', fontSize: 14, background: 'rgba(0,0,0,0.05)', border: 'none', borderRadius: 4, cursor: 'pointer' }}>•</button>
+                    </div>
                   </div>
+                  
                   <div style={{ display: 'flex', gap: 16, alignItems: 'center' }}>
-                    <button onClick={() => deleteNote(activeNote.id)} style={{ background: 'none', border: 'none', color: '#ff4d4f', cursor: 'pointer', fontSize: 15, fontWeight: 500 }}>Sil</button>
-                    <button onClick={() => { setExpandedId(null); saveNotes(notes); }} style={{ padding: '10px 28px', background: 'transparent', color: '#111', fontWeight: 700, fontSize: 16, border: 'none', cursor: 'pointer', borderRadius: 8 }}>
+                    <button onClick={() => deleteNote(activeNote.id)} style={{ background: 'none', border: 'none', color: '#ff4d4f', cursor: 'pointer', fontSize: 14, fontWeight: 500 }}>Sil</button>
+                    <button onClick={() => { setExpandedId(null); saveNotes(notes); }} style={{ padding: '10px 24px', background: 'transparent', color: '#111', fontWeight: 700, fontSize: 15, border: 'none', cursor: 'pointer', borderRadius: 8 }}>
                       Kapat
                     </button>
                   </div>
