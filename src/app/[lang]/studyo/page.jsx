@@ -5210,17 +5210,22 @@ function KisaNotlar() {
             pointerEvents: 'auto'
           }}
         >
+          <style>{`
+            .kisa-notlar-modal::-webkit-scrollbar { display: none; }
+          `}</style>
           {(() => {
             const activeNote = notes.find(n => n.id === expandedId)
             if (!activeNote) return null;
             return (
               <div 
+                className="kisa-notlar-modal"
                 onClick={e => e.stopPropagation()}
                 style={{
-                  width: '100%', maxWidth: 640, background: activeNote.color || '#fff',
-                  borderRadius: 16, padding: '2rem', boxShadow: '0 24px 64px rgba(0,0,0,0.25)',
+                  width: '100%', maxWidth: 960, background: activeNote.color || '#fff',
+                  borderRadius: 16, padding: '2.5rem', boxShadow: '0 24px 64px rgba(0,0,0,0.25)',
                   display: 'flex', flexDirection: 'column', position: 'relative',
-                  maxHeight: '90vh', overflowY: 'auto',
+                  maxHeight: '94vh', overflowY: 'auto',
+                  scrollbarWidth: 'none', msOverflowStyle: 'none',
                   border: '1px solid rgba(0,0,0,0.08)'
                 }}
               >
@@ -5229,24 +5234,25 @@ function KisaNotlar() {
                   onChange={e => setNotes(notes.map(n => n.id === activeNote.id ? { ...n, title: e.target.value } : n))}
                   onBlur={() => saveNotes(notes)}
                   placeholder="Başlık..."
-                  style={{ width: '100%', background: 'transparent', border: 'none', outline: 'none', fontWeight: 700, fontSize: 22, margin: '0 0 1rem 0', fontFamily: 'inherit', color: '#111' }}
+                  style={{ width: '100%', background: 'transparent', border: 'none', outline: 'none', fontWeight: 700, fontSize: 24, margin: '0 0 1.25rem 0', fontFamily: 'inherit', color: '#111' }}
                 />
                 <textarea 
                   value={activeNote.content} 
                   onChange={e => setNotes(notes.map(n => n.id === activeNote.id ? { ...n, content: e.target.value } : n))}
                   onBlur={() => saveNotes(notes)}
                   placeholder="Notunu buraya yaz..."
-                  style={{ width: '100%', background: 'transparent', border: 'none', outline: 'none', resize: 'vertical', minHeight: 350, fontSize: 16, lineHeight: 1.8, fontFamily: 'inherit', color: '#333' }}
+                  className="kisa-notlar-modal"
+                  style={{ width: '100%', background: 'transparent', border: 'none', outline: 'none', resize: 'vertical', minHeight: 450, fontSize: 16, lineHeight: 1.8, fontFamily: 'inherit', color: '#333', scrollbarWidth: 'none', msOverflowStyle: 'none' }}
                 />
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '1.5rem', borderTop: '1px solid rgba(0,0,0,0.06)', paddingTop: '1.5rem' }}>
-                  <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', maxWidth: 350 }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '2rem', borderTop: '1px solid rgba(0,0,0,0.06)', paddingTop: '1.5rem' }}>
+                  <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', maxWidth: 400 }}>
                     {COLORS.map(c => (
-                      <button key={c} onClick={() => changeNoteColor(activeNote.id, c)} title="Renk Değiştir" style={{ width: 22, height: 22, borderRadius: '50%', background: c, border: activeNote.color === c ? '2.5px solid #555' : '1px solid #ccc', cursor: 'pointer', padding: 0 }} />
+                      <button key={c} onClick={() => changeNoteColor(activeNote.id, c)} title="Renk Değiştir" style={{ width: 24, height: 24, borderRadius: '50%', background: c, border: activeNote.color === c ? '2.5px solid #555' : '1px solid #ccc', cursor: 'pointer', padding: 0 }} />
                     ))}
                   </div>
                   <div style={{ display: 'flex', gap: 16, alignItems: 'center' }}>
-                    <button onClick={() => deleteNote(activeNote.id)} style={{ background: 'none', border: 'none', color: '#ff4d4f', cursor: 'pointer', fontSize: 14, fontWeight: 500 }}>Sil</button>
-                    <button onClick={() => { setExpandedId(null); saveNotes(notes); }} style={{ padding: '8px 24px', background: 'transparent', color: '#111', fontWeight: 700, fontSize: 15, border: 'none', cursor: 'pointer', borderRadius: 8 }}>
+                    <button onClick={() => deleteNote(activeNote.id)} style={{ background: 'none', border: 'none', color: '#ff4d4f', cursor: 'pointer', fontSize: 15, fontWeight: 500 }}>Sil</button>
+                    <button onClick={() => { setExpandedId(null); saveNotes(notes); }} style={{ padding: '10px 28px', background: 'transparent', color: '#111', fontWeight: 700, fontSize: 16, border: 'none', cursor: 'pointer', borderRadius: 8 }}>
                       Kapat
                     </button>
                   </div>
