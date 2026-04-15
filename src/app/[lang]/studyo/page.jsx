@@ -5095,6 +5095,29 @@ function KisaNotlar() {
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [expandedId, setExpandedId] = useState(null)
+  const [draggedId, setDraggedId] = useState(null)
+
+  const handleDragStart = (e, id) => {
+    setDraggedId(id)
+    e.dataTransfer.effectAllowed = 'move'
+  }
+
+  const handleDragOver = (e, index) => {
+    e.preventDefault()
+    if (!draggedId) return
+    const draggedIndex = notes.findIndex(n => n.id === draggedId)
+    if (draggedIndex === index) return
+
+    const newNotes = [...notes]
+    const [draggedItem] = newNotes.splice(draggedIndex, 1)
+    newNotes.splice(index, 0, draggedItem)
+    setNotes(newNotes) // optimistik sıra değişimi
+  }
+
+  const handleDragEnd = () => {
+    setDraggedId(null)
+    saveNotes(notes)
+  }
 
   useEffect(() => {
     fetch('/api/kisa-notlar')
@@ -5163,19 +5186,24 @@ function KisaNotlar() {
 
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: 16 }}>
         {notes.length === 0 && <div style={{ color: '#aaa', fontSize: 13, minHeight: 160, display: 'flex', alignItems: 'center' }}>Henüz not eklenmedi. Sağ üstten yeni not oluşturabilirsiniz.</div>}
-        {notes.map(note => (
+        {notes.map((note, idx) => (
           <div key={note.id} 
+            draggable
+            onDragStart={(e) => handleDragStart(e, note.id)}
+            onDragOver={(e) => handleDragOver(e, idx)}
+            onDragEnd={handleDragEnd}
             onClick={() => setExpandedId(note.id)}
             style={{
               width: 250, background: note.color || '#fff', 
               border: '1px solid #e0e0e0', borderRadius: 12, 
               padding: 16, display: 'flex', flexDirection: 'column',
               boxShadow: '0 2px 6px rgba(0,0,0,0.04)',
-              position: 'relative', cursor: 'pointer',
-              transition: 'transform 0.15s',
+              position: 'relative', cursor: 'grab',
+              transition: 'transform 0.15s, opacity 0.2s',
+              opacity: draggedId === note.id ? 0.3 : 1
             }}
-            onMouseEnter={e => e.currentTarget.style.transform = 'translateY(-2px)'}
-            onMouseLeave={e => e.currentTarget.style.transform = 'translateY(0)'}
+            onMouseEnter={e => draggedId ? null : e.currentTarget.style.transform = 'translateY(-2px)'}
+            onMouseLeave={e => draggedId ? null : e.currentTarget.style.transform = 'translateY(0)'}
           >
             <div style={{ fontWeight: 700, fontSize: 16, marginBottom: 8, fontFamily: 'inherit', color: '#222', minHeight: 22 }}>
               {note.title || <span style={{color:'#bbb', fontStyle:'italic'}}>Başlıksız</span>}
@@ -5184,9 +5212,8 @@ function KisaNotlar() {
               fontSize: 14, lineHeight: 1.6, fontFamily: 'inherit', color: '#444', 
               flex: 1, minHeight: 180, whiteSpace: 'pre-wrap', overflow: 'hidden',
               display: '-webkit-box', WebkitLineClamp: 8, WebkitBoxOrient: 'vertical'
-            }}>
-              {note.content || <span style={{color:'#bbb', fontStyle:'italic'}}>Notunuz boştur...</span>}
-            </div>
+            }}
+            dangerouslySetInnerHTML={{ __html: note.content || '<span style="color:#bbb; font-style:italic">Notunuz boştur...</span>' }} />
             <div onClick={e => e.stopPropagation()} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 12, borderTop: '1px solid rgba(0,0,0,0.06)', paddingTop: 12 }}>
               <div style={{ display: 'flex', gap: 5, flexWrap: 'wrap', width: 170 }}>
                 {COLORS.map(c => (
@@ -5235,15 +5262,33 @@ function KisaNotlar() {
                   onChange={e => setNotes(notes.map(n => n.id === activeNote.id ? { ...n, title: e.target.value } : n))}
                   onBlur={() => saveNotes(notes)}
                   placeholder="Başlık..."
-                  style={{ width: '100%', background: 'transparent', border: 'none', outline: 'none', fontWeight: 700, fontSize: 24, margin: '0 0 1.25rem 0', fontFamily: 'inherit', color: '#111' }}
+                  style={{ width: '100%', background: 'transparent', border: 'none', outline: 'none', fontWeight: 700, fontSize: 24, margin: '0 0 1rem 0', fontFamily: 'inherit', color: '#111' }}
                 />
-                <textarea 
-                  value={activeNote.content} 
-                  onChange={e => setNotes(notes.map(n => n.id === activeNote.id ? { ...n, content: e.target.value } : n))}
-                  onBlur={() => saveNotes(notes)}
-                  placeholder="Notunu buraya yaz..."
+
+                {/* ZENGİN METİN ARAÇ ÇUBUĞU */}
+                <div style={{ display: 'flex', gap: 6, marginBottom: 12, borderBottom: '1px solid rgba(0,0,0,0.08)', paddingBottom: 12, flexWrap: 'wrap' }}>
+                  <button onMouseDown={e => { e.preventDefault(); document.execCommand('formatBlock', false, 'H1') }} style={{ padding: '6px 12px', fontSize: 13, fontWeight: 700, background: 'rgba(0,0,0,0.06)', border: 'none', borderRadius: 6, cursor: 'pointer', color: '#111' }}>H1 Büyük</button>
+                  <button onMouseDown={e => { e.preventDefault(); document.execCommand('formatBlock', false, 'H2') }} style={{ padding: '6px 12px', fontSize: 13, fontWeight: 600, background: 'rgba(0,0,0,0.06)', border: 'none', borderRadius: 6, cursor: 'pointer', color: '#222' }}>H2 Orta</button>
+                  <button onMouseDown={e => { e.preventDefault(); document.execCommand('formatBlock', false, 'H3') }} style={{ padding: '6px 12px', fontSize: 13, fontWeight: 500, background: 'rgba(0,0,0,0.06)', border: 'none', borderRadius: 6, cursor: 'pointer', color: '#333' }}>H3 Küçük</button>
+                  <button onMouseDown={e => { e.preventDefault(); document.execCommand('formatBlock', false, 'DIV') }} style={{ padding: '6px 12px', fontSize: 13, background: 'rgba(0,0,0,0.06)', border: 'none', borderRadius: 6, cursor: 'pointer', color: '#444' }}>Normal Metin</button>
+                  <div style={{ width: 1, background: 'rgba(0,0,0,0.1)', margin: '0 4px' }} />
+                  <button onMouseDown={e => { e.preventDefault(); document.execCommand('bold', false, null) }} style={{ padding: '6px 12px', fontSize: 13, fontWeight: 'bold', background: 'rgba(0,0,0,0.06)', border: 'none', borderRadius: 6, cursor: 'pointer' }}>K</button>
+                  <button onMouseDown={e => { e.preventDefault(); document.execCommand('italic', false, null) }} style={{ padding: '6px 12px', fontSize: 13, fontStyle: 'italic', background: 'rgba(0,0,0,0.06)', border: 'none', borderRadius: 6, cursor: 'pointer' }}>İ</button>
+                  <button onMouseDown={e => { e.preventDefault(); document.execCommand('underline', false, null) }} style={{ padding: '6px 12px', fontSize: 13, textDecoration: 'underline', background: 'rgba(0,0,0,0.06)', border: 'none', borderRadius: 6, cursor: 'pointer' }}>A</button>
+                  <button onMouseDown={e => { e.preventDefault(); document.execCommand('insertUnorderedList', false, null) }} style={{ padding: '6px 12px', fontSize: 13, background: 'rgba(0,0,0,0.06)', border: 'none', borderRadius: 6, cursor: 'pointer' }}>• Liste</button>
+                </div>
+
+                <div 
+                  contentEditable
+                  suppressContentEditableWarning
+                  onBlur={(e) => {
+                    const html = e.currentTarget.innerHTML;
+                    setNotes(notes.map(n => n.id === activeNote.id ? { ...n, content: html } : n));
+                    saveNotes(notes.map(n => n.id === activeNote.id ? { ...n, content: html } : n));
+                  }}
+                  dangerouslySetInnerHTML={{ __html: activeNote.content }}
                   className="kisa-notlar-modal"
-                  style={{ width: '100%', background: 'transparent', border: 'none', outline: 'none', resize: 'vertical', minHeight: 450, fontSize: 16, lineHeight: 1.8, fontFamily: 'inherit', color: '#333', scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+                  style={{ width: '100%', background: 'transparent', border: 'none', outline: 'none', minHeight: 450, fontSize: 16, lineHeight: 1.8, fontFamily: 'inherit', color: '#333', scrollbarWidth: 'none', msOverflowStyle: 'none' }}
                 />
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '2rem', borderTop: '1px solid rgba(0,0,0,0.06)', paddingTop: '1.5rem' }}>
                   <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', maxWidth: 400 }}>
