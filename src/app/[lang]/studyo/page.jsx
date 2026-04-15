@@ -5094,6 +5094,7 @@ function KisaNotlar() {
   const [notes, setNotes] = useState([])
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
+  const [expandedId, setExpandedId] = useState(null)
 
   useEffect(() => {
     fetch('/api/kisa-notlar')
@@ -5117,8 +5118,9 @@ function KisaNotlar() {
   }
 
   const addNote = () => {
+    const newId = Date.now().toString()
     const newNote = {
-      id: Date.now().toString(),
+      id: newId,
       title: '',
       content: '',
       color: '#ffffff'
@@ -5126,10 +5128,11 @@ function KisaNotlar() {
     const newNotes = [newNote, ...notes]
     setNotes(newNotes)
     saveNotes(newNotes)
+    setExpandedId(newId)
   }
 
-  const updateNote = (id, key, value) => {
-    const newNotes = notes.map(n => n.id === id ? { ...n, [key]: value } : n)
+  const changeNoteColor = (id, color) => {
+    const newNotes = notes.map(n => n.id === id ? { ...n, color } : n)
     setNotes(newNotes)
     saveNotes(newNotes)
   }
@@ -5139,6 +5142,7 @@ function KisaNotlar() {
     const newNotes = notes.filter(n => n.id !== id)
     setNotes(newNotes)
     saveNotes(newNotes)
+    if(expandedId === id) setExpandedId(null)
   }
 
   const COLORS = ['#ffffff', '#f28b82', '#fbbc04', '#fff475', '#ccff90', '#a7ffeb', '#cbf0f8', '#aecbfa', '#d7aefb', '#fdcfe8', '#e6c9a8', '#e8eaed']
@@ -5150,7 +5154,7 @@ function KisaNotlar() {
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
         <div>
           <h1 style={{ fontSize: 22, fontWeight: 500, margin: 0 }}>Kısa Notlar</h1>
-          <p style={{ fontSize: 13, color: '#888', marginTop: 4 }}>Renk kodlu hızlı notlar al, düzenle, kaydet &middot; Yaptığın değişiklikler arkada otomatik kaydedilir.</p>
+          <p style={{ fontSize: 13, color: '#888', marginTop: 4 }}>Renk kodlu hızlı notlar al, düzenle, kaydet. Notların üzerine tıklayarak geniş ekranda düzenleyebilirsin.</p>
         </div>
         <button onClick={addNote} disabled={saving} style={{ padding: '8px 16px', background: '#111', color: '#fff', border: 'none', borderRadius: 8, cursor: 'pointer', transition: 'opacity 0.2s', opacity: saving ? 0.7 : 1 }}>
           {saving ? 'Kaydediliyor...' : '+ Yeni Not Ekle'}
@@ -5160,37 +5164,33 @@ function KisaNotlar() {
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: 16 }}>
         {notes.length === 0 && <div style={{ color: '#aaa', fontSize: 13, minHeight: 160, display: 'flex', alignItems: 'center' }}>Henüz not eklenmedi. Sağ üstten yeni not oluşturabilirsiniz.</div>}
         {notes.map(note => (
-          <div key={note.id} style={{
-            width: 250, background: note.color || '#fff', 
-            border: '1px solid #e0e0e0', borderRadius: 12, 
-            padding: 16, display: 'flex', flexDirection: 'column',
-            boxShadow: '0 2px 6px rgba(0,0,0,0.04)',
-            position: 'relative'
-          }}>
-            <input 
-              value={note.title} 
-              onChange={e => {
-                const newNotes = notes.map(n => n.id === note.id ? { ...n, title: e.target.value } : n)
-                setNotes(newNotes)
-              }}
-              onBlur={() => saveNotes(notes)}
-              placeholder="Başlık..."
-              style={{ width: '100%', background: 'transparent', border: 'none', outline: 'none', fontWeight: 700, fontSize: 16, marginBottom: 8, fontFamily: 'inherit', color: '#222' }}
-            />
-            <textarea 
-              value={note.content} 
-              onChange={e => {
-                const newNotes = notes.map(n => n.id === note.id ? { ...n, content: e.target.value } : n)
-                setNotes(newNotes)
-              }}
-              onBlur={() => saveNotes(notes)}
-              placeholder="Notunu buraya yaz..."
-              style={{ width: '100%', background: 'transparent', border: 'none', outline: 'none', resize: 'none', minHeight: 180, fontSize: 14, lineHeight: 1.6, fontFamily: 'inherit', color: '#444' }}
-            />
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 12, borderTop: '1px solid rgba(0,0,0,0.06)', paddingTop: 12 }}>
+          <div key={note.id} 
+            onClick={() => setExpandedId(note.id)}
+            style={{
+              width: 250, background: note.color || '#fff', 
+              border: '1px solid #e0e0e0', borderRadius: 12, 
+              padding: 16, display: 'flex', flexDirection: 'column',
+              boxShadow: '0 2px 6px rgba(0,0,0,0.04)',
+              position: 'relative', cursor: 'pointer',
+              transition: 'transform 0.15s',
+            }}
+            onMouseEnter={e => e.currentTarget.style.transform = 'translateY(-2px)'}
+            onMouseLeave={e => e.currentTarget.style.transform = 'translateY(0)'}
+          >
+            <div style={{ fontWeight: 700, fontSize: 16, marginBottom: 8, fontFamily: 'inherit', color: '#222', minHeight: 22 }}>
+              {note.title || <span style={{color:'#bbb', fontStyle:'italic'}}>Başlıksız</span>}
+            </div>
+            <div style={{ 
+              fontSize: 14, lineHeight: 1.6, fontFamily: 'inherit', color: '#444', 
+              flex: 1, minHeight: 180, whiteSpace: 'pre-wrap', overflow: 'hidden',
+              display: '-webkit-box', WebkitLineClamp: 8, WebkitBoxOrient: 'vertical'
+            }}>
+              {note.content || <span style={{color:'#bbb', fontStyle:'italic'}}>Notunuz boştur...</span>}
+            </div>
+            <div onClick={e => e.stopPropagation()} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 12, borderTop: '1px solid rgba(0,0,0,0.06)', paddingTop: 12 }}>
               <div style={{ display: 'flex', gap: 5, flexWrap: 'wrap', width: 170 }}>
                 {COLORS.map(c => (
-                  <button key={c} onClick={() => updateNote(note.id, 'color', c)} title="Renk Değiştir" style={{ width: 18, height: 18, borderRadius: '50%', background: c, border: note.color === c ? '2.5px solid #555' : '1px solid #ccc', cursor: 'pointer', padding: 0 }} />
+                  <button key={c} onClick={() => changeNoteColor(note.id, c)} title="Renk Değiştir" style={{ width: 18, height: 18, borderRadius: '50%', background: c, border: note.color === c ? '2.5px solid #555' : '1px solid #ccc', cursor: 'pointer', padding: 0 }} />
                 ))}
               </div>
               <button onClick={() => deleteNote(note.id)} title="Notu sil" style={{ background: 'none', border: 'none', color: '#ff4d4f', cursor: 'pointer', fontSize: 12, fontWeight: 500 }}>Sil</button>
@@ -5198,6 +5198,63 @@ function KisaNotlar() {
           </div>
         ))}
       </div>
+
+      {/* MODAL / GENİŞ EKRAN */}
+      {expandedId && (
+        <div 
+          onClick={() => { setExpandedId(null); saveNotes(notes); }}
+          style={{
+            position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh',
+            background: 'rgba(0,0,0,0.4)', zIndex: 9999,
+            display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1.5rem',
+            backdropFilter: 'blur(3px)'
+          }}
+        >
+          {(() => {
+            const activeNote = notes.find(n => n.id === expandedId)
+            if (!activeNote) return null;
+            return (
+              <div 
+                onClick={e => e.stopPropagation()}
+                style={{
+                  width: '100%', maxWidth: 640, background: activeNote.color || '#fff',
+                  borderRadius: 16, padding: '2rem', boxShadow: '0 12px 48px rgba(0,0,0,0.2)',
+                  display: 'flex', flexDirection: 'column', position: 'relative',
+                  maxHeight: '90vh', overflowY: 'auto'
+                }}
+              >
+                <input 
+                  value={activeNote.title} 
+                  onChange={e => setNotes(notes.map(n => n.id === activeNote.id ? { ...n, title: e.target.value } : n))}
+                  onBlur={() => saveNotes(notes)}
+                  placeholder="Başlık..."
+                  style={{ width: '100%', background: 'transparent', border: 'none', outline: 'none', fontWeight: 700, fontSize: 22, margin: '0 0 1rem 0', fontFamily: 'inherit', color: '#111' }}
+                />
+                <textarea 
+                  value={activeNote.content} 
+                  onChange={e => setNotes(notes.map(n => n.id === activeNote.id ? { ...n, content: e.target.value } : n))}
+                  onBlur={() => saveNotes(notes)}
+                  placeholder="Notunu buraya yaz..."
+                  style={{ width: '100%', background: 'transparent', border: 'none', outline: 'none', resize: 'vertical', minHeight: 350, fontSize: 16, lineHeight: 1.8, fontFamily: 'inherit', color: '#333' }}
+                />
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '1.5rem', borderTop: '1px solid rgba(0,0,0,0.06)', paddingTop: '1.5rem' }}>
+                  <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', maxWidth: 350 }}>
+                    {COLORS.map(c => (
+                      <button key={c} onClick={() => changeNoteColor(activeNote.id, c)} title="Renk Değiştir" style={{ width: 22, height: 22, borderRadius: '50%', background: c, border: activeNote.color === c ? '2.5px solid #555' : '1px solid #ccc', cursor: 'pointer', padding: 0 }} />
+                    ))}
+                  </div>
+                  <div style={{ display: 'flex', gap: 16, alignItems: 'center' }}>
+                    <button onClick={() => deleteNote(activeNote.id)} style={{ background: 'none', border: 'none', color: '#ff4d4f', cursor: 'pointer', fontSize: 14, fontWeight: 500 }}>Sil</button>
+                    <button onClick={() => { setExpandedId(null); saveNotes(notes); }} style={{ padding: '8px 24px', background: 'transparent', color: '#111', fontWeight: 700, fontSize: 15, border: 'none', cursor: 'pointer', borderRadius: 8 }}>
+                      Kapat
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )
+          })()}
+        </div>
+      )}
     </div>
   )
 }
