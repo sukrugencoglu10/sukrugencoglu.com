@@ -5274,12 +5274,16 @@ function KisaNotlar() {
                   border: '1px solid rgba(0,0,0,0.08)'
                 }}
               >
-                <input 
-                  value={activeNote.title} 
-                  onChange={e => setNotes(notes.map(n => n.id === activeNote.id ? { ...n, title: e.target.value } : n))}
+                <textarea 
+                  value={activeNote.title || ''}
+                  onChange={e => {
+                    setNotes(notes.map(n => n.id === activeNote.id ? { ...n, title: e.target.value } : n));
+                  }}
                   onBlur={() => saveNotes(notes)}
+                  ref={el => { if (el) { el.style.height = 'auto'; el.style.height = el.scrollHeight + 'px'; } }}
                   placeholder="Başlık..."
-                  style={{ flexShrink: 0, width: '100%', background: 'transparent', border: 'none', outline: 'none', fontWeight: 700, fontSize: 24, margin: '0 0 1rem 0', fontFamily: 'inherit', color: '#111' }}
+                  rows={1}
+                  style={{ flexShrink: 0, width: '100%', background: 'transparent', border: 'none', outline: 'none', fontWeight: 700, fontSize: 24, margin: '0 0 1rem 0', fontFamily: 'inherit', color: '#111', resize: 'none', overflow: 'hidden', lineHeight: 1.4 }}
                 />
 
                 <div 
