@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import ServicesSection from "@/components/sections/ServicesSection";
-import StudyoShowcase from "@/components/sections/StudyoShowcase";
 
 const baseUrl = "https://www.sukrugencoglu.com";
 
@@ -28,7 +27,6 @@ export default function HizmetlerPage() {
   return (
     <>
       <ServicesSection />
-      <StudyoShowcase />
     </>
   );
 }
