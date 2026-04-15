@@ -5243,16 +5243,18 @@ function KisaNotlar() {
             .kisa-notlar-modal::-webkit-scrollbar { display: none !important; width: 0 !important; height: 0 !important; }
             .kisa-notlar-modal { scrollbar-width: none !important; -ms-overflow-style: none !important; }
             
-            .kisa-notlar-modal h1 { font-size: 2em; font-weight: 800; margin: 0.6em 0; line-height: 1.2; }
-            .kisa-notlar-modal h2 { font-size: 1.5em; font-weight: 700; margin: 0.7em 0; line-height: 1.3; }
-            .kisa-notlar-modal h3 { font-size: 1.17em; font-weight: 600; margin: 0.8em 0; line-height: 1.4; }
+            .kisa-notlar-modal h1, .kisa-notlar-modal font[size="6"] { font-size: 2em; font-weight: 800; margin: 0.6em 0; line-height: 1.2; display: inline-block; }
+            .kisa-notlar-modal h2, .kisa-notlar-modal font[size="5"] { font-size: 1.5em; font-weight: 700; margin: 0.7em 0; line-height: 1.3; display: inline-block; }
+            .kisa-notlar-modal h3, .kisa-notlar-modal font[size="4"] { font-size: 1.17em; font-weight: 600; margin: 0.8em 0; line-height: 1.4; display: inline-block; }
+            .kisa-notlar-modal p, .kisa-notlar-modal font[size="3"] { font-size: 1em; font-weight: 400; }
             .kisa-notlar-modal ul { list-style-type: disc; padding-left: 2em; margin: 1em 0; }
             .kisa-notlar-modal b, .kisa-notlar-modal strong { font-weight: 800; }
             .kisa-notlar-modal i, .kisa-notlar-modal em { font-style: italic; }
             
-            .kisa-notlar-preview h1 { font-size: 1.25em; font-weight: bold; margin: 0.2em 0; line-height: 1.2; }
-            .kisa-notlar-preview h2 { font-size: 1.1em; font-weight: bold; margin: 0.2em 0; line-height: 1.2; }
-            .kisa-notlar-preview h3 { font-size: 1em; font-weight: bold; margin: 0.2em 0; line-height: 1.2; }
+            .kisa-notlar-preview h1, .kisa-notlar-preview font[size="6"] { font-size: 1.25em; font-weight: bold; margin: 0.2em 0; line-height: 1.2; }
+            .kisa-notlar-preview h2, .kisa-notlar-preview font[size="5"] { font-size: 1.1em; font-weight: bold; margin: 0.2em 0; line-height: 1.2; }
+            .kisa-notlar-preview h3, .kisa-notlar-preview font[size="4"] { font-size: 1em; font-weight: bold; margin: 0.2em 0; line-height: 1.2; }
+            .kisa-notlar-preview p, .kisa-notlar-preview font[size="3"] { font-size: 1em; font-weight: 400; }
             .kisa-notlar-preview ul { list-style-type: disc; padding-left: 1.5em; margin: 0.2em 0; }
             .kisa-notlar-preview b, .kisa-notlar-preview strong { font-weight: 800; }
             .kisa-notlar-preview i, .kisa-notlar-preview em { font-style: italic; }
@@ -5317,9 +5319,9 @@ function KisaNotlar() {
 
                     {/* Zengin Metin Menüsü */}
                     <div style={{ display: 'flex', gap: 5 }}>
-                      <button onMouseDown={e => { e.preventDefault(); document.execCommand('formatBlock', false, 'H1') }} style={{ padding: '6px 12px', fontSize: 14, fontWeight: 700, background: 'rgba(0,0,0,0.05)', border: 'none', borderRadius: 4, cursor: 'pointer', color: '#111' }}>h1</button>
-                      <button onMouseDown={e => { e.preventDefault(); document.execCommand('formatBlock', false, 'H2') }} style={{ padding: '6px 12px', fontSize: 14, fontWeight: 600, background: 'rgba(0,0,0,0.05)', border: 'none', borderRadius: 4, cursor: 'pointer', color: '#222' }}>h2</button>
-                      <button onMouseDown={e => { e.preventDefault(); document.execCommand('formatBlock', false, 'DIV') }} style={{ padding: '6px 12px', fontSize: 14, background: 'rgba(0,0,0,0.05)', border: 'none', borderRadius: 4, cursor: 'pointer', color: '#444' }}>p</button>
+                      <button onMouseDown={e => { e.preventDefault(); document.execCommand('fontSize', false, '6') }} style={{ padding: '6px 12px', fontSize: 14, fontWeight: 700, background: 'rgba(0,0,0,0.05)', border: 'none', borderRadius: 4, cursor: 'pointer', color: '#111' }}>h1</button>
+                      <button onMouseDown={e => { e.preventDefault(); document.execCommand('fontSize', false, '5') }} style={{ padding: '6px 12px', fontSize: 14, fontWeight: 600, background: 'rgba(0,0,0,0.05)', border: 'none', borderRadius: 4, cursor: 'pointer', color: '#222' }}>h2</button>
+                      <button onMouseDown={e => { e.preventDefault(); document.execCommand('fontSize', false, '3') }} style={{ padding: '6px 12px', fontSize: 14, background: 'rgba(0,0,0,0.05)', border: 'none', borderRadius: 4, cursor: 'pointer', color: '#444' }}>p</button>
                       <button onMouseDown={e => { e.preventDefault(); document.execCommand('bold', false, null) }} style={{ padding: '6px 12px', fontSize: 14, fontWeight: 'bold', background: 'rgba(0,0,0,0.05)', border: 'none', borderRadius: 4, cursor: 'pointer' }}>B</button>
                       <button onMouseDown={e => { e.preventDefault(); document.execCommand('italic', false, null) }} style={{ padding: '6px 12px', fontSize: 14, fontStyle: 'italic', background: 'rgba(0,0,0,0.05)', border: 'none', borderRadius: 4, cursor: 'pointer' }}>I</button>
                       <button onMouseDown={e => { e.preventDefault(); document.execCommand('insertUnorderedList', false, null) }} style={{ padding: '6px 12px', fontSize: 14, background: 'rgba(0,0,0,0.05)', border: 'none', borderRadius: 4, cursor: 'pointer' }}>•</button>
