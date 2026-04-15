@@ -485,197 +485,8 @@ ${nlText}`
   )
 }
 
-// ─── Google Ads RSA Üreticisi ─────────────────────────────────────────────────
-const CTA_OPTIONS = ['Hemen Ara', 'Teklif Al', 'Ücretsiz Dene', 'Daha Fazla Bilgi']
 
-function CharRow({ text, limit, onCopy }) {
-  const [copied, setCopied] = useState(false)
-  const len = text.length
-  const over = len > limit
 
-  const copy = () => {
-    navigator.clipboard.writeText(text)
-    setCopied(true)
-    setTimeout(() => setCopied(false), 1500)
-  }
-
-  return (
-    <div style={{
-      display: 'flex',
-      alignItems: 'center',
-      gap: 8,
-      padding: '6px 10px',
-      borderRadius: 7,
-      background: over ? '#FFF5F5' : '#f7f7f5',
-      border: `0.5px solid ${over ? '#FFCDD2' : '#e0e0e0'}`,
-      marginBottom: 4,
-    }}>
-      <span style={{ flex: 1, fontSize: 13, color: '#111', lineHeight: 1.4 }}>{text}</span>
-      <span style={{
-        fontSize: 11,
-        fontVariantNumeric: 'tabular-nums',
-        color: over ? '#c0392b' : '#1D9E75',
-        minWidth: 32,
-        textAlign: 'right',
-      }}>{len}/{limit}</span>
-      <button
-        onClick={copy}
-        style={{
-          fontSize: 11,
-          padding: '3px 9px',
-          borderRadius: 6,
-          border: copied ? '0.5px solid #1D9E75' : '0.5px solid #d0d0d0',
-          background: 'transparent',
-          color: copied ? '#0F6E56' : '#888',
-          cursor: 'pointer',
-          fontFamily: 'inherit',
-          whiteSpace: 'nowrap',
-        }}
-      >
-        {copied ? '✓' : 'Kopyala'}
-      </button>
-    </div>
-  )
-}
-
-function RsaUreticisi() {
-  const [urun, setUrun] = useState('')
-  const [kitle, setKitle] = useState('')
-  const [faydalar, setFaydalar] = useState('')
-  const [cta, setCta] = useState('Hemen Ara')
-  const [result, setResult] = useState(null)
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState('')
-  const [copiedAll, setCopiedAll] = useState('')
-
-  const generate = async () => {
-    if (!urun.trim()) return
-    setLoading(true)
-    setResult(null)
-    setError('')
-
-    const prompt = `Google Ads Responsive Search Ad (RSA) için metin üret.
-
-Ürün/Hizmet: ${urun}
-Hedef kitle: ${kitle || 'genel'}
-Öne çıkan faydalar: ${faydalar || 'belirtilmedi'}
-CTA: ${cta}
-
-Kurallar:
-- Türkçe yaz
-- Tam olarak 15 başlık üret, her biri maksimum 30 karakter
-- Tam olarak 4 açıklama üret, her biri maksimum 90 karakter
-- Başlıklarda çeşitlilik sağla: fayda, özellik, CTA, sosyal kanıt, aciliyet
-- Sadece JSON döndür, başka açıklama ekleme:
-{"headlines":["..."],"descriptions":["..."]}`
-
-    try {
-      const text = await callClaude(prompt)
-      const json = JSON.parse(text.replace(/```json|```/g, '').trim())
-      setResult(json)
-    } catch (e) {
-      setError('Hata: ' + e.message)
-    }
-    setLoading(false)
-  }
-
-  const copyAll = (type) => {
-    const items = type === 'headlines' ? result?.headlines : result?.descriptions
-    if (!items) return
-    navigator.clipboard.writeText(items.join('\n'))
-    setCopiedAll(type)
-    setTimeout(() => setCopiedAll(''), 1800)
-  }
-
-  const card = { background: '#fff', border: '0.5px solid #e8e8e8', borderRadius: 14, padding: '1.5rem', marginBottom: '1rem' }
-  const label = { fontSize: 12, color: '#888', display: 'block', marginBottom: 5 }
-  const input = { width: '100%', fontSize: 14, padding: '9px 12px', borderRadius: 8, border: '0.5px solid #ddd', fontFamily: 'inherit', outline: 'none', boxSizing: 'border-box' }
-  const primaryBtn = { width: '100%', padding: '10px', background: '#111', color: '#fff', border: 'none', borderRadius: 9, fontSize: 14, fontFamily: 'inherit', cursor: 'pointer', marginTop: 4 }
-  const sectionHead = { display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }
-
-  return (
-    <div style={{ maxWidth: 700, margin: '0 auto', padding: '2rem 1rem', fontFamily: 'inherit' }}>
-
-      <div style={{ marginBottom: '2rem' }}>
-        <h1 style={{ fontSize: 22, fontWeight: 500, margin: 0 }}>Google Ads RSA Üreticisi</h1>
-        <p style={{ fontSize: 13, color: '#888', marginTop: 4 }}>
-          15 başlık · 4 açıklama · karakter limiti kontrolü
-        </p>
-      </div>
-
-      <div style={card}>
-        <div style={{ display: 'flex', gap: 10, marginBottom: 10, flexWrap: 'wrap' }}>
-          <div style={{ flex: 2, minWidth: 150 }}>
-            <label style={label}>Ürün / hizmet</label>
-            <input style={input} value={urun} onChange={e => setUrun(e.target.value)} placeholder="ör. SEO danışmanlığı, e-ticaret sitesi..." />
-          </div>
-          <div style={{ flex: 1, minWidth: 130 }}>
-            <label style={label}>Hedef kitle</label>
-            <input style={input} value={kitle} onChange={e => setKitle(e.target.value)} placeholder="ör. KOBİ sahipleri..." />
-          </div>
-        </div>
-
-        <div style={{ marginBottom: 10 }}>
-          <label style={label}>Öne çıkan faydalar (virgülle ayır)</label>
-          <input style={input} value={faydalar} onChange={e => setFaydalar(e.target.value)} placeholder="ör. ücretsiz analiz, 7/24 destek, garantili sonuç..." />
-        </div>
-
-        <div style={{ marginBottom: 14 }}>
-          <label style={label}>CTA tercihi</label>
-          <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
-            {CTA_OPTIONS.map(c => (
-              <Chip key={c} label={c} active={cta === c} onClick={() => setCta(c)} />
-            ))}
-          </div>
-        </div>
-
-        <button style={primaryBtn} onClick={generate} disabled={loading}>
-          {loading ? 'Üretiliyor...' : 'RSA Üret'}
-        </button>
-
-        {error && <p style={{ fontSize: 13, color: '#c0392b', marginTop: 10 }}>{error}</p>}
-      </div>
-
-      {loading && (
-        <div style={{ ...card, color: '#aaa', fontSize: 14, fontStyle: 'italic' }}>Başlıklar ve açıklamalar oluşturuluyor...</div>
-      )}
-
-      {result && (
-        <>
-          <div style={card}>
-            <div style={sectionHead}>
-              <span style={{ fontSize: 12, color: '#888', fontWeight: 500 }}>BAŞLIKLAR <span style={{ color: '#bbb', fontWeight: 400 }}>({result.headlines.length}/15 · maks 30 karakter)</span></span>
-              <button
-                onClick={() => copyAll('headlines')}
-                style={{ fontSize: 11, padding: '3px 10px', borderRadius: 6, border: copiedAll === 'headlines' ? '0.5px solid #1D9E75' : '0.5px solid #d0d0d0', background: 'transparent', color: copiedAll === 'headlines' ? '#0F6E56' : '#888', cursor: 'pointer', fontFamily: 'inherit' }}
-              >
-                {copiedAll === 'headlines' ? 'Kopyalandı' : 'Tümünü Kopyala'}
-              </button>
-            </div>
-            {result.headlines.map((h, i) => (
-              <CharRow key={i} text={h} limit={30} />
-            ))}
-          </div>
-
-          <div style={card}>
-            <div style={sectionHead}>
-              <span style={{ fontSize: 12, color: '#888', fontWeight: 500 }}>AÇIKLAMALAR <span style={{ color: '#bbb', fontWeight: 400 }}>({result.descriptions.length}/4 · maks 90 karakter)</span></span>
-              <button
-                onClick={() => copyAll('descriptions')}
-                style={{ fontSize: 11, padding: '3px 10px', borderRadius: 6, border: copiedAll === 'descriptions' ? '0.5px solid #1D9E75' : '0.5px solid #d0d0d0', background: 'transparent', color: copiedAll === 'descriptions' ? '#0F6E56' : '#888', cursor: 'pointer', fontFamily: 'inherit' }}
-              >
-                {copiedAll === 'descriptions' ? 'Kopyalandı' : 'Tümünü Kopyala'}
-              </button>
-            </div>
-            {result.descriptions.map((d, i) => (
-              <CharRow key={i} text={d} limit={90} />
-            ))}
-          </div>
-        </>
-      )}
-    </div>
-  )
-}
 // ─── GTM Ekosistemi Zihin Haritası ───────────────────────────────────────────
 const GTM_NW = 140
 const GTM_NH = 56
@@ -5342,6 +5153,12 @@ function ReklamHiyerarsisiHaritasi() {
 // ─── Araç listesi ─────────────────────────────────────────────────────────────
 const TOOLS = [
   {
+    id: 'icerik-studyosu',
+    label: 'İçerik Stüdyosu',
+    icon: '✦',
+    component: StudyoContent,
+  },
+  {
     id: 'reklam-hiyerarsisi-harita',
     label: 'Reklam Hiyerarşisi',
     icon: '⬡',
@@ -5358,18 +5175,6 @@ const TOOLS = [
     label: 'Şablonlar',
     icon: '◉',
     component: YzHaritasi,
-  },
-  {
-    id: 'icerik-studyosu',
-    label: 'İçerik Stüdyosu',
-    icon: '✦',
-    component: StudyoContent,
-  },
-  {
-    id: 'rsa-ureticisi',
-    label: 'RSA Üreticisi',
-    icon: '◈',
-    component: RsaUreticisi,
   },
   {
     id: 'dijital-anons',
