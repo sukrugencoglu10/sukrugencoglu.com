@@ -5211,7 +5211,8 @@ function KisaNotlar() {
           }}
         >
           <style>{`
-            .kisa-notlar-modal::-webkit-scrollbar { display: none; }
+            .kisa-notlar-modal::-webkit-scrollbar { display: none !important; width: 0 !important; height: 0 !important; }
+            .kisa-notlar-modal { scrollbar-width: none !important; -ms-overflow-style: none !important; }
           `}</style>
           {(() => {
             const activeNote = notes.find(n => n.id === expandedId)
