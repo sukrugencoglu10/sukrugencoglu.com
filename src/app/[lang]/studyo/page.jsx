@@ -625,15 +625,35 @@ function GtmZihinHaritasi() {
                     onChange={e => setTerms(prev => prev.map(t => t.id === selectedTerm.id ? { ...t, desc: e.target.value } : t))}
                     onPaste={(e) => {
                       e.preventDefault()
-                      const text = e.clipboardData.getData('text/plain')
-                      const cleanText = text.replace(/\r/g, '').replace(/\n{3,}/g, '\n\n')
-                      const target = e.target
-                      const start = target.selectionStart
-                      const end = target.selectionEnd
-                      const current = target.value
-                      const newValue = current.substring(0, start) + cleanText + current.substring(end)
+                      const html = e.clipboardData.getData('text/html')
+                      const plain = e.clipboardData.getData('text/plain')
+                      let pasted = plain
+                      if (html) {
+                        const div = document.createElement('div')
+                        div.innerHTML = html
+                        div.querySelectorAll('table').forEach(table => {
+                          let rows = ''
+                          table.querySelectorAll('tr').forEach(tr => {
+                            const cells = [...tr.querySelectorAll('td,th')].map(c => c.innerText.trim())
+                            rows += '| ' + cells.join(' | ') + ' |\n'
+                          })
+                          table.replaceWith(document.createTextNode('\n' + rows))
+                        })
+                        div.querySelectorAll('h1').forEach(el => el.replaceWith(document.createTextNode('# ' + el.innerText + '\n')))
+                        div.querySelectorAll('h2').forEach(el => el.replaceWith(document.createTextNode('## ' + el.innerText + '\n')))
+                        div.querySelectorAll('h3,h4,h5,h6').forEach(el => el.replaceWith(document.createTextNode('### ' + el.innerText + '\n')))
+                        div.querySelectorAll('ol > li').forEach((li, i) => li.prepend(document.createTextNode((i + 1) + '. ')))
+                        div.querySelectorAll('ul > li').forEach(li => li.prepend(document.createTextNode('• ')))
+                        div.querySelectorAll('li,p,div,br').forEach(el => el.after(document.createTextNode('\n')))
+                        pasted = div.innerText.replace(/\n{3,}/g, '\n\n').trim()
+                      }
+                      const el = e.target
+                      const start = el.selectionStart
+                      const end = el.selectionEnd
+                      const current = el.value
+                      const newValue = current.substring(0, start) + pasted + current.substring(end)
                       setTerms(prev => prev.map(t => t.id === selectedTerm.id ? { ...t, desc: newValue } : t))
-                      setTimeout(() => { target.selectionStart = target.selectionEnd = start + cleanText.length }, 0)
+                      setTimeout(() => { el.selectionStart = el.selectionEnd = start + pasted.length }, 0)
                     }}
                     style={{
                       width: '100%', minHeight: 100, padding: 12, fontSize: 14, lineHeight: 1.8,
@@ -1257,15 +1277,35 @@ function MantiKHaritasi() {
                     onChange={e => setTerms(prev => prev.map(t => t.id === selectedTerm.id ? { ...t, desc: e.target.value } : t))}
                     onPaste={(e) => {
                       e.preventDefault()
-                      const text = e.clipboardData.getData('text/plain')
-                      const cleanText = text.replace(/\r/g, '').replace(/\n{3,}/g, '\n\n')
-                      const target = e.target
-                      const start = target.selectionStart
-                      const end = target.selectionEnd
-                      const current = target.value
-                      const newValue = current.substring(0, start) + cleanText + current.substring(end)
+                      const html = e.clipboardData.getData('text/html')
+                      const plain = e.clipboardData.getData('text/plain')
+                      let pasted = plain
+                      if (html) {
+                        const div = document.createElement('div')
+                        div.innerHTML = html
+                        div.querySelectorAll('table').forEach(table => {
+                          let rows = ''
+                          table.querySelectorAll('tr').forEach(tr => {
+                            const cells = [...tr.querySelectorAll('td,th')].map(c => c.innerText.trim())
+                            rows += '| ' + cells.join(' | ') + ' |\n'
+                          })
+                          table.replaceWith(document.createTextNode('\n' + rows))
+                        })
+                        div.querySelectorAll('h1').forEach(el => el.replaceWith(document.createTextNode('# ' + el.innerText + '\n')))
+                        div.querySelectorAll('h2').forEach(el => el.replaceWith(document.createTextNode('## ' + el.innerText + '\n')))
+                        div.querySelectorAll('h3,h4,h5,h6').forEach(el => el.replaceWith(document.createTextNode('### ' + el.innerText + '\n')))
+                        div.querySelectorAll('ol > li').forEach((li, i) => li.prepend(document.createTextNode((i + 1) + '. ')))
+                        div.querySelectorAll('ul > li').forEach(li => li.prepend(document.createTextNode('• ')))
+                        div.querySelectorAll('li,p,div,br').forEach(el => el.after(document.createTextNode('\n')))
+                        pasted = div.innerText.replace(/\n{3,}/g, '\n\n').trim()
+                      }
+                      const el = e.target
+                      const start = el.selectionStart
+                      const end = el.selectionEnd
+                      const current = el.value
+                      const newValue = current.substring(0, start) + pasted + current.substring(end)
                       setTerms(prev => prev.map(t => t.id === selectedTerm.id ? { ...t, desc: newValue } : t))
-                      setTimeout(() => { target.selectionStart = target.selectionEnd = start + cleanText.length }, 0)
+                      setTimeout(() => { el.selectionStart = el.selectionEnd = start + pasted.length }, 0)
                     }}
                     style={{
                       width: '100%', minHeight: 100, padding: 12, fontSize: 14, lineHeight: 1.8,
@@ -2014,15 +2054,35 @@ function YzHaritasi() {
                       onChange={e => setTerms(prev => prev.map(t => t.id === selectedTerm.id ? { ...t, desc: e.target.value } : t))}
                       onPaste={(e) => {
                         e.preventDefault()
-                        const text = e.clipboardData.getData('text/plain')
-                        const cleanText = text.replace(/\r/g, '').replace(/\n{3,}/g, '\n\n')
-                        const target = e.target
-                        const start = target.selectionStart
-                        const end = target.selectionEnd
-                        const current = target.value
-                        const newValue = current.substring(0, start) + cleanText + current.substring(end)
+                        const html = e.clipboardData.getData('text/html')
+                        const plain = e.clipboardData.getData('text/plain')
+                        let pasted = plain
+                        if (html) {
+                          const div = document.createElement('div')
+                          div.innerHTML = html
+                          div.querySelectorAll('table').forEach(table => {
+                            let rows = ''
+                            table.querySelectorAll('tr').forEach(tr => {
+                              const cells = [...tr.querySelectorAll('td,th')].map(c => c.innerText.trim())
+                              rows += '| ' + cells.join(' | ') + ' |\n'
+                            })
+                            table.replaceWith(document.createTextNode('\n' + rows))
+                          })
+                          div.querySelectorAll('h1').forEach(el => el.replaceWith(document.createTextNode('# ' + el.innerText + '\n')))
+                          div.querySelectorAll('h2').forEach(el => el.replaceWith(document.createTextNode('## ' + el.innerText + '\n')))
+                          div.querySelectorAll('h3,h4,h5,h6').forEach(el => el.replaceWith(document.createTextNode('### ' + el.innerText + '\n')))
+                          div.querySelectorAll('ol > li').forEach((li, i) => li.prepend(document.createTextNode((i + 1) + '. ')))
+                          div.querySelectorAll('ul > li').forEach(li => li.prepend(document.createTextNode('• ')))
+                          div.querySelectorAll('li,p,div,br').forEach(el => el.after(document.createTextNode('\n')))
+                          pasted = div.innerText.replace(/\n{3,}/g, '\n\n').trim()
+                        }
+                        const el = e.target
+                        const start = el.selectionStart
+                        const end = el.selectionEnd
+                        const current = el.value
+                        const newValue = current.substring(0, start) + pasted + current.substring(end)
                         setTerms(prev => prev.map(t => t.id === selectedTerm.id ? { ...t, desc: newValue } : t))
-                        setTimeout(() => { target.selectionStart = target.selectionEnd = start + cleanText.length }, 0)
+                        setTimeout(() => { el.selectionStart = el.selectionEnd = start + pasted.length }, 0)
                       }}
                       style={{
                         width: '100%', minHeight: 300, padding: 12, fontSize: 15, lineHeight: 1.7,
@@ -5057,15 +5117,35 @@ function ReklamHiyerarsisiHaritasi() {
                       onChange={e => setTerms(prev => prev.map(t => t.id === selectedTerm.id ? { ...t, desc: e.target.value } : t))}
                       onPaste={(e) => {
                         e.preventDefault()
-                        const text = e.clipboardData.getData('text/plain')
-                        const cleanText = text.replace(/\r/g, '').replace(/\n{3,}/g, '\n\n')
-                        const target = e.target
-                        const start = target.selectionStart
-                        const end = target.selectionEnd
-                        const current = target.value
-                        const newValue = current.substring(0, start) + cleanText + current.substring(end)
+                        const html = e.clipboardData.getData('text/html')
+                        const plain = e.clipboardData.getData('text/plain')
+                        let pasted = plain
+                        if (html) {
+                          const div = document.createElement('div')
+                          div.innerHTML = html
+                          div.querySelectorAll('table').forEach(table => {
+                            let rows = ''
+                            table.querySelectorAll('tr').forEach(tr => {
+                              const cells = [...tr.querySelectorAll('td,th')].map(c => c.innerText.trim())
+                              rows += '| ' + cells.join(' | ') + ' |\n'
+                            })
+                            table.replaceWith(document.createTextNode('\n' + rows))
+                          })
+                          div.querySelectorAll('h1').forEach(el => el.replaceWith(document.createTextNode('# ' + el.innerText + '\n')))
+                          div.querySelectorAll('h2').forEach(el => el.replaceWith(document.createTextNode('## ' + el.innerText + '\n')))
+                          div.querySelectorAll('h3,h4,h5,h6').forEach(el => el.replaceWith(document.createTextNode('### ' + el.innerText + '\n')))
+                          div.querySelectorAll('ol > li').forEach((li, i) => li.prepend(document.createTextNode((i + 1) + '. ')))
+                          div.querySelectorAll('ul > li').forEach(li => li.prepend(document.createTextNode('• ')))
+                          div.querySelectorAll('li,p,div,br').forEach(el => el.after(document.createTextNode('\n')))
+                          pasted = div.innerText.replace(/\n{3,}/g, '\n\n').trim()
+                        }
+                        const el = e.target
+                        const start = el.selectionStart
+                        const end = el.selectionEnd
+                        const current = el.value
+                        const newValue = current.substring(0, start) + pasted + current.substring(end)
                         setTerms(prev => prev.map(t => t.id === selectedTerm.id ? { ...t, desc: newValue } : t))
-                        setTimeout(() => { target.selectionStart = target.selectionEnd = start + cleanText.length }, 0)
+                        setTimeout(() => { el.selectionStart = el.selectionEnd = start + pasted.length }, 0)
                       }}
                       style={{
                         width: '100%', minHeight: 300, padding: 12, fontSize: 15, lineHeight: 1.7,
