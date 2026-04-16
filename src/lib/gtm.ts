@@ -21,7 +21,7 @@ export const trackFormSubmissionGrowth = (params: {
   budget?: string;
   form_destination: string;
 }) => {
-  pushToDataLayer("form_submission_growth", params);
+  pushToDataLayer("form_submit_growth", params);
 };
 
 export const trackFormSubmissionPlus = (params: {
@@ -31,7 +31,7 @@ export const trackFormSubmissionPlus = (params: {
   website?: string;
   form_destination: string;
 }) => {
-  pushToDataLayer("form_submission_plus", params);
+  pushToDataLayer("form_submit_plus", params);
 };
 
 export const trackWhatsAppClick = (params: {
