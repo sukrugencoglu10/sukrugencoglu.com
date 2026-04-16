@@ -65,7 +65,7 @@ export const tr: Translations = {
     stat3_label: "Yıl Deneyim",
   },
   contact: {
-    badge: "İletişime Geç",
+    badge: "Reklam ve Analiz",
     title: "Birlikte",
     title_accent: "çalışalım",
     subtitle:
@@ -143,7 +143,7 @@ export const tr: Translations = {
     ],
   },
   plusServices: {
-    badge: "Birlikte Çalışalım",
+    badge: "+Plus Hizmetler",
     title: "Hangi sisteme ihtiyacınız var?",
     subtitle: "En yakın seçeneği seçin — en kısa sürede size dönelim.",
     categories: [

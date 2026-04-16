@@ -63,7 +63,7 @@ export const en = {
     stat3_label: "Years Experience",
   },
   contact: {
-    badge: "Get In Touch",
+    badge: "Advertising & Analytics",
     title: "Let's work",
     title_accent: "together",
     subtitle:
