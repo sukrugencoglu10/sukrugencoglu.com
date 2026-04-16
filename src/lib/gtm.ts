@@ -34,6 +34,23 @@ export const trackFormSubmissionPlus = (params: {
   pushToDataLayer("form_submit_plus", params);
 };
 
+export const trackProjectView = (params: {
+  project_id: string;
+  project_company: string;
+  project_title: string;
+  project_category: string;
+}) => {
+  pushToDataLayer("project_view", params);
+};
+
+export const trackNavClick = (params: {
+  nav_item: string;
+  nav_label: string;
+  nav_href: string;
+}) => {
+  pushToDataLayer("nav_click", params);
+};
+
 export const trackWhatsAppClick = (params: {
   click_text: string;
   service_interest?: string;

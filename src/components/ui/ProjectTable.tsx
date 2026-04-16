@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { useLanguage } from "@/context/LanguageContext";
 import type { Project } from "@/lib/projects";
+import { trackProjectView } from "@/lib/gtm";
 
 // Basic chevron icon component
 const ChevronDown = ({ className }: { className?: string }) => (
@@ -39,8 +40,17 @@ export default function ProjectTable() {
       .finally(() => setLoading(false));
   }, []);
 
-  const toggle = (id: string) => {
-    setOpenId(openId === id ? null : id);
+  const toggle = (project: Project) => {
+    const isOpening = openId !== project.id;
+    setOpenId(isOpening ? project.id : null);
+    if (isOpening) {
+      trackProjectView({
+        project_id: project.id,
+        project_company: project.company,
+        project_title: lang === "tr" ? project.titleTR : project.titleEN,
+        project_category: lang === "tr" ? project.categoryTR : project.categoryEN,
+      });
+    }
   };
 
   return (
@@ -116,7 +126,7 @@ export default function ProjectTable() {
                 className={`grid grid-cols-1 md:grid-cols-[60px_1fr_200px_200px_50px] gap-4 p-5 lg:p-6 items-center cursor-pointer transition-colors ${
                   isOpen ? "bg-surface-secondary" : "hover:bg-surface-secondary"
                 }`}
-                onClick={() => toggle(project.id)}
+                onClick={() => toggle(project)}
               >
                 <div className="hidden md:block text-xl font-bold text-accent">
                   {index + 1}

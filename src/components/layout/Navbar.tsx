@@ -7,6 +7,7 @@ import { usePathname } from "next/navigation";
 import { useLanguage } from "@/context/LanguageContext";
 import LanguageToggle from "@/components/ui/LanguageToggle";
 import { getSlug } from "@/lib/slugs";
+import { trackNavClick } from "@/lib/gtm";
 
 const NAV_KEYS = ["home", "services", "work", "process", "about", "contact"] as const;
 type NavKey = typeof NAV_KEYS[number];
@@ -127,6 +128,7 @@ export default function Navbar() {
                   key={key}
                   href={getHref(key)}
                   className={`nav-tab${isActive ? " active" : ""}`}
+                  onClick={() => trackNavClick({ nav_item: key, nav_label: t.nav[key], nav_href: getHref(key) })}
                 >
                   {t.nav[key]}
                   <span className="nav-tab-dot" />
@@ -225,7 +227,7 @@ export default function Navbar() {
               <Link
                 key={key}
                 href={getHref(key)}
-                onClick={() => setMobileOpen(false)}
+                onClick={() => { setMobileOpen(false); trackNavClick({ nav_item: key, nav_label: t.nav[key], nav_href: getHref(key) }); }}
                 style={{
                   display: "block",
                   padding: "12px 0",
