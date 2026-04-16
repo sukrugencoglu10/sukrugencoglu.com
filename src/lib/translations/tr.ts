@@ -166,6 +166,7 @@ export const tr: Translations = {
     name_placeholder: "Adınız",
     surname_placeholder: "Soyadınız",
     phone_placeholder: "Telefon numaranız",
+    website_placeholder: "Web siteniz (opsiyonel)",
     email_placeholder: "E-posta adresiniz",
     submit: "Gönder",
     sending: "Gönderiliyor...",

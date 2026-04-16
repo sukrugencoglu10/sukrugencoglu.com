@@ -13,15 +13,25 @@ export const pushToDataLayer = (name: string, data: Record<string, any>) => {
   }
 };
 
-export const trackFormSubmission = (params: {
-  form_name: string;
-  user_email: string;
-  service_category?: string;
+export const trackFormSubmissionGrowth = (params: {
+  email: string;
+  phone?: string;
+  goal?: string;
+  industry?: string;
+  budget?: string;
   form_destination: string;
-  lead_quality_score?: string;
-  [key: string]: any;
 }) => {
-  pushToDataLayer("form_submission", params);
+  pushToDataLayer("form_submission_growth", params);
+};
+
+export const trackFormSubmissionPlus = (params: {
+  email: string;
+  phone?: string;
+  service?: string;
+  website?: string;
+  form_destination: string;
+}) => {
+  pushToDataLayer("form_submission_plus", params);
 };
 
 export const trackWhatsAppClick = (params: {

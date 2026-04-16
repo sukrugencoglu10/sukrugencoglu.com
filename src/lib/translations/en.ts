@@ -164,6 +164,7 @@ export const en = {
     name_placeholder: "First name",
     surname_placeholder: "Last name",
     phone_placeholder: "Phone number",
+    website_placeholder: "Your website (optional)",
     email_placeholder: "Email address",
     submit: "Submit",
     sending: "Sending...",
@@ -296,6 +297,7 @@ export interface Translations {
     name_placeholder: string;
     surname_placeholder: string;
     phone_placeholder: string;
+    website_placeholder: string;
     email_placeholder: string;
     submit: string;
     sending: string;

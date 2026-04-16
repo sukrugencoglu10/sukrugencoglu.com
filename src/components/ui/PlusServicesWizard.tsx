@@ -4,7 +4,7 @@ import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useLanguage } from "@/context/LanguageContext";
 import Badge from "@/components/ui/Badge";
-import { trackFormSubmission, trackWhatsAppClick } from "@/lib/gtm";
+import { trackFormSubmissionPlus, trackWhatsAppClick } from "@/lib/gtm";
 
 const WA_ICON = (
   <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
@@ -22,6 +22,7 @@ export default function PlusServicesWizard({ showContactButton = false }: { show
   const [name, setName]               = useState("");
   const [surname, setSurname]         = useState("");
   const [phone, setPhone]             = useState("");
+  const [website, setWebsite]         = useState("");
   const [email, setEmail]             = useState("");
   const [isLoading, setIsLoading]     = useState(false);
   const [sent, setSent]               = useState(false);
@@ -52,15 +53,17 @@ export default function PlusServicesWizard({ showContactButton = false }: { show
             `Hizmet: ${selected}`,
             description ? `Açıklama: ${description}` : null,
             phone ? `Telefon: ${phone}` : null,
+            website ? `Website: ${website}` : null,
           ].filter(Boolean).join("\n"),
         }),
       });
       const data = await res.json();
       if (res.ok) {
-        trackFormSubmission({
-          form_name: "plus_services_form",
-          user_email: email,
-          service_category: selected,
+        trackFormSubmissionPlus({
+          email,
+          phone: phone || undefined,
+          service: selected,
+          website: website || undefined,
           form_destination: window.location.pathname,
         });
         setSent(true);
@@ -213,6 +216,10 @@ export default function PlusServicesWizard({ showContactButton = false }: { show
 
                   <input type="tel" placeholder={ps.phone_placeholder} value={phone}
                     onChange={(e) => setPhone(e.target.value)}
+                    className="w-full p-3 rounded-xl border border-border bg-surface text-ink text-sm placeholder:text-ink-subtle mb-3 focus:outline-none focus:ring-2 focus:ring-[#ff6b00]/40 focus:border-[#ff6b00] transition-all" />
+
+                  <input type="url" placeholder={ps.website_placeholder} value={website}
+                    onChange={(e) => setWebsite(e.target.value)}
                     className="w-full p-3 rounded-xl border border-border bg-surface text-ink text-sm placeholder:text-ink-subtle mb-3 focus:outline-none focus:ring-2 focus:ring-[#ff6b00]/40 focus:border-[#ff6b00] transition-all" />
 
                   <input type="email" placeholder={ps.email_placeholder} value={email}
