@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useLanguage } from "@/context/LanguageContext";
+import { trackWhatsAppClick } from "@/lib/gtm";
 
 export default function FloatingWhatsApp() {
   const { t } = useLanguage();
@@ -37,6 +38,10 @@ export default function FloatingWhatsApp() {
         className="relative group flex items-center justify-center w-[84px] h-[84px] md:w-14 md:h-14 rounded-full bg-[#25D366] text-white shadow-xl hover:bg-[#20bd5a] transition-colors"
         onMouseEnter={() => setShowTooltip(true)}
         onMouseLeave={() => setShowTooltip(false)}
+        onClick={() => trackWhatsAppClick({
+          click_location: "floating_button",
+          click_text: t.contact.whatsapp_tooltip,
+        })}
         aria-label={t.contact.whatsapp_tooltip}
       >
         {/* Pulse/Nabız efekti - arkadaki yayılan halka */}

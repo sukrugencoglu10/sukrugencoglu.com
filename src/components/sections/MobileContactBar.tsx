@@ -1,6 +1,7 @@
 "use client";
 
 import { useLanguage } from "@/context/LanguageContext";
+import { trackWhatsAppClick } from "@/lib/gtm";
 
 const socialLinks = [
   {
@@ -51,6 +52,10 @@ export default function MobileContactBar() {
           href={s.href}
           target="_blank"
           rel="noopener noreferrer"
+          onClick={s.name === "WhatsApp" ? () => trackWhatsAppClick({
+            click_location: "mobile_contact_bar",
+            click_text: s.label,
+          }) : undefined}
           className="flex items-center gap-3 group text-ink-secondary hover:text-[#a855f7] transition-colors"
         >
           <span className="p-2 rounded-lg bg-surface border border-border group-hover:bg-[#a855f7]/10 group-hover:border-[#a855f7]/30 transition-all">

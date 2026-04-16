@@ -4,6 +4,7 @@ import { useLanguage } from "@/context/LanguageContext";
 import Badge from "@/components/ui/Badge";
 import GrowthForm from "@/components/ui/GrowthForm";
 import type { ReactNode } from "react";
+import { trackWhatsAppClick } from "@/lib/gtm";
 
 const socialLinks = [
   {
@@ -54,6 +55,21 @@ export default function ContactSection({ pinnedAnons, mobileFirstRight, noWrappe
         <h3 className="text-lg font-bold text-ink">{t.contact.form_title}</h3>
       </div>
       <GrowthForm />
+      <p className="hidden lg:block text-ink-muted leading-relaxed max-w-md">{t.contact.subtitle}</p>
+      <div className="hidden lg:flex flex-col gap-2">
+        <p className="text-xs font-semibold uppercase tracking-wider text-ink-muted mb-2">{t.contact.or_reach}</p>
+        {socialLinks.map((s) => (
+          <a key={s.name} href={s.href} target="_blank" rel="noopener noreferrer"
+            onClick={s.name === "WhatsApp" ? () => trackWhatsAppClick({
+              click_location: "contact_section",
+              click_text: s.label,
+            }) : undefined}
+            className="flex items-center gap-3 group text-ink-secondary hover:text-[#a855f7] transition-colors">
+            <span className="p-2 rounded-lg bg-surface border border-border group-hover:bg-[#a855f7]/10 group-hover:border-[#a855f7]/30 transition-all">{s.icon}</span>
+            <span className="text-sm font-medium">{s.label}</span>
+          </a>
+        ))}
+      </div>
     </div>
   );
 

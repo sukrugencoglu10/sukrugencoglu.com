@@ -4,6 +4,7 @@ import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useLanguage } from "@/context/LanguageContext";
 import Badge from "@/components/ui/Badge";
+import { trackFormSubmission, trackWhatsAppClick } from "@/lib/gtm";
 
 const WA_ICON = (
   <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
@@ -55,7 +56,15 @@ export default function PlusServicesWizard({ showContactButton = false }: { show
         }),
       });
       const data = await res.json();
-      if (res.ok) { setSent(true); }
+      if (res.ok) {
+        trackFormSubmission({
+          form_name: "plus_services_form",
+          user_email: email,
+          service_category: selected,
+          form_destination: window.location.pathname,
+        });
+        setSent(true);
+      }
       else         { setError(data.error || ps.error_generic); }
     } catch {
       setError(ps.error_generic);
@@ -234,6 +243,11 @@ export default function PlusServicesWizard({ showContactButton = false }: { show
             href={`https://wa.me/905324072694?text=${encodeURIComponent(t.contact.whatsapp_message)}`}
             target="_blank"
             rel="noopener noreferrer"
+            onClick={() => trackWhatsAppClick({
+              click_location: "plus_services_widget",
+              click_text: ps.whatsapp_cta,
+              service_interest: selected,
+            })}
             className="flex items-center justify-center gap-2 w-full py-3.5 rounded-xl
               bg-[#ff6b00] hover:bg-[#e56000] text-white font-medium text-sm transition-all
               shadow-[0_4px_16px_rgba(255,107,0,0.35)] hover:shadow-[0_4px_20px_rgba(255,107,0,0.45)]"

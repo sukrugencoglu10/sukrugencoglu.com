@@ -4,6 +4,7 @@ import { useLanguage } from '@/context/LanguageContext';
 import MasonryGallery from '@/components/ui/MasonryGallery';
 import Link from 'next/link';
 import { getSlug } from '@/lib/slugs';
+import { trackWhatsAppClick } from '@/lib/gtm';
 
 export default function HeroSection() {
   const { t, lang } = useLanguage();
@@ -55,6 +56,10 @@ export default function HeroSection() {
             href={`https://wa.me/905324072694?text=${encodeURIComponent(t.contact.whatsapp_message)}`}
             target="_blank"
             rel="noopener noreferrer"
+            onClick={() => trackWhatsAppClick({
+              click_location: "hero_cta",
+              click_text: t.hero.cta_primary,
+            })}
             className="bg-[#12b347] text-white py-[13px] px-[26px] rounded-[4px] no-underline font-semibold text-[0.9rem] inline-block transition-all duration-200 hover:bg-[#0e933a] hover:-translate-y-[2px]"
           >
             {t.hero.cta_primary}

@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useLanguage } from "@/context/LanguageContext";
+import { trackFormSubmission } from "@/lib/gtm";
 
 export default function GrowthForm() {
   const { t } = useLanguage();
@@ -40,6 +41,14 @@ export default function GrowthForm() {
       });
       const data = await response.json();
       if (response.ok) {
+        trackFormSubmission({
+          form_name: "growth_form",
+          user_email: formData.email,
+          service_category: formData.goal,
+          form_destination: window.location.pathname,
+          lead_quality_score: formData.budget,
+          industry: formData.industry
+        });
         setSent(true);
       } else {
         setError(data.error || gf.error_generic);
