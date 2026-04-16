@@ -5251,6 +5251,10 @@ function KisaNotlar() {
             .kisa-notlar-modal ol { list-style-type: decimal; padding-left: 2em; margin: 0.5em 0; display: block; }
             .kisa-notlar-modal b, .kisa-notlar-modal strong { font-weight: 800; }
             .kisa-notlar-modal i, .kisa-notlar-modal em { font-style: italic; }
+            .kisa-notlar-modal table { border-collapse: collapse; width: 100%; margin: 0.75em 0; display: table; }
+            .kisa-notlar-modal th { background: rgba(0,0,0,0.06); font-weight: 700; text-align: left; padding: 7px 12px; border: 1px solid rgba(0,0,0,0.12); font-size: 0.85em; }
+            .kisa-notlar-modal td { padding: 6px 12px; border: 1px solid rgba(0,0,0,0.1); font-size: 0.9em; vertical-align: top; }
+            .kisa-notlar-modal tr:nth-child(even) td { background: rgba(0,0,0,0.025); }
             
             .kisa-notlar-preview h1, .kisa-notlar-preview font[size="6"] { font-size: 1.25em; font-weight: bold; margin: 0; line-height: 1.2; display: block; }
             .kisa-notlar-preview h2, .kisa-notlar-preview font[size="5"] { font-size: 1.1em; font-weight: bold; margin: 0; line-height: 1.2; display: block; }
@@ -5260,6 +5264,9 @@ function KisaNotlar() {
             .kisa-notlar-preview ol { list-style-type: decimal; padding-left: 1.5em; margin: 0; display: block; }
             .kisa-notlar-preview b, .kisa-notlar-preview strong { font-weight: 800; }
             .kisa-notlar-preview i, .kisa-notlar-preview em { font-style: italic; }
+            .kisa-notlar-preview table { border-collapse: collapse; width: 100%; margin: 0.3em 0; display: table; font-size: 0.8em; }
+            .kisa-notlar-preview th { background: rgba(0,0,0,0.06); font-weight: 700; text-align: left; padding: 4px 8px; border: 1px solid rgba(0,0,0,0.12); }
+            .kisa-notlar-preview td { padding: 3px 8px; border: 1px solid rgba(0,0,0,0.1); vertical-align: top; }
           `}</style>
           {(() => {
             const activeNote = notes.find(n => n.id === expandedId)
@@ -5303,15 +5310,20 @@ function KisaNotlar() {
                     if (html) {
                       const parser = new DOMParser();
                       const doc = parser.parseFromString(html, 'text/html');
-                      const cleanNode = (node) => {
+                    const cleanNode = (node) => {
                         if (node.nodeType === 3) return document.createTextNode(node.textContent);
                         if (node.nodeType !== 1) return null;
                         const tag = node.tagName.toUpperCase();
                         let target = tag;
-                        const allowed = ['H1','H2','H3','P','UL','OL','LI','B','STRONG','I','EM','U','BR','DIV'];
+                        const allowed = ['H1','H2','H3','P','UL','OL','LI','B','STRONG','I','EM','U','BR','DIV','TABLE','THEAD','TBODY','TR','TD','TH'];
                         if (['H4','H5','H6'].includes(tag)) target = 'H3';
                         if (allowed.includes(target)) {
                           const res = document.createElement(target);
+                          // TD/TH için colspan/rowspan koru
+                          if (target === 'TD' || target === 'TH') {
+                            if (node.getAttribute('colspan')) res.setAttribute('colspan', node.getAttribute('colspan'));
+                            if (node.getAttribute('rowspan')) res.setAttribute('rowspan', node.getAttribute('rowspan'));
+                          }
                           node.childNodes.forEach(c => { const cl = cleanNode(c); if(cl) res.appendChild(cl); });
                           return res;
                         }
