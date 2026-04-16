@@ -2248,7 +2248,7 @@ function ReklamHiyerarsisi({
       .replace(/[ \t]+/g, ' ')      // çoklu boşluk → tek
       .replace(/\n[ \t]+/g, '\n')   // satır başı boşlukları temizle
       .replace(/[ \t]+\n/g, '\n')   // satır sonu boşluklarını temizle
-      .replace(/\n{2,}/g, '\n')     // art arda 2 veya daha fazla boş satırı TEK satıra indir
+      .replace(/\n{3,}/g, '\n\n')   // 3 ve üzeri boşluğu 2'ye indir (paragrafları koru)
       .trim()
   }
 
@@ -2263,7 +2263,7 @@ function ReklamHiyerarsisi({
     e.preventDefault()
 
     // Güvenlik katmanı: Düz metinden gelse dahi çift/gereksiz boşlukları temizle
-    text = text.replace(/\r\n/g, '\n').replace(/\n{2,}/g, '\n')
+    text = text.replace(/\r\n/g, '\n').replace(/\n{3,}/g, '\n\n')
 
     const el = e.target
     const before = currentVal.slice(0, el.selectionStart)
@@ -5243,19 +5243,21 @@ function KisaNotlar() {
             .kisa-notlar-modal::-webkit-scrollbar { display: none !important; width: 0 !important; height: 0 !important; }
             .kisa-notlar-modal { scrollbar-width: none !important; -ms-overflow-style: none !important; }
             
-            .kisa-notlar-modal h1, .kisa-notlar-modal font[size="6"] { font-size: 2em; font-weight: 800; margin: 0.6em 0; line-height: 1.2; display: inline-block; }
-            .kisa-notlar-modal h2, .kisa-notlar-modal font[size="5"] { font-size: 1.5em; font-weight: 700; margin: 0.7em 0; line-height: 1.3; display: inline-block; }
-            .kisa-notlar-modal h3, .kisa-notlar-modal font[size="4"] { font-size: 1.17em; font-weight: 600; margin: 0.8em 0; line-height: 1.4; display: inline-block; }
-            .kisa-notlar-modal p, .kisa-notlar-modal font[size="3"] { font-size: 1em; font-weight: 400; }
-            .kisa-notlar-modal ul { list-style-type: disc; padding-left: 2em; margin: 1em 0; }
+            .kisa-notlar-modal h1, .kisa-notlar-modal font[size="6"] { font-size: 2em; font-weight: 800; margin: 0.6em 0; line-height: 1.2; display: block; }
+            .kisa-notlar-modal h2, .kisa-notlar-modal font[size="5"] { font-size: 1.5em; font-weight: 700; margin: 0.7em 0; line-height: 1.3; display: block; }
+            .kisa-notlar-modal h3, .kisa-notlar-modal font[size="4"] { font-size: 1.17em; font-weight: 600; margin: 0.8em 0; line-height: 1.4; display: block; }
+            .kisa-notlar-modal p, .kisa-notlar-modal font[size="3"] { font-size: 1em; font-weight: 400; margin: 0.8em 0; display: block; }
+            .kisa-notlar-modal ul { list-style-type: disc; padding-left: 2em; margin: 1em 0; display: block; }
+            .kisa-notlar-modal ol { list-style-type: decimal; padding-left: 2em; margin: 1em 0; display: block; }
             .kisa-notlar-modal b, .kisa-notlar-modal strong { font-weight: 800; }
             .kisa-notlar-modal i, .kisa-notlar-modal em { font-style: italic; }
             
-            .kisa-notlar-preview h1, .kisa-notlar-preview font[size="6"] { font-size: 1.25em; font-weight: bold; margin: 0.2em 0; line-height: 1.2; }
-            .kisa-notlar-preview h2, .kisa-notlar-preview font[size="5"] { font-size: 1.1em; font-weight: bold; margin: 0.2em 0; line-height: 1.2; }
-            .kisa-notlar-preview h3, .kisa-notlar-preview font[size="4"] { font-size: 1em; font-weight: bold; margin: 0.2em 0; line-height: 1.2; }
-            .kisa-notlar-preview p, .kisa-notlar-preview font[size="3"] { font-size: 1em; font-weight: 400; }
-            .kisa-notlar-preview ul { list-style-type: disc; padding-left: 1.5em; margin: 0.2em 0; }
+            .kisa-notlar-preview h1, .kisa-notlar-preview font[size="6"] { font-size: 1.25em; font-weight: bold; margin: 0.2em 0; line-height: 1.2; display: block; }
+            .kisa-notlar-preview h2, .kisa-notlar-preview font[size="5"] { font-size: 1.1em; font-weight: bold; margin: 0.2em 0; line-height: 1.2; display: block; }
+            .kisa-notlar-preview h3, .kisa-notlar-preview font[size="4"] { font-size: 1em; font-weight: bold; margin: 0.2em 0; line-height: 1.2; display: block; }
+            .kisa-notlar-preview p, .kisa-notlar-preview font[size="3"] { font-size: 1em; font-weight: 400; margin: 0.4em 0; display: block; }
+            .kisa-notlar-preview ul { list-style-type: disc; padding-left: 1.5em; margin: 0.2em 0; display: block; }
+            .kisa-notlar-preview ol { list-style-type: decimal; padding-left: 1.5em; margin: 0.2em 0; display: block; }
             .kisa-notlar-preview b, .kisa-notlar-preview strong { font-weight: 800; }
             .kisa-notlar-preview i, .kisa-notlar-preview em { font-style: italic; }
           `}</style>
@@ -5296,9 +5298,35 @@ function KisaNotlar() {
                   }}
                   onPaste={(e) => {
                     e.preventDefault();
+                    const html = e.clipboardData.getData('text/html');
                     const text = e.clipboardData.getData('text/plain');
-                    const html = text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/\n/g, '<br>');
-                    document.execCommand('insertHTML', false, html);
+                    if (html) {
+                      const parser = new DOMParser();
+                      const doc = parser.parseFromString(html, 'text/html');
+                      const cleanNode = (node) => {
+                        if (node.nodeType === 3) return document.createTextNode(node.textContent);
+                        if (node.nodeType !== 1) return null;
+                        const tag = node.tagName.toUpperCase();
+                        let target = tag;
+                        const allowed = ['H1','H2','H3','P','UL','OL','LI','B','STRONG','I','EM','U','BR','DIV'];
+                        if (['H4','H5','H6'].includes(tag)) target = 'H3';
+                        if (allowed.includes(target)) {
+                          const res = document.createElement(target);
+                          node.childNodes.forEach(c => { const cl = cleanNode(c); if(cl) res.appendChild(cl); });
+                          return res;
+                        }
+                        const frag = document.createDocumentFragment();
+                        node.childNodes.forEach(c => { const cl = cleanNode(c); if(cl) frag.appendChild(cl); });
+                        return frag;
+                      };
+                      const cleaned = cleanNode(doc.body);
+                      const wrap = document.createElement('div');
+                      wrap.appendChild(cleaned);
+                      document.execCommand('insertHTML', false, wrap.innerHTML);
+                    } else {
+                      const escaped = text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/\n/g, '<br>');
+                      document.execCommand('insertHTML', false, escaped);
+                    }
                   }}
                   dangerouslySetInnerHTML={{ __html: activeNote.content }}
                   className="kisa-notlar-modal"
