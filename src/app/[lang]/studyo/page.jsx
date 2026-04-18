@@ -5078,16 +5078,16 @@ function ReklamHiyerarsisiHaritasi() {
         ) : selectedTerm ? (            <>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                  <div style={{ width: 8, height: 8, borderRadius: 2, background: (RH_CAT_COLORS[selectedTerm.cat] || RH_CAT_COLORS['web']).stripe, flexShrink: 0 }} />
-                  <span style={{ fontSize: 11, color: (RH_CAT_COLORS[selectedTerm.cat] || RH_CAT_COLORS['web']).stripe, fontWeight: 600 }}>
+                  <div style={{ width: 9, height: 9, borderRadius: 2, background: (RH_CAT_COLORS[selectedTerm.cat] || RH_CAT_COLORS['web']).stripe, flexShrink: 0 }} />
+                  <span style={{ fontSize: 12, color: (RH_CAT_COLORS[selectedTerm.cat] || RH_CAT_COLORS['web']).stripe, fontWeight: 700 }}>
                     {(RH_CAT_LABELS[selectedTerm.cat] || 'Kategori').toUpperCase()}
                   </span>
                 </div>
                 <button
                   onClick={() => setEditId(prev => prev === selectedTerm.id ? null : selectedTerm.id)}
                   style={{
-                    fontSize: 11, cursor: 'pointer', padding: '4px 10px',
-                    borderRadius: 6, border: '0.5px solid #d0d0d0', background: '#fff', color: '#555'
+                    fontSize: 12, cursor: 'pointer', padding: '5px 12px',
+                    borderRadius: 6, border: '1px solid #d0d0d0', background: '#fff', color: '#444', fontWeight: 500
                   }}
                 >
                   {editId === selectedTerm.id ? 'Bitti' : 'Düzenle'}
@@ -5097,23 +5097,23 @@ function ReklamHiyerarsisiHaritasi() {
               {editId === selectedTerm.id ? (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
                   <div>
-                    <label style={{ fontSize: 11, color: '#888', display: 'block', marginBottom: 4 }}>Başlık</label>
+                    <label style={{ fontSize: 12, color: '#666', display: 'block', marginBottom: 5, fontWeight: 600 }}>Başlık</label>
                     <input
                       value={selectedTerm.abbr}
                       onChange={e => setTerms(prev => prev.map(t => t.id === selectedTerm.id ? { ...t, abbr: e.target.value } : t))}
-                      style={{ width: '100%', padding: '6px 10px', fontSize: 13, border: '0.5px solid #ccc', borderRadius: 6, outline: 'none' }}
+                      style={{ width: '100%', padding: '8px 10px', fontSize: 14, border: '1px solid #ddd', borderRadius: 7, outline: 'none' }}
                     />
                   </div>
                   <div>
-                    <label style={{ fontSize: 11, color: '#888', display: 'block', marginBottom: 4 }}>Alt Başlık</label>
+                    <label style={{ fontSize: 12, color: '#666', display: 'block', marginBottom: 5, fontWeight: 600 }}>Alt Başlık</label>
                     <input
                       value={selectedTerm.sub}
                       onChange={e => setTerms(prev => prev.map(t => t.id === selectedTerm.id ? { ...t, sub: e.target.value } : t))}
-                      style={{ width: '100%', padding: '6px 10px', fontSize: 13, border: '0.5px solid #ccc', borderRadius: 6, outline: 'none' }}
+                      style={{ width: '100%', padding: '8px 10px', fontSize: 14, border: '1px solid #ddd', borderRadius: 7, outline: 'none' }}
                     />
                   </div>
                   <div>
-                    <label style={{ fontSize: 11, color: '#888', display: 'block', marginBottom: 4 }}>Renk</label>
+                    <label style={{ fontSize: 12, color: '#666', display: 'block', marginBottom: 5, fontWeight: 600 }}>Renk</label>
                     <div style={{ display: 'flex', flexWrap: 'wrap', gap: 5 }}>
                       {Object.entries(RH_CAT_COLORS).map(([cat, colors]) => (
                         <div
@@ -5137,32 +5137,29 @@ function ReklamHiyerarsisiHaritasi() {
                   {/* TEXTAREA_MOVED */}
 
                   <div style={{ borderTop: '0.5px solid #eee', paddingTop: 12 }}>
-                    <label style={{ fontSize: 11, color: '#888', display: 'block', marginBottom: 8, fontWeight: 600 }}>BAĞLANTI YÖNETİMİ</label>
+                    <label style={{ fontSize: 12, color: '#666', display: 'block', marginBottom: 10, fontWeight: 700, letterSpacing: '0.04em' }}>BAĞLANTI YÖNETİMİ</label>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                      <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-                        <div style={{ padding: '5px 10px', fontSize: 12, background: '#f0f0f0', border: '0.5px solid #ccc', borderRadius: 6, fontWeight: 700, whiteSpace: 'nowrap', color: '#333' }}>
-                          A: {selectedTerm.abbr}
-                        </div>
-                        <span style={{ fontSize: 16, color: '#999' }}>→</span>
-                        <select
-                          id="rh-target-select"
-                          style={{ flex: 1, padding: '6px 10px', fontSize: 12, border: '0.5px solid #ccc', borderRadius: 6, outline: 'none', background: '#fff' }}
-                        >
-                          <option value="">B kutusunu seç...</option>
-                          {terms.filter(t => t.id !== selectedTerm.id).map(t => (
-                            <option key={t.id} value={t.id}>{t.abbr} ({t.sub})</option>
-                          ))}
-                        </select>
-                        <button
-                          onClick={() => {
-                            const sel = document.getElementById('rh-target-select')
-                            if (sel.value) handleAddConnection(sel.value)
-                          }}
-                          style={{ padding: '6px 14px', fontSize: 12, background: '#f5f5f5', border: '0.5px solid #ccc', borderRadius: 6, cursor: 'pointer' }}
-                        >
-                          Ekle
-                        </button>
+                      <div style={{ fontSize: 12, color: '#888', paddingLeft: 2 }}>
+                        <span style={{ fontWeight: 700, color: '#444' }}>A:</span> {selectedTerm.abbr} &nbsp;→&nbsp; B seç:
                       </div>
+                      <select
+                        id="rh-target-select"
+                        style={{ width: '100%', padding: '7px 10px', fontSize: 13, border: '1px solid #ddd', borderRadius: 7, outline: 'none', background: '#fff', color: '#333' }}
+                      >
+                        <option value="">— Hedef kutuyu seç —</option>
+                        {terms.filter(t => t.id !== selectedTerm.id).map(t => (
+                          <option key={t.id} value={t.id}>{t.abbr} ({t.sub})</option>
+                        ))}
+                      </select>
+                      <button
+                        onClick={() => {
+                          const sel = document.getElementById('rh-target-select')
+                          if (sel && sel.value) { handleAddConnection(sel.value); sel.value = '' }
+                        }}
+                        style={{ width: '100%', padding: '8px 14px', fontSize: 13, fontWeight: 600, background: '#111', color: '#fff', border: 'none', borderRadius: 7, cursor: 'pointer' }}
+                      >
+                        + Ok Ekle
+                      </button>
                     </div>
 
                     <div style={{ marginTop: 12, display: 'flex', flexDirection: 'column', gap: 6 }}>
@@ -5170,9 +5167,9 @@ function ReklamHiyerarsisiHaritasi() {
                         const target = termMap[c.to]
                         if (!target) return null
                         return (
-                          <div key={c.to} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '4px 8px', background: '#f9f9f9', border: '0.5px solid #eee', borderRadius: 6, fontSize: 11 }}>
-                            <span>→ {target.abbr}</span>
-                            <button onClick={() => handleRemoveConnection(c.to)} style={{ border: 'none', background: 'none', cursor: 'pointer', color: '#ff4d4f' }}>Kaldır</button>
+                          <div key={c.to} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '6px 10px', background: '#f5f5f5', border: '0.5px solid #e8e8e8', borderRadius: 7, fontSize: 13 }}>
+                            <span style={{ color: '#333' }}>→ {target.abbr}</span>
+                            <button onClick={() => handleRemoveConnection(c.to)} style={{ border: 'none', background: 'none', cursor: 'pointer', color: '#ff4d4f', fontSize: 12 }}>Kaldır</button>
                           </div>
                         )
                       })}
@@ -5188,7 +5185,7 @@ function ReklamHiyerarsisiHaritasi() {
                           setSelectedIds([]); setEditId(null);
                         }
                       }}
-                      style={{ color: '#ff4d4f', fontSize: 11, background: 'none', border: 'none', cursor: 'pointer', textDecoration: 'underline' }}
+                      style={{ color: '#ff4d4f', fontSize: 13, background: 'none', border: 'none', cursor: 'pointer', textDecoration: 'underline' }}
                     >
                       Kutuyu Tamamen Sil
                     </button>
@@ -5196,10 +5193,10 @@ function ReklamHiyerarsisiHaritasi() {
                 </div>
               ) : (
                 <>
-                  <div style={{ fontSize: 18, fontWeight: 700, color: (RH_CAT_COLORS[selectedTerm.cat] || RH_CAT_COLORS['web']).stripe, marginBottom: 4, whiteSpace: 'pre-line' }}>
+                  <div style={{ fontSize: 19, fontWeight: 700, color: (RH_CAT_COLORS[selectedTerm.cat] || RH_CAT_COLORS['web']).stripe, marginBottom: 6, whiteSpace: 'pre-line' }}>
                     {selectedTerm.abbr}
                   </div>
-                  <div style={{ fontSize: 12, color: '#888', marginBottom: 12 }}>{selectedTerm.sub}</div>
+                  <div style={{ fontSize: 14, color: '#666', marginBottom: 12 }}>{selectedTerm.sub}</div>
                   {/* PREVIEW_MOVED */}
                 </>
               )}
