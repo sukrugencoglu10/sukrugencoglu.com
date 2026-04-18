@@ -5470,6 +5470,220 @@ function KisaNotlar() {
 }
 
 // ─── Araç listesi ─────────────────────────────────────────────────────────────
+// ─── NAA Blok Zihin Haritası ──────────────────────────────────────────────────
+function NaaHaritasi() {
+  const containerRef = useRef(null)
+  const [canvasDim, setCanvasDim] = useState({ w: 880, h: 555 })
+  const [hovered, setHovered] = useState(null)
+  const [selectedIds, setSelectedIds] = useState([])
+  const [selectionBox, setSelectionBox] = useState(null)
+  const [terms, setTerms] = useState([])
+  const [connections, setConnections] = useState([])
+  const [dragging, setDragging] = useState(null)
+  const [editId, setEditId] = useState(null)
+  const [saving, setSaving] = useState(false)
+  const [lastSaved, setLastSaved] = useState(null)
+
+  useEffect(() => {
+    fetch('/api/naa-harita')
+      .then(r => r.json())
+      .then(data => {
+        if (data && data.terms) {
+          setTerms(data.terms)
+          setConnections(data.connections || [])
+          if (data.metadata?.w) setCanvasDim({ w: data.metadata.w, h: data.metadata.h || 555 })
+        }
+      })
+      .catch(err => console.error('NAA yükleme hatası:', err))
+  }, [])
+
+  const handleSave = async () => {
+    setSaving(true)
+    try {
+      const res = await fetch('/api/naa-harita', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ terms, connections, metadata: canvasDim }),
+      })
+      const result = await res.json()
+      if (res.ok && result.ok) setLastSaved(new Date().toLocaleTimeString())
+      else alert('Kaydedilemedi: ' + (result.error || 'Bilinmeyen hata'))
+    } catch (err) { alert('Hata: ' + err.message) }
+    setSaving(false)
+  }
+
+  useEffect(() => {
+    const onMove = (e) => {
+      if (!dragging) return
+      const dx = e.clientX - dragging.startMouseX, dy = e.clientY - dragging.startMouseY
+      setTerms(prev => prev.map(t => dragging.startPositions?.[t.id] ? { ...t, x: dragging.startPositions[t.id].x + dx, y: dragging.startPositions[t.id].y + dy } : t))
+    }
+    const onUp = () => setDragging(null)
+    if (dragging) { window.addEventListener('mousemove', onMove); window.addEventListener('mouseup', onUp) }
+    return () => { window.removeEventListener('mousemove', onMove); window.removeEventListener('mouseup', onUp) }
+  }, [dragging])
+
+  const termMap = Object.fromEntries(terms.map(t => [t.id, t]))
+  const selectedTerm = selectedIds.length === 1 ? termMap[selectedIds[0]] : null
+  const activeIds = new Set(selectedIds)
+  if (hovered) activeIds.add(hovered)
+  const connectedIds = activeIds.size > 0 ? new Set([...activeIds, ...connections.filter(c => activeIds.has(c.from)).map(c => c.to), ...connections.filter(c => activeIds.has(c.to)).map(c => c.from)]) : null
+
+  const handleAddNode = () => {
+    const id = 'naa_' + Math.random().toString(36).substr(2, 9)
+    const node = { id, abbr: 'Yeni Düğüm', sub: 'Alt başlık...', cat: 'frontend', x: 300 + Math.random() * 100, y: 200 + Math.random() * 100, desc: 'Açıklama...' }
+    setTerms([...terms, node]); setSelectedIds([id]); setEditId(id)
+  }
+  const handleAddConnection = (targetId) => {
+    if (selectedIds.length !== 1 || !targetId || selectedIds[0] === targetId) return
+    if (connections.find(c => c.from === selectedIds[0] && c.to === targetId)) return
+    setConnections([...connections, { from: selectedIds[0], to: targetId }])
+  }
+  const handleRemoveConnection = (targetId) => setConnections(connections.filter(c => !(c.from === selectedIds[0] && c.to === targetId)))
+
+  return (
+    <div style={{ padding: '2rem 1.25rem', fontFamily: 'inherit' }}>
+      <div style={{ marginBottom: '1.25rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <div>
+          <h1 style={{ fontSize: 22, fontWeight: 500, margin: 0 }}>NAA Blok</h1>
+          <p style={{ fontSize: 13, color: '#888', marginTop: 4 }}>Zihin haritası — düğüm ekle, bağlantı kur, kaydet</p>
+        </div>
+        <button onClick={handleAddNode} style={{ background: '#fff', border: '1px solid #ddd', borderRadius: 8, padding: '6px 12px', fontSize: 12, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6, color: '#444' }}>
+          <span style={{ fontSize: 16, fontWeight: 'bold' }}>+</span> Yeni Düğüm Ekle
+        </button>
+      </div>
+
+      <div style={{ display: 'flex', gap: 14, marginBottom: '1.25rem', flexWrap: 'wrap' }}>
+        {Object.entries(KB_CAT_LABELS).map(([cat, label]) => (
+          <div key={cat} style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 12, color: '#555' }}>
+            <div style={{ width: 10, height: 10, borderRadius: 2, background: KB_CAT_COLORS[cat].stripe }} />
+            {label}
+          </div>
+        ))}
+      </div>
+
+      <div style={{ display: 'flex', gap: 16, alignItems: 'flex-start' }}>
+        <div ref={containerRef} style={{ flex: 1, overflow: 'auto', minHeight: 400, background: '#fafafa', border: '0.5px solid #e8e8e8', borderRadius: 12, padding: '8px 0 10px' }}>
+          <div style={{ position: 'relative', width: canvasDim.w, height: canvasDim.h }}
+            onMouseDown={(e) => { if (e.button !== 0) return; if (e.target !== e.currentTarget && e.target.tagName !== 'svg') return; const rect = e.currentTarget.getBoundingClientRect(); const x = e.clientX - rect.left, y = e.clientY - rect.top; setSelectionBox({ startX: x, startY: y, currX: x, currY: y }); if (!e.shiftKey) setSelectedIds([]); setEditId(null) }}
+            onMouseMove={(e) => { if (selectionBox) { const rect = e.currentTarget.getBoundingClientRect(); setSelectionBox({ ...selectionBox, currX: e.clientX - rect.left, currY: e.clientY - rect.top }) } }}
+            onMouseUp={(e) => { if (selectionBox) { const x1 = Math.min(selectionBox.startX, selectionBox.currX), x2 = Math.max(selectionBox.startX, selectionBox.currX), y1 = Math.min(selectionBox.startY, selectionBox.currY), y2 = Math.max(selectionBox.startY, selectionBox.currY); const newly = terms.filter(t => t.x > x1 && t.x < x2 && t.y > y1 && t.y < y2).map(t => t.id); if (e.shiftKey) setSelectedIds(prev => Array.from(new Set([...prev, ...newly]))); else setSelectedIds(newly); setSelectionBox(null) } }}
+            onMouseLeave={() => setSelectionBox(null)}
+          >
+            <svg width={canvasDim.w} height={canvasDim.h} style={{ position: 'absolute', top: 0, left: 0, pointerEvents: 'none', overflow: 'visible', zIndex: 5 }}>
+              <defs>
+                <marker id="naa-arr" markerWidth="7" markerHeight="7" refX="7" refY="3.5" orient="auto"><path d="M0,0 L0,7 L7,3.5 z" fill="#ccc" /></marker>
+                <marker id="naa-arr-hi" markerWidth="7" markerHeight="7" refX="7" refY="3.5" orient="auto"><path d="M0,0 L0,7 L7,3.5 z" fill="#777" /></marker>
+              </defs>
+              {connections.map((conn, i) => {
+                const from = termMap[conn.from], to = termMap[conn.to]
+                if (!from || !to) return null
+                const p1 = kbEdgePoint(from, to), p2 = kbEdgePoint(to, from)
+                const isActive = activeIds.has(conn.from) || activeIds.has(conn.to)
+                return <line key={i} x1={p1.x} y1={p1.y} x2={p2.x} y2={p2.y} stroke={isActive ? '#777' : '#ddd'} strokeWidth={isActive ? 2 : 1.5} markerEnd={isActive ? 'url(#naa-arr-hi)' : 'url(#naa-arr)'} />
+              })}
+            </svg>
+            {selectionBox && <div style={{ position: 'absolute', border: '1px solid rgba(29,158,117,0.5)', background: 'rgba(29,158,117,0.1)', left: Math.min(selectionBox.startX, selectionBox.currX), top: Math.min(selectionBox.startY, selectionBox.currY), width: Math.abs(selectionBox.currX - selectionBox.startX), height: Math.abs(selectionBox.currY - selectionBox.startY), pointerEvents: 'none', zIndex: 10, borderRadius: 4 }} />}
+            {terms.map(term => {
+              const colors = KB_CAT_COLORS[term.cat] || KB_CAT_COLORS.frontend
+              const isHovered = hovered === term.id, isSelected = selectedIds.includes(term.id), isDimmed = connectedIds && !connectedIds.has(term.id), isDragging = dragging?.id === term.id
+              return (
+                <div key={term.id}
+                  onMouseEnter={() => setHovered(term.id)} onMouseLeave={() => setHovered(null)}
+                  onClick={(e) => { e.stopPropagation(); if (dragging && (Math.abs(e.clientX - dragging.startMouseX) > 5 || Math.abs(e.clientY - dragging.startMouseY) > 5)) return }}
+                  onMouseDown={(e) => {
+                    if (e.button !== 0) return; e.stopPropagation()
+                    let cur = selectedIds; if (!selectedIds.includes(term.id)) { cur = e.shiftKey ? [...selectedIds, term.id] : [term.id]; setSelectedIds(cur); if (editId !== term.id) setEditId(null) }
+                    const pos = {}; terms.forEach(t => { if (cur.includes(t.id)) pos[t.id] = { x: t.x, y: t.y } })
+                    setDragging({ startMouseX: e.clientX, startMouseY: e.clientY, startPositions: pos, id: term.id })
+                  }}
+                  style={{ position: 'absolute', left: term.x - KB_NODE_W / 2, top: term.y - KB_NODE_H / 2, width: KB_NODE_W, height: KB_NODE_H, background: isSelected ? colors.stripe + '18' : colors.bg, border: `${isSelected ? 2 : 1}px solid ${isSelected ? colors.stripe : isHovered ? colors.stripe : colors.border}`, borderRadius: 8, padding: '6px 10px 6px 12px', opacity: isDimmed && !isDragging ? 0.22 : 1, transition: isDragging ? 'none' : 'all 0.13s', zIndex: isDragging ? 4 : isSelected ? 3 : isHovered ? 2 : 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', cursor: isDragging ? 'grabbing' : 'grab', userSelect: 'none', boxSizing: 'border-box', overflow: 'hidden' }}
+                >
+                  <div style={{ fontSize: 13, fontWeight: 700, color: colors.stripe, lineHeight: 1.2, marginBottom: 3, whiteSpace: 'pre-line' }}>{term.abbr}</div>
+                  <div style={{ fontSize: 10, color: '#555', lineHeight: 1.3 }}>{term.sub}</div>
+                </div>
+              )
+            })}
+          </div>
+        </div>
+
+        <div style={{ width: 300, flexShrink: 0, background: '#fff', border: '0.5px solid #e8e8e8', borderRadius: 12, padding: '1.25rem', minHeight: 200, maxHeight: '80vh', overflowY: 'auto', alignSelf: 'flex-start', position: 'sticky', top: 80, transition: 'all 0.2s', boxShadow: selectedTerm ? '0 8px 24px rgba(0,0,0,0.05)' : 'none' }}>
+          {selectedIds.length > 1 ? (
+            <div style={{ padding: '2rem 1rem', textAlign: 'center' }}>
+              <div style={{ fontSize: 28, color: '#1D9E75', marginBottom: 12 }}>✓</div>
+              <div style={{ fontSize: 18, fontWeight: 700, marginBottom: 8 }}>{selectedIds.length} Düğüm Seçili</div>
+              <button onClick={() => { if (confirm(`Seçili ${selectedIds.length} düğümü silmek istiyor musunuz?`)) { setConnections(connections.filter(c => !selectedIds.includes(c.from) && !selectedIds.includes(c.to))); setTerms(terms.filter(t => !selectedIds.includes(t.id))); setSelectedIds([]); setEditId(null) } }} style={{ padding: '10px 14px', background: '#ffefef', border: '1px solid #ffccc7', color: '#f5222d', borderRadius: 8, cursor: 'pointer', fontWeight: 600, fontFamily: 'inherit' }}>Toplu Sil</button>
+            </div>
+          ) : selectedTerm ? (
+            <>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <div style={{ width: 8, height: 8, borderRadius: 2, background: KB_CAT_COLORS[selectedTerm.cat]?.stripe || '#888', flexShrink: 0 }} />
+                  <span style={{ fontSize: 11, color: KB_CAT_COLORS[selectedTerm.cat]?.stripe || '#888', fontWeight: 600 }}>{(KB_CAT_LABELS[selectedTerm.cat] || selectedTerm.cat).toUpperCase()}</span>
+                </div>
+                <button onClick={() => setEditId(prev => prev === selectedTerm.id ? null : selectedTerm.id)} style={{ fontSize: 11, cursor: 'pointer', padding: '4px 10px', borderRadius: 6, border: '0.5px solid #d0d0d0', background: '#fff', color: '#555' }}>{editId === selectedTerm.id ? 'Bitti' : 'Düzenle'}</button>
+              </div>
+              {editId === selectedTerm.id ? (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+                  <div><label style={{ fontSize: 11, color: '#888', display: 'block', marginBottom: 4 }}>Başlık</label><input value={selectedTerm.abbr} onChange={e => setTerms(prev => prev.map(t => t.id === selectedTerm.id ? { ...t, abbr: e.target.value } : t))} style={{ width: '100%', padding: '6px 10px', fontSize: 13, border: '0.5px solid #ccc', borderRadius: 6, outline: 'none' }} /></div>
+                  <div><label style={{ fontSize: 11, color: '#888', display: 'block', marginBottom: 4 }}>Alt Başlık</label><input value={selectedTerm.sub} onChange={e => setTerms(prev => prev.map(t => t.id === selectedTerm.id ? { ...t, sub: e.target.value } : t))} style={{ width: '100%', padding: '6px 10px', fontSize: 13, border: '0.5px solid #ccc', borderRadius: 6, outline: 'none' }} /></div>
+                  <div><label style={{ fontSize: 11, color: '#888', display: 'block', marginBottom: 4 }}>Renk</label><div style={{ display: 'flex', flexWrap: 'wrap', gap: 5 }}>{Object.entries(KB_CAT_COLORS).map(([cat, colors]) => (<div key={cat} onClick={() => setTerms(prev => prev.map(t => t.id === selectedTerm.id ? { ...t, cat } : t))} style={{ width: 26, height: 26, borderRadius: 6, cursor: 'pointer', background: colors.bg, border: selectedTerm.cat === cat ? `2.5px solid ${colors.stripe}` : `1.5px solid ${colors.border}`, display: 'flex', alignItems: 'flex-end', padding: '0 3px 3px', boxSizing: 'border-box' }}><div style={{ width: '100%', height: 3, borderRadius: 2, background: colors.stripe }} /></div>))}</div></div>
+                  <div style={{ borderTop: '0.5px solid #eee', paddingTop: 12 }}>
+                    <label style={{ fontSize: 11, color: '#888', display: 'block', marginBottom: 8, fontWeight: 600 }}>BAĞLANTI YÖNETİMİ</label>
+                    <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                      <div style={{ padding: '5px 10px', fontSize: 12, background: '#f0f0f0', border: '0.5px solid #ccc', borderRadius: 6, fontWeight: 700, whiteSpace: 'nowrap', color: '#333' }}>A: {selectedTerm.abbr}</div>
+                      <span style={{ fontSize: 16, color: '#999' }}>→</span>
+                      <select id="naa-target-select" style={{ flex: 1, padding: '6px 10px', fontSize: 12, border: '0.5px solid #ccc', borderRadius: 6, outline: 'none', background: '#fff' }}>
+                        <option value="">B düğümünü seç...</option>
+                        {terms.filter(t => t.id !== selectedTerm.id).map(t => (<option key={t.id} value={t.id}>{t.abbr} ({t.sub})</option>))}
+                      </select>
+                      <button onClick={() => { const sel = document.getElementById('naa-target-select'); if (sel.value) handleAddConnection(sel.value) }} style={{ padding: '6px 14px', fontSize: 12, background: '#f5f5f5', border: '0.5px solid #ccc', borderRadius: 6, cursor: 'pointer' }}>Ekle</button>
+                    </div>
+                    <div style={{ marginTop: 12, display: 'flex', flexDirection: 'column', gap: 6 }}>
+                      {connections.filter(c => c.from === selectedTerm.id).map(c => { const target = termMap[c.to]; if (!target) return null; return (<div key={c.to} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '4px 8px', background: '#f9f9f9', border: '0.5px solid #eee', borderRadius: 6, fontSize: 11 }}><span>→ {target.abbr}</span><button onClick={() => handleRemoveConnection(c.to)} style={{ border: 'none', background: 'none', cursor: 'pointer', color: '#ff4d4f' }}>Kaldır</button></div>) })}
+                    </div>
+                  </div>
+                  <div style={{ marginTop: 'auto', paddingTop: 12, borderTop: '0.5px solid #eee', display: 'flex', justifyContent: 'center' }}>
+                    <button onClick={() => { if (confirm('Bu düğümü silmek istiyor musunuz?')) { setConnections(connections.filter(c => c.from !== selectedTerm.id && c.to !== selectedTerm.id)); setTerms(terms.filter(t => t.id !== selectedTerm.id)); setSelectedIds([]); setEditId(null) } }} style={{ color: '#ff4d4f', fontSize: 11, background: 'none', border: 'none', cursor: 'pointer', textDecoration: 'underline' }}>Düğümü Sil</button>
+                  </div>
+                </div>
+              ) : (
+                <>
+                  <div style={{ fontSize: 18, fontWeight: 700, color: KB_CAT_COLORS[selectedTerm.cat]?.stripe || '#333', marginBottom: 4 }}>{selectedTerm.abbr}</div>
+                  <div style={{ fontSize: 12, color: '#888', marginBottom: 12 }}>{selectedTerm.sub}</div>
+                </>
+              )}
+            </>
+          ) : (
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: 160, gap: 8, color: '#ccc', textAlign: 'center' }}>
+              <div style={{ fontSize: 28 }}>◎</div>
+              <div style={{ fontSize: 12 }}>Bir düğüme tıkla,<br />düzenle veya bağlantı kur</div>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {selectedTerm && (
+        <div style={{ marginTop: 20, padding: 20, background: '#fff', border: '1px solid #e8e8e8', borderRadius: 12, boxShadow: '0 4px 12px rgba(0,0,0,0.03)' }}>
+          <div style={{ fontSize: 13, fontWeight: 700, color: '#888', marginBottom: 12, display: 'flex', alignItems: 'center', gap: 8 }}>
+            <span style={{ width: 12, height: 12, borderRadius: 3, background: KB_CAT_COLORS[selectedTerm.cat]?.stripe || '#888' }}></span>İÇERİK DÜZENLEME & DETAY
+          </div>
+          {editId === selectedTerm.id ? (
+            <textarea value={selectedTerm.desc} onChange={e => setTerms(prev => prev.map(t => t.id === selectedTerm.id ? { ...t, desc: e.target.value } : t))} style={{ width: '100%', minHeight: 400, padding: 12, fontSize: 14, lineHeight: 1.7, color: '#333', border: '0.5px solid #ccc', borderRadius: 8, outline: 'none', resize: 'vertical', fontFamily: 'monospace', background: '#f8f8f8' }} />
+          ) : (
+            <div style={{ fontSize: 14, color: '#333', lineHeight: 1.7, whiteSpace: 'pre-wrap', wordBreak: 'break-word', fontFamily: 'monospace', background: '#f8f8f8', padding: 16, borderRadius: 8, border: '0.5px solid #eee' }}>{selectedTerm.desc}</div>
+          )}
+        </div>
+      )}
+
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: 12, marginTop: 12 }}>
+        {lastSaved && <span style={{ fontSize: 11, color: '#1D9E75' }}>Kaydedildi: {lastSaved}</span>}
+        <button onClick={handleSave} disabled={saving} style={{ background: '#111', color: '#fff', border: 'none', borderRadius: 8, padding: '6px 14px', fontSize: 13, cursor: saving ? 'not-allowed' : 'pointer', opacity: saving ? 0.7 : 1, transition: 'all 0.2s' }}>{saving ? 'Kaydediliyor...' : 'Değişiklikleri Kaydet'}</button>
+      </div>
+    </div>
+  )
+}
+
 const TOOLS = [
   {
     id: 'reklam-hiyerarsisi-harita',
@@ -5524,6 +5738,12 @@ const TOOLS = [
     label: 'Kısa Notlar',
     icon: '📝',
     component: KisaNotlar,
+  },
+  {
+    id: 'naa-harita',
+    label: 'NAA Blok',
+    icon: '⬡',
+    component: NaaHaritasi,
   },
 ]
 
