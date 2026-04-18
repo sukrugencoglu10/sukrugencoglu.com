@@ -2,8 +2,10 @@
 
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import Link from "next/link";
 import { useLanguage } from "@/context/LanguageContext";
 import Badge from "@/components/ui/Badge";
+import { getSlug } from "@/lib/slugs";
 import { trackFormSubmissionPlus, trackWhatsAppClick } from "@/lib/gtm";
 
 const WA_ICON = (
@@ -13,7 +15,7 @@ const WA_ICON = (
 );
 
 export default function PlusServicesWizard({ showContactButton = false }: { showContactButton?: boolean }) {
-  const { t } = useLanguage();
+  const { t, lang } = useLanguage();
   const ps = t.plusServices;
 
   const [step, setStep]               = useState<1 | 2 | 3>(1);
@@ -161,6 +163,13 @@ export default function PlusServicesWizard({ showContactButton = false }: { show
                   >
                     + {otherLabel}
                   </button>
+
+                  <Link
+                    href={`/${lang}/${getSlug(lang, "contact")}`}
+                    className="mt-3 w-full py-3 rounded-xl bg-[#ff6b00] text-white text-sm font-semibold text-center block hover:bg-[#e56000] transition-colors"
+                  >
+                    {t.nav.cta}
+                  </Link>
                 </>
               )}
 

@@ -211,52 +211,32 @@ export default function HeroServiceCards() {
           )}
         </AnimatePresence>
 
-        {/* Bottom bar: dots + persistent CTA buttons */}
+        {/* Navigation dots */}
         <div
-          className="absolute flex items-center justify-between px-3"
-          style={{ bottom: 10, left: 0, right: 0, zIndex: 20, pointerEvents: "auto" }}
+          className="absolute flex gap-2 items-center"
+          style={{ bottom: 14, left: "50%", transform: "translateX(-50%)", zIndex: 20, pointerEvents: "auto" }}
         >
-          {/* Dots */}
-          <div className="flex gap-1.5 items-center">
-            {Array.from({ length: TOTAL }).map((_, i) => {
-              const card = i > 0 ? CARDS[i - 1] : null;
-              const isActive = i === active;
-              return (
-                <button
-                  key={i}
-                  onClick={() => { setActive(i); setPaused(false); }}
-                  style={{
-                    width: isActive ? 18 : 6,
-                    height: 6,
-                    borderRadius: 4,
-                    background: isActive ? (card?.color ?? "#a855f7") : "rgba(0,0,0,0.18)",
-                    border: "none",
-                    padding: 0,
-                    cursor: "pointer",
-                    transition: "all 0.3s ease",
-                  }}
-                  aria-label={i === 0 ? "Galeri" : CARDS[i - 1].badge}
-                />
-              );
-            })}
-          </div>
-
-          {/* CTA buttons — always visible */}
-          <div className="flex gap-1.5">
-            {CARDS.map((card) => (
+          {Array.from({ length: TOTAL }).map((_, i) => {
+            const card = i > 0 ? CARDS[i - 1] : null;
+            const isActive = i === active;
+            return (
               <button
-                key={card.id}
-                onClick={(e) => { e.stopPropagation(); openModal(card.id); }}
+                key={i}
+                onClick={() => { setActive(i); setPaused(false); }}
                 style={{
-                  background: card.color,
-                  boxShadow: `0 2px 8px ${card.color}50`,
+                  width: isActive ? 20 : 7,
+                  height: 7,
+                  borderRadius: 4,
+                  background: isActive ? (card?.color ?? "#a855f7") : "rgba(0,0,0,0.2)",
+                  border: "none",
+                  padding: 0,
+                  cursor: "pointer",
+                  transition: "all 0.3s ease",
                 }}
-                className="text-white text-[10px] font-bold px-2.5 py-1.5 rounded-lg border-none cursor-pointer transition-opacity hover:opacity-85 whitespace-nowrap"
-              >
-                {card.icon} {card.badge}
-              </button>
-            ))}
-          </div>
+                aria-label={i === 0 ? "Galeri" : CARDS[i - 1].badge}
+              />
+            );
+          })}
         </div>
       </div>
 
