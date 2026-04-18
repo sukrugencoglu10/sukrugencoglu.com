@@ -209,7 +209,9 @@ function GtmZihinHaritasi() {
   const [editId, setEditId] = useState(null)
   const [saving, setSaving] = useState(false)
   const [lastSaved, setLastSaved] = useState(null)
-
+  const [canvasZoom, setCanvasZoom] = useState(1)
+  const canvasZoomRef = useRef(1)
+  const setZoom = (z) => { canvasZoomRef.current = z; setCanvasZoom(z) }
 
   useEffect(() => {
     fetch('/api/gtm-ekosistemi')
@@ -225,6 +227,21 @@ function GtmZihinHaritasi() {
         }
       })
       .catch(err => console.error('GTM yükleme hatası:', err))
+  }, [])
+
+  useEffect(() => {
+    const handleWheel = (e) => {
+      if (containerRef.current && containerRef.current.contains(e.target)) {
+        if (e.ctrlKey || e.metaKey) {
+          e.preventDefault()
+          const delta = e.deltaY > 0 ? -0.1 : 0.1
+          const next = parseFloat(Math.min(Math.max(canvasZoomRef.current + delta, 0.3), 2.5).toFixed(2))
+          setZoom(next)
+        }
+      }
+    }
+    window.addEventListener('wheel', handleWheel, { passive: false })
+    return () => window.removeEventListener('wheel', handleWheel)
   }, [])
 
   const handleSave = async () => {
@@ -249,8 +266,8 @@ function GtmZihinHaritasi() {
   useEffect(() => {
     const handleMouseMove = (e) => {
       if (!dragging) return
-      const dx = e.clientX - dragging.startMouseX
-      const dy = e.clientY - dragging.startMouseY
+      const dx = (e.clientX - dragging.startMouseX) / canvasZoomRef.current
+      const dy = (e.clientY - dragging.startMouseY) / canvasZoomRef.current
       setTerms(prev => prev.map(t => {
         if (dragging.startPositions && dragging.startPositions[t.id]) {
           return { ...t, x: dragging.startPositions[t.id].x + dx, y: dragging.startPositions[t.id].y + dy }
@@ -321,16 +338,24 @@ function GtmZihinHaritasi() {
             Data Layer → GTM → Etiket akışı · kutucuğu tutup sürükle, tıklayarak açıklamayı oku
           </p>
         </div>
-        <button
-          onClick={handleAddNode}
-          style={{
-            background: '#fff', border: '1px solid #ddd', borderRadius: 8,
-            padding: '6px 12px', fontSize: 12, cursor: 'pointer', transition: 'all 0.2s',
-            display: 'flex', alignItems: 'center', gap: 6, color: '#444'
-          }}
-        >
-          <span style={{ fontSize: 16, fontWeight: 'bold' }}>+</span> Yeni Kutu Ekle
-        </button>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 3 }}>
+            <button onClick={() => setZoom(Math.min(parseFloat((canvasZoom + 0.15).toFixed(2)), 2.5))} style={{ width: 26, height: 26, border: '1px solid #ddd', borderRadius: 5, background: '#fff', cursor: 'pointer', fontSize: 14, lineHeight: 1, color: '#555', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>+</button>
+            <span style={{ fontSize: 11, color: '#888', minWidth: 36, textAlign: 'center' }}>{Math.round(canvasZoom * 100)}%</span>
+            <button onClick={() => setZoom(Math.max(parseFloat((canvasZoom - 0.15).toFixed(2)), 0.3))} style={{ width: 26, height: 26, border: '1px solid #ddd', borderRadius: 5, background: '#fff', cursor: 'pointer', fontSize: 14, lineHeight: 1, color: '#555', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>−</button>
+            <button onClick={() => setZoom(1)} title="Sıfırla" style={{ width: 26, height: 26, border: '1px solid #ddd', borderRadius: 5, background: '#fff', cursor: 'pointer', fontSize: 11, color: '#888', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>↺</button>
+          </div>
+          <button
+            onClick={handleAddNode}
+            style={{
+              background: '#fff', border: '1px solid #ddd', borderRadius: 8,
+              padding: '6px 12px', fontSize: 12, cursor: 'pointer', transition: 'all 0.2s',
+              display: 'flex', alignItems: 'center', gap: 6, color: '#444'
+            }}
+          >
+            <span style={{ fontSize: 16, fontWeight: 'bold' }}>+</span> Yeni Kutu Ekle
+          </button>
+        </div>
       </div>
 
       {/* Legenda */}
@@ -344,27 +369,27 @@ function GtmZihinHaritasi() {
       </div>
 
       {/* Canvas */}
-      <div style={{ overflowX: 'auto', background: '#fafafa', border: '0.5px solid #e8e8e8', borderRadius: 12, padding: '12px 0' }}>
-        <div style={{ position: "relative", width: canvasDim.w, height: canvasDim.h, margin: 0 }}
+      <div ref={containerRef} style={{ overflowX: 'auto', background: '#fafafa', border: '0.5px solid #e8e8e8', borderRadius: 12, padding: '12px 0' }}>
+        <div style={{ position: "relative", width: canvasDim.w, height: canvasDim.h, margin: 0, transform: `scale(${canvasZoom})`, transformOrigin: 'top left', transition: 'transform 0.15s ease-out' }}
              onMouseDown={(e) => {
                if (e.button !== 0) return
                if (e.target !== e.currentTarget && e.target.tagName !== 'svg') return
-               const zoom = parseFloat(getComputedStyle(document.documentElement).zoom) || 1
+               const cssZoom = parseFloat(getComputedStyle(document.documentElement).zoom) || 1
                const rect = e.currentTarget.getBoundingClientRect()
-               const x = e.clientX / zoom - rect.left
-               const y = e.clientY / zoom - rect.top
+               const x = (e.clientX / cssZoom - rect.left) / canvasZoom
+               const y = (e.clientY / cssZoom - rect.top) / canvasZoom
                setSelectionBox({ startX: x, startY: y, currX: x, currY: y })
                if (!e.shiftKey) setSelectedIds([])
                setEditId(null)
              }}
              onMouseMove={(e) => {
                if (selectionBox) {
-                 const zoom = parseFloat(getComputedStyle(document.documentElement).zoom) || 1
+                 const cssZoom = parseFloat(getComputedStyle(document.documentElement).zoom) || 1
                  const rect = e.currentTarget.getBoundingClientRect()
                  setSelectionBox({
                    ...selectionBox,
-                   currX: e.clientX / zoom - rect.left,
-                   currY: e.clientY / zoom - rect.top
+                   currX: (e.clientX / cssZoom - rect.left) / canvasZoom,
+                   currY: (e.clientY / cssZoom - rect.top) / canvasZoom
                  })
                }
              }}
@@ -838,6 +863,9 @@ function MantiKHaritasi() {
   const [editId, setEditId] = useState(null)
   const [saving, setSaving] = useState(false)
   const [lastSaved, setLastSaved] = useState(null)
+  const [canvasZoom, setCanvasZoom] = useState(1)
+  const canvasZoomRef = useRef(1)
+  const setZoom = (z) => { canvasZoomRef.current = z; setCanvasZoom(z) }
 
   useEffect(() => {
     fetch('/api/reklam-terimleri')
@@ -854,6 +882,20 @@ function MantiKHaritasi() {
       .catch(err => console.error('Reklam Terimleri yükleme hatası:', err))
   }, [])
 
+  useEffect(() => {
+    const handleWheel = (e) => {
+      if (containerRef.current && containerRef.current.contains(e.target)) {
+        if (e.ctrlKey || e.metaKey) {
+          e.preventDefault()
+          const delta = e.deltaY > 0 ? -0.1 : 0.1
+          const next = parseFloat(Math.min(Math.max(canvasZoomRef.current + delta, 0.3), 2.5).toFixed(2))
+          setZoom(next)
+        }
+      }
+    }
+    window.addEventListener('wheel', handleWheel, { passive: false })
+    return () => window.removeEventListener('wheel', handleWheel)
+  }, [])
 
   const handleSave = async () => {
     setSaving(true)
@@ -877,8 +919,8 @@ function MantiKHaritasi() {
   useEffect(() => {
     const handleMouseMove = (e) => {
       if (!dragging) return
-      const dx = e.clientX - dragging.startMouseX
-      const dy = e.clientY - dragging.startMouseY
+      const dx = (e.clientX - dragging.startMouseX) / canvasZoomRef.current
+      const dy = (e.clientY - dragging.startMouseY) / canvasZoomRef.current
       setTerms(prev => prev.map(t => {
         if (dragging.startPositions && dragging.startPositions[t.id]) {
           return { ...t, x: dragging.startPositions[t.id].x + dx, y: dragging.startPositions[t.id].y + dy }
@@ -950,16 +992,24 @@ function MantiKHaritasi() {
             Dijital reklamcılık kısaltmaları ve funnel içindeki hiyerarşik ilişkileri
           </p>
         </div>
-        <button
-          onClick={handleAddNode}
-          style={{
-            background: '#fff', border: '1px solid #ddd', borderRadius: 8,
-            padding: '6px 12px', fontSize: 12, cursor: 'pointer', transition: 'all 0.2s',
-            display: 'flex', alignItems: 'center', gap: 6, color: '#444'
-          }}
-        >
-          <span style={{ fontSize: 16, fontWeight: 'bold' }}>+</span> Yeni Kutu Ekle
-        </button>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 3 }}>
+            <button onClick={() => setZoom(Math.min(parseFloat((canvasZoom + 0.15).toFixed(2)), 2.5))} style={{ width: 26, height: 26, border: '1px solid #ddd', borderRadius: 5, background: '#fff', cursor: 'pointer', fontSize: 14, lineHeight: 1, color: '#555', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>+</button>
+            <span style={{ fontSize: 11, color: '#888', minWidth: 36, textAlign: 'center' }}>{Math.round(canvasZoom * 100)}%</span>
+            <button onClick={() => setZoom(Math.max(parseFloat((canvasZoom - 0.15).toFixed(2)), 0.3))} style={{ width: 26, height: 26, border: '1px solid #ddd', borderRadius: 5, background: '#fff', cursor: 'pointer', fontSize: 14, lineHeight: 1, color: '#555', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>−</button>
+            <button onClick={() => setZoom(1)} title="Sıfırla" style={{ width: 26, height: 26, border: '1px solid #ddd', borderRadius: 5, background: '#fff', cursor: 'pointer', fontSize: 11, color: '#888', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>↺</button>
+          </div>
+          <button
+            onClick={handleAddNode}
+            style={{
+              background: '#fff', border: '1px solid #ddd', borderRadius: 8,
+              padding: '6px 12px', fontSize: 12, cursor: 'pointer', transition: 'all 0.2s',
+              display: 'flex', alignItems: 'center', gap: 6, color: '#444'
+            }}
+          >
+            <span style={{ fontSize: 16, fontWeight: 'bold' }}>+</span> Yeni Kutu Ekle
+          </button>
+        </div>
       </div>
 
       {/* Legenda */}
@@ -974,27 +1024,27 @@ function MantiKHaritasi() {
       </div>
 
       {/* Canvas */}
-      <div style={{ overflowX: 'auto', background: '#fafafa', border: '0.5px solid #e8e8e8', borderRadius: 12, padding: '8px 0 12px' }}>
-        <div style={{ position: "relative", width: canvasDim.w, height: canvasDim.h, margin: 0 }}
+      <div ref={containerRef} style={{ overflowX: 'auto', background: '#fafafa', border: '0.5px solid #e8e8e8', borderRadius: 12, padding: '8px 0 12px' }}>
+        <div style={{ position: "relative", width: canvasDim.w, height: canvasDim.h, margin: 0, transform: `scale(${canvasZoom})`, transformOrigin: 'top left', transition: 'transform 0.15s ease-out' }}
              onMouseDown={(e) => {
                if (e.button !== 0) return
                if (e.target !== e.currentTarget && e.target.tagName !== 'svg') return
-               const zoom = parseFloat(getComputedStyle(document.documentElement).zoom) || 1
+               const cssZoom = parseFloat(getComputedStyle(document.documentElement).zoom) || 1
                const rect = e.currentTarget.getBoundingClientRect()
-               const x = e.clientX / zoom - rect.left
-               const y = e.clientY / zoom - rect.top
+               const x = (e.clientX / cssZoom - rect.left) / canvasZoom
+               const y = (e.clientY / cssZoom - rect.top) / canvasZoom
                setSelectionBox({ startX: x, startY: y, currX: x, currY: y })
                if (!e.shiftKey) setSelectedIds([])
                setEditId(null)
              }}
              onMouseMove={(e) => {
                if (selectionBox) {
-                 const zoom = parseFloat(getComputedStyle(document.documentElement).zoom) || 1
+                 const cssZoom = parseFloat(getComputedStyle(document.documentElement).zoom) || 1
                  const rect = e.currentTarget.getBoundingClientRect()
                  setSelectionBox({
                    ...selectionBox,
-                   currX: e.clientX / zoom - rect.left,
-                   currY: e.clientY / zoom - rect.top
+                   currX: (e.clientX / cssZoom - rect.left) / canvasZoom,
+                   currY: (e.clientY / cssZoom - rect.top) / canvasZoom
                  })
                }
              }}
@@ -1540,6 +1590,9 @@ function YzHaritasi() {
   const [editId, setEditId] = useState(null)
   const [saving, setSaving] = useState(false)
   const [lastSaved, setLastSaved] = useState(null)
+  const [canvasZoom, setCanvasZoom] = useState(1)
+  const canvasZoomRef = useRef(1)
+  const setZoom = (z) => { canvasZoomRef.current = z; setCanvasZoom(z) }
 
   useEffect(() => {
     fetch('/api/ai-terimleri')
@@ -1554,6 +1607,21 @@ function YzHaritasi() {
         }
       })
       .catch(err => console.error('AI Terimleri yükleme hatası:', err))
+  }, [])
+
+  useEffect(() => {
+    const handleWheel = (e) => {
+      if (containerRef.current && containerRef.current.contains(e.target)) {
+        if (e.ctrlKey || e.metaKey) {
+          e.preventDefault()
+          const delta = e.deltaY > 0 ? -0.1 : 0.1
+          const next = parseFloat(Math.min(Math.max(canvasZoomRef.current + delta, 0.3), 2.5).toFixed(2))
+          setZoom(next)
+        }
+      }
+    }
+    window.addEventListener('wheel', handleWheel, { passive: false })
+    return () => window.removeEventListener('wheel', handleWheel)
   }, [])
 
 
@@ -1579,8 +1647,8 @@ function YzHaritasi() {
   useEffect(() => {
     const handleMouseMove = (e) => {
       if (!dragging) return
-      const dx = e.clientX - dragging.startMouseX
-      const dy = e.clientY - dragging.startMouseY
+      const dx = (e.clientX - dragging.startMouseX) / canvasZoomRef.current
+      const dy = (e.clientY - dragging.startMouseY) / canvasZoomRef.current
       setTerms(prev => prev.map(t => {
         if (dragging.startPositions && dragging.startPositions[t.id]) {
           return { ...t, x: dragging.startPositions[t.id].x + dx, y: dragging.startPositions[t.id].y + dy }
@@ -1651,16 +1719,24 @@ function YzHaritasi() {
             AI ekosisteminin temel kavramları ve aralarındaki ilişkiler · Terime tıkla: açıklamayı gör
           </p>
         </div>
-        <button
-          onClick={handleAddNode}
-          style={{
-            background: '#fff', border: '1px solid #ddd', borderRadius: 8,
-            padding: '6px 12px', fontSize: 12, cursor: 'pointer', transition: 'all 0.2s',
-            display: 'flex', alignItems: 'center', gap: 6, color: '#444'
-          }}
-        >
-          <span style={{ fontSize: 16, fontWeight: 'bold' }}>+</span> Yeni Kutu Ekle
-        </button>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 3 }}>
+            <button onClick={() => setZoom(Math.min(parseFloat((canvasZoom + 0.15).toFixed(2)), 2.5))} style={{ width: 26, height: 26, border: '1px solid #ddd', borderRadius: 5, background: '#fff', cursor: 'pointer', fontSize: 14, lineHeight: 1, color: '#555', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>+</button>
+            <span style={{ fontSize: 11, color: '#888', minWidth: 36, textAlign: 'center' }}>{Math.round(canvasZoom * 100)}%</span>
+            <button onClick={() => setZoom(Math.max(parseFloat((canvasZoom - 0.15).toFixed(2)), 0.3))} style={{ width: 26, height: 26, border: '1px solid #ddd', borderRadius: 5, background: '#fff', cursor: 'pointer', fontSize: 14, lineHeight: 1, color: '#555', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>−</button>
+            <button onClick={() => setZoom(1)} title="Sıfırla" style={{ width: 26, height: 26, border: '1px solid #ddd', borderRadius: 5, background: '#fff', cursor: 'pointer', fontSize: 11, color: '#888', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>↺</button>
+          </div>
+          <button
+            onClick={handleAddNode}
+            style={{
+              background: '#fff', border: '1px solid #ddd', borderRadius: 8,
+              padding: '6px 12px', fontSize: 12, cursor: 'pointer', transition: 'all 0.2s',
+              display: 'flex', alignItems: 'center', gap: 6, color: '#444'
+            }}
+          >
+            <span style={{ fontSize: 16, fontWeight: 'bold' }}>+</span> Yeni Kutu Ekle
+          </button>
+        </div>
       </div>
 
       {/* Legenda */}
@@ -1678,26 +1754,26 @@ function YzHaritasi() {
 
         {/* Canvas */}
         <div ref={containerRef} style={{ flex: 1, overflow: "auto", resize: "both", minHeight: 400, background: '#fafafa', border: '0.5px solid #e8e8e8', borderRadius: 12, padding: '8px 0 10px' }}>
-          <div style={{ position: "relative", width: canvasDim.w, height: canvasDim.h, margin: 0 }}
+          <div style={{ position: "relative", width: canvasDim.w, height: canvasDim.h, margin: 0, transform: `scale(${canvasZoom})`, transformOrigin: 'top left', transition: 'transform 0.15s ease-out' }}
              onMouseDown={(e) => {
                if (e.button !== 0) return
                if (e.target !== e.currentTarget && e.target.tagName !== 'svg') return
-               const zoom = parseFloat(getComputedStyle(document.documentElement).zoom) || 1
+               const cssZoom = parseFloat(getComputedStyle(document.documentElement).zoom) || 1
                const rect = e.currentTarget.getBoundingClientRect()
-               const x = e.clientX / zoom - rect.left
-               const y = e.clientY / zoom - rect.top
+               const x = (e.clientX / cssZoom - rect.left) / canvasZoom
+               const y = (e.clientY / cssZoom - rect.top) / canvasZoom
                setSelectionBox({ startX: x, startY: y, currX: x, currY: y })
                if (!e.shiftKey) setSelectedIds([])
                setEditId(null)
              }}
              onMouseMove={(e) => {
                if (selectionBox) {
-                 const zoom = parseFloat(getComputedStyle(document.documentElement).zoom) || 1
+                 const cssZoom = parseFloat(getComputedStyle(document.documentElement).zoom) || 1
                  const rect = e.currentTarget.getBoundingClientRect()
                  setSelectionBox({
                    ...selectionBox,
-                   currX: e.clientX / zoom - rect.left,
-                   currY: e.clientY / zoom - rect.top
+                   currX: (e.clientX / cssZoom - rect.left) / canvasZoom,
+                   currY: (e.clientY / cssZoom - rect.top) / canvasZoom
                  })
                }
              }}
@@ -2968,6 +3044,9 @@ function KodBloklariHaritasi() {
   const [editId, setEditId] = useState(null)
   const [saving, setSaving] = useState(false)
   const [lastSaved, setLastSaved] = useState(null)
+  const [canvasZoom, setCanvasZoom] = useState(1)
+  const canvasZoomRef = useRef(1)
+  const setZoom = (z) => { canvasZoomRef.current = z; setCanvasZoom(z) }
 
   useEffect(() => {
     fetch('/api/kod-bloklari')
@@ -2981,6 +3060,21 @@ function KodBloklariHaritasi() {
         }
       })
       .catch(err => console.error('Kod Blokları yükleme hatası:', err))
+  }, [])
+
+  useEffect(() => {
+    const handleWheel = (e) => {
+      if (containerRef.current && containerRef.current.contains(e.target)) {
+        if (e.ctrlKey || e.metaKey) {
+          e.preventDefault()
+          const delta = e.deltaY > 0 ? -0.1 : 0.1
+          const next = parseFloat(Math.min(Math.max(canvasZoomRef.current + delta, 0.3), 2.5).toFixed(2))
+          setZoom(next)
+        }
+      }
+    }
+    window.addEventListener('wheel', handleWheel, { passive: false })
+    return () => window.removeEventListener('wheel', handleWheel)
   }, [])
 
   const handleSave = async () => {
@@ -3013,8 +3107,8 @@ function KodBloklariHaritasi() {
   useEffect(() => {
     const handleMouseMove = (e) => {
       if (!dragging) return
-      const dx = e.clientX - dragging.startMouseX
-      const dy = e.clientY - dragging.startMouseY
+      const dx = (e.clientX - dragging.startMouseX) / canvasZoomRef.current
+      const dy = (e.clientY - dragging.startMouseY) / canvasZoomRef.current
       setTerms(prev => prev.map(t => {
         if (dragging.startPositions && dragging.startPositions[t.id]) {
           return { ...t, x: dragging.startPositions[t.id].x + dx, y: dragging.startPositions[t.id].y + dy }
@@ -3081,16 +3175,24 @@ function KodBloklariHaritasi() {
             Teknik mimari, kod parçacıkları ve yapılar arası ilişkiler
           </p>
         </div>
-        <button
-          onClick={handleAddNode}
-          style={{
-            background: '#fff', border: '1px solid #ddd', borderRadius: 8,
-            padding: '6px 12px', fontSize: 12, cursor: 'pointer', transition: 'all 0.2s',
-            display: 'flex', alignItems: 'center', gap: 6, color: '#444'
-          }}
-        >
-          <span style={{ fontSize: 16, fontWeight: 'bold' }}>+</span> Yeni Blok Ekle
-        </button>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 3 }}>
+            <button onClick={() => setZoom(Math.min(parseFloat((canvasZoom + 0.15).toFixed(2)), 2.5))} style={{ width: 26, height: 26, border: '1px solid #ddd', borderRadius: 5, background: '#fff', cursor: 'pointer', fontSize: 14, lineHeight: 1, color: '#555', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>+</button>
+            <span style={{ fontSize: 11, color: '#888', minWidth: 36, textAlign: 'center' }}>{Math.round(canvasZoom * 100)}%</span>
+            <button onClick={() => setZoom(Math.max(parseFloat((canvasZoom - 0.15).toFixed(2)), 0.3))} style={{ width: 26, height: 26, border: '1px solid #ddd', borderRadius: 5, background: '#fff', cursor: 'pointer', fontSize: 14, lineHeight: 1, color: '#555', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>−</button>
+            <button onClick={() => setZoom(1)} title="Sıfırla" style={{ width: 26, height: 26, border: '1px solid #ddd', borderRadius: 5, background: '#fff', cursor: 'pointer', fontSize: 11, color: '#888', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>↺</button>
+          </div>
+          <button
+            onClick={handleAddNode}
+            style={{
+              background: '#fff', border: '1px solid #ddd', borderRadius: 8,
+              padding: '6px 12px', fontSize: 12, cursor: 'pointer', transition: 'all 0.2s',
+              display: 'flex', alignItems: 'center', gap: 6, color: '#444'
+            }}
+          >
+            <span style={{ fontSize: 16, fontWeight: 'bold' }}>+</span> Yeni Blok Ekle
+          </button>
+        </div>
       </div>
 
       <div style={{ display: 'flex', gap: 14, marginBottom: '1.25rem', flexWrap: 'wrap' }}>
@@ -3104,12 +3206,12 @@ function KodBloklariHaritasi() {
 
       <div style={{ display: 'flex', gap: 16, alignItems: 'flex-start' }}>
         <div ref={containerRef} style={{ flex: 1, overflow: "auto", minHeight: 400, background: '#fafafa', border: '0.5px solid #e8e8e8', borderRadius: 12, padding: '8px 0 10px' }}>
-          <div style={{ position: "relative", width: canvasDim.w, height: canvasDim.h, margin: 0 }}
+          <div style={{ position: "relative", width: canvasDim.w, height: canvasDim.h, margin: 0, transform: `scale(${canvasZoom})`, transformOrigin: 'top left', transition: 'transform 0.15s ease-out' }}
              onMouseDown={(e) => {
                if (e.button !== 0) return
                if (e.target !== e.currentTarget && e.target.tagName !== 'svg') return
                const rect = e.currentTarget.getBoundingClientRect()
-               const x = e.clientX - rect.left, y = e.clientY - rect.top
+               const x = (e.clientX - rect.left) / canvasZoom, y = (e.clientY - rect.top) / canvasZoom
                setSelectionBox({ startX: x, startY: y, currX: x, currY: y })
                if (!e.shiftKey) setSelectedIds([])
                setEditId(null)
@@ -3117,7 +3219,7 @@ function KodBloklariHaritasi() {
              onMouseMove={(e) => {
                if (selectionBox) {
                  const rect = e.currentTarget.getBoundingClientRect()
-                 setSelectionBox({ ...selectionBox, currX: e.clientX - rect.left, currY: e.clientY - rect.top })
+                 setSelectionBox({ ...selectionBox, currX: (e.clientX - rect.left) / canvasZoom, currY: (e.clientY - rect.top) / canvasZoom })
                }
              }}
              onMouseUp={(e) => {
@@ -4565,6 +4667,9 @@ function ReklamHiyerarsisiHaritasi() {
   const [editId, setEditId] = useState(null)
   const [saving, setSaving] = useState(false)
   const [lastSaved, setLastSaved] = useState(null)
+  const [canvasZoom, setCanvasZoom] = useState(1)
+  const canvasZoomRef = useRef(1)
+  const setZoom = (z) => { canvasZoomRef.current = z; setCanvasZoom(z) }
   const [isPanning, setIsPanning] = useState(false)
   const panStart = useRef({ x: 0, y: 0, sl: 0, st: 0 })
 
@@ -4600,6 +4705,20 @@ function ReklamHiyerarsisiHaritasi() {
       .catch(err => console.error('Reklam Hiyerarsisi Haritası yükleme hatası:', err))
   }, [])
 
+  useEffect(() => {
+    const handleWheel = (e) => {
+      if (containerRef.current && containerRef.current.contains(e.target)) {
+        if (e.ctrlKey || e.metaKey) {
+          e.preventDefault()
+          const delta = e.deltaY > 0 ? -0.1 : 0.1
+          const next = parseFloat(Math.min(Math.max(canvasZoomRef.current + delta, 0.3), 2.5).toFixed(2))
+          setZoom(next)
+        }
+      }
+    }
+    window.addEventListener('wheel', handleWheel, { passive: false })
+    return () => window.removeEventListener('wheel', handleWheel)
+  }, [])
 
   const handleSave = async () => {
     setSaving(true)
@@ -4623,8 +4742,8 @@ function ReklamHiyerarsisiHaritasi() {
   useEffect(() => {
     const handleMouseMove = (e) => {
       if (!dragging) return
-      const dx = e.clientX - dragging.startMouseX
-      const dy = e.clientY - dragging.startMouseY
+      const dx = (e.clientX - dragging.startMouseX) / canvasZoomRef.current
+      const dy = (e.clientY - dragging.startMouseY) / canvasZoomRef.current
       setTerms(prev => prev.map(t => {
         if (dragging.startPositions && dragging.startPositions[t.id]) {
           return { ...t, x: dragging.startPositions[t.id].x + dx, y: dragging.startPositions[t.id].y + dy }
@@ -4745,26 +4864,26 @@ function ReklamHiyerarsisiHaritasi() {
             }
           }}
         >
-          <div style={{ position: "relative", width: canvasDim.w, height: canvasDim.h, margin: 0 }}
+          <div style={{ position: "relative", width: canvasDim.w, height: canvasDim.h, margin: 0, transform: `scale(${canvasZoom})`, transformOrigin: 'top left', transition: 'transform 0.15s ease-out' }}
              onMouseDown={(e) => {
                if (e.button !== 0) return
                if (e.target !== e.currentTarget && e.target.tagName !== 'svg') return
-               const zoom = parseFloat(getComputedStyle(document.documentElement).zoom) || 1
+               const cssZoom = parseFloat(getComputedStyle(document.documentElement).zoom) || 1
                const rect = e.currentTarget.getBoundingClientRect()
-               const x = e.clientX / zoom - rect.left
-               const y = e.clientY / zoom - rect.top
+               const x = (e.clientX / cssZoom - rect.left) / canvasZoom
+               const y = (e.clientY / cssZoom - rect.top) / canvasZoom
                setSelectionBox({ startX: x, startY: y, currX: x, currY: y })
                if (!e.shiftKey) setSelectedIds([])
                setEditId(null)
              }}
              onMouseMove={(e) => {
                if (selectionBox) {
-                 const zoom = parseFloat(getComputedStyle(document.documentElement).zoom) || 1
+                 const cssZoom = parseFloat(getComputedStyle(document.documentElement).zoom) || 1
                  const rect = e.currentTarget.getBoundingClientRect()
                  setSelectionBox({
                    ...selectionBox,
-                   currX: e.clientX / zoom - rect.left,
-                   currY: e.clientY / zoom - rect.top
+                   currX: (e.clientX / cssZoom - rect.left) / canvasZoom,
+                   currY: (e.clientY / cssZoom - rect.top) / canvasZoom
                  })
                }
              }}
@@ -5473,6 +5592,7 @@ function KisaNotlar() {
 // ─── ANA Blok Zihin Haritası ──────────────────────────────────────────────────
 function AnaHaritasi() {
   const containerRef = useRef(null)
+  const draggingRef = useRef(null)
   const [canvasDim, setCanvasDim] = useState({ w: 880, h: 555 })
   const [hovered, setHovered] = useState(null)
   const [selectedIds, setSelectedIds] = useState([])
@@ -5483,6 +5603,9 @@ function AnaHaritasi() {
   const [editId, setEditId] = useState(null)
   const [saving, setSaving] = useState(false)
   const [lastSaved, setLastSaved] = useState(null)
+  const [canvasZoom, setCanvasZoom] = useState(1)
+  const canvasZoomRef = useRef(1)
+  const setZoom = (z) => { canvasZoomRef.current = z; setCanvasZoom(z) }
 
   useEffect(() => {
     fetch('/api/ana-harita')
@@ -5495,6 +5618,21 @@ function AnaHaritasi() {
         }
       })
       .catch(err => console.error('ANA yükleme hatası:', err))
+  }, [])
+
+  useEffect(() => {
+    const handleWheel = (e) => {
+      if (containerRef.current && containerRef.current.contains(e.target)) {
+        if (e.ctrlKey || e.metaKey) {
+          e.preventDefault()
+          const delta = e.deltaY > 0 ? -0.1 : 0.1
+          const next = parseFloat(Math.min(Math.max(canvasZoomRef.current + delta, 0.3), 2.5).toFixed(2))
+          setZoom(next)
+        }
+      }
+    }
+    window.addEventListener('wheel', handleWheel, { passive: false })
+    return () => window.removeEventListener('wheel', handleWheel)
   }, [])
 
   const handleSave = async () => {
@@ -5511,17 +5649,6 @@ function AnaHaritasi() {
     } catch (err) { alert('Hata: ' + err.message) }
     setSaving(false)
   }
-
-  useEffect(() => {
-    const onMove = (e) => {
-      if (!dragging) return
-      const dx = e.clientX - dragging.startMouseX, dy = e.clientY - dragging.startMouseY
-      setTerms(prev => prev.map(t => dragging.startPositions?.[t.id] ? { ...t, x: dragging.startPositions[t.id].x + dx, y: dragging.startPositions[t.id].y + dy } : t))
-    }
-    const onUp = () => setDragging(null)
-    if (dragging) { window.addEventListener('mousemove', onMove); window.addEventListener('mouseup', onUp) }
-    return () => { window.removeEventListener('mousemove', onMove); window.removeEventListener('mouseup', onUp) }
-  }, [dragging])
 
   const termMap = Object.fromEntries(terms.map(t => [t.id, t]))
   const selectedTerm = selectedIds.length === 1 ? termMap[selectedIds[0]] : null
@@ -5548,9 +5675,17 @@ function AnaHaritasi() {
           <h1 style={{ fontSize: 22, fontWeight: 500, margin: 0 }}>ANA Blok</h1>
           <p style={{ fontSize: 13, color: '#888', marginTop: 4 }}>Zihin haritası — düğüm ekle, bağlantı kur, kaydet</p>
         </div>
-        <button onClick={handleAddNode} style={{ background: '#fff', border: '1px solid #ddd', borderRadius: 8, padding: '6px 12px', fontSize: 12, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6, color: '#444' }}>
-          <span style={{ fontSize: 16, fontWeight: 'bold' }}>+</span> Yeni Düğüm Ekle
-        </button>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 3 }}>
+            <button onClick={() => setZoom(Math.min(parseFloat((canvasZoom + 0.15).toFixed(2)), 2.5))} style={{ width: 26, height: 26, border: '1px solid #ddd', borderRadius: 5, background: '#fff', cursor: 'pointer', fontSize: 14, lineHeight: 1, color: '#555', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>+</button>
+            <span style={{ fontSize: 11, color: '#888', minWidth: 36, textAlign: 'center' }}>{Math.round(canvasZoom * 100)}%</span>
+            <button onClick={() => setZoom(Math.max(parseFloat((canvasZoom - 0.15).toFixed(2)), 0.3))} style={{ width: 26, height: 26, border: '1px solid #ddd', borderRadius: 5, background: '#fff', cursor: 'pointer', fontSize: 14, lineHeight: 1, color: '#555', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>−</button>
+            <button onClick={() => setZoom(1)} title="Sıfırla" style={{ width: 26, height: 26, border: '1px solid #ddd', borderRadius: 5, background: '#fff', cursor: 'pointer', fontSize: 11, color: '#888', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>↺</button>
+          </div>
+          <button onClick={handleAddNode} style={{ background: '#fff', border: '1px solid #ddd', borderRadius: 8, padding: '6px 12px', fontSize: 12, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6, color: '#444' }}>
+            <span style={{ fontSize: 16, fontWeight: 'bold' }}>+</span> Yeni Düğüm Ekle
+          </button>
+        </div>
       </div>
 
       <div style={{ display: 'flex', gap: 14, marginBottom: '1.25rem', flexWrap: 'wrap' }}>
@@ -5564,9 +5699,9 @@ function AnaHaritasi() {
 
       <div style={{ display: 'flex', gap: 16, alignItems: 'flex-start' }}>
         <div ref={containerRef} style={{ flex: 1, overflow: 'auto', minHeight: 400, background: '#fafafa', border: '0.5px solid #e8e8e8', borderRadius: 12, padding: '8px 0 10px' }}>
-          <div style={{ position: 'relative', width: canvasDim.w, height: canvasDim.h }}
-            onMouseDown={(e) => { if (e.button !== 0) return; if (e.target !== e.currentTarget && e.target.tagName !== 'svg') return; const rect = e.currentTarget.getBoundingClientRect(); const x = e.clientX - rect.left, y = e.clientY - rect.top; setSelectionBox({ startX: x, startY: y, currX: x, currY: y }); if (!e.shiftKey) setSelectedIds([]); setEditId(null) }}
-            onMouseMove={(e) => { if (selectionBox) { const rect = e.currentTarget.getBoundingClientRect(); setSelectionBox({ ...selectionBox, currX: e.clientX - rect.left, currY: e.clientY - rect.top }) } }}
+          <div style={{ position: 'relative', width: canvasDim.w, height: canvasDim.h, transform: `scale(${canvasZoom})`, transformOrigin: 'top left', transition: 'transform 0.15s ease-out' }}
+            onMouseDown={(e) => { if (e.button !== 0) return; if (e.target !== e.currentTarget && e.target.tagName !== 'svg') return; const rect = e.currentTarget.getBoundingClientRect(); const x = (e.clientX - rect.left) / canvasZoom, y = (e.clientY - rect.top) / canvasZoom; setSelectionBox({ startX: x, startY: y, currX: x, currY: y }); if (!e.shiftKey) setSelectedIds([]); setEditId(null) }}
+            onMouseMove={(e) => { if (selectionBox) { const rect = e.currentTarget.getBoundingClientRect(); setSelectionBox({ ...selectionBox, currX: (e.clientX - rect.left) / canvasZoom, currY: (e.clientY - rect.top) / canvasZoom }) } }}
             onMouseUp={(e) => { if (selectionBox) { const x1 = Math.min(selectionBox.startX, selectionBox.currX), x2 = Math.max(selectionBox.startX, selectionBox.currX), y1 = Math.min(selectionBox.startY, selectionBox.currY), y2 = Math.max(selectionBox.startY, selectionBox.currY); const newly = terms.filter(t => t.x > x1 && t.x < x2 && t.y > y1 && t.y < y2).map(t => t.id); if (e.shiftKey) setSelectedIds(prev => Array.from(new Set([...prev, ...newly]))); else setSelectedIds(newly); setSelectionBox(null) } }}
             onMouseLeave={() => setSelectionBox(null)}
           >
@@ -5590,12 +5725,22 @@ function AnaHaritasi() {
               return (
                 <div key={term.id}
                   onMouseEnter={() => setHovered(term.id)} onMouseLeave={() => setHovered(null)}
-                  onClick={(e) => { e.stopPropagation(); if (dragging && (Math.abs(e.clientX - dragging.startMouseX) > 5 || Math.abs(e.clientY - dragging.startMouseY) > 5)) return }}
+                  onClick={(e) => { e.stopPropagation(); if (draggingRef.current && (Math.abs(e.clientX - draggingRef.current.startMouseX) > 5 || Math.abs(e.clientY - draggingRef.current.startMouseY) > 5)) return }}
                   onMouseDown={(e) => {
                     if (e.button !== 0) return; e.stopPropagation()
                     let cur = selectedIds; if (!selectedIds.includes(term.id)) { cur = e.shiftKey ? [...selectedIds, term.id] : [term.id]; setSelectedIds(cur); if (editId !== term.id) setEditId(null) }
                     const pos = {}; terms.forEach(t => { if (cur.includes(t.id)) pos[t.id] = { x: t.x, y: t.y } })
-                    setDragging({ startMouseX: e.clientX, startMouseY: e.clientY, startPositions: pos, id: term.id })
+                    const dragState = { startMouseX: e.clientX, startMouseY: e.clientY, startPositions: pos, id: term.id }
+                    draggingRef.current = dragState
+                    setDragging(dragState)
+                    const onMove = (me) => {
+                      if (!draggingRef.current) return
+                      const dx = (me.clientX - draggingRef.current.startMouseX) / canvasZoomRef.current, dy = (me.clientY - draggingRef.current.startMouseY) / canvasZoomRef.current
+                      setTerms(prev => prev.map(t => draggingRef.current?.startPositions?.[t.id] ? { ...t, x: draggingRef.current.startPositions[t.id].x + dx, y: draggingRef.current.startPositions[t.id].y + dy } : t))
+                    }
+                    const onUp = () => { draggingRef.current = null; setDragging(null); window.removeEventListener('mousemove', onMove); window.removeEventListener('mouseup', onUp) }
+                    window.addEventListener('mousemove', onMove)
+                    window.addEventListener('mouseup', onUp)
                   }}
                   style={{ position: 'absolute', left: term.x - KB_NODE_W / 2, top: term.y - KB_NODE_H / 2, width: KB_NODE_W, height: KB_NODE_H, background: isSelected ? colors.stripe + '18' : colors.bg, border: `${isSelected ? 2 : 1}px solid ${isSelected ? colors.stripe : isHovered ? colors.stripe : colors.border}`, borderRadius: 8, padding: '6px 10px 6px 12px', opacity: isDimmed && !isDragging ? 0.22 : 1, transition: isDragging ? 'none' : 'all 0.13s', zIndex: isDragging ? 4 : isSelected ? 3 : isHovered ? 2 : 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', cursor: isDragging ? 'grabbing' : 'grab', userSelect: 'none', boxSizing: 'border-box', overflow: 'hidden' }}
                 >
