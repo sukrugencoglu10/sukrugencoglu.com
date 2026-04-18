@@ -2,6 +2,7 @@
 
 import { useLanguage } from '@/context/LanguageContext';
 import MasonryGallery from '@/components/ui/MasonryGallery';
+import HeroServiceCards from '@/components/ui/HeroServiceCards';
 import Link from 'next/link';
 import { getSlug } from '@/lib/slugs';
 import { trackWhatsAppClick } from '@/lib/gtm';
@@ -76,8 +77,9 @@ export default function HeroSection() {
 
       {/* Sağ: Görsel kolaj — mobil için de görünür, biraz küçültülmüş */}
       <div className={`w-[50%] lg:w-[52%] flex justify-center lg:block origin-center ${lang === 'en' ? 'scale-[1.38] sm:scale-[1.15]' : 'scale-[1.20] sm:scale-100'} -ml-16 pr-8 sm:ml-0 sm:pr-0`}>
-        <div className="w-full">
+        <div className="w-full relative">
           <MasonryGallery />
+          <HeroServiceCards />
         </div>
       </div>
 
