@@ -153,6 +153,8 @@ export const tr: Translations = {
       "Müşteri Yönetimi (CRM)",
       "Stok & Depo Takibi",
       "Raporlama & Analitik Paneli",
+      "Web Site",
+      "SEO",
       "Diğer",
     ],
     form_label: "Hızlı Başvuru",

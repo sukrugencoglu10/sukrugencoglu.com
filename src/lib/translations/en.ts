@@ -151,6 +151,8 @@ export const en = {
       "Customer Management (CRM)",
       "Inventory & Warehouse Tracking",
       "Reporting & Analytics Dashboard",
+      "Website",
+      "SEO",
       "Other",
     ],
     form_label: "Quick Application",
