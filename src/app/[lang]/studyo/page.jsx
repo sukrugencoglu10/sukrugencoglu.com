@@ -5138,9 +5138,11 @@ function ReklamHiyerarsisiHaritasi() {
 
                   <div style={{ borderTop: '0.5px solid #eee', paddingTop: 12 }}>
                     <label style={{ fontSize: 12, color: '#666', display: 'block', marginBottom: 10, fontWeight: 700, letterSpacing: '0.04em' }}>BAĞLANTI YÖNETİMİ</label>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+
+                    {/* GİDEN: Bu → Hedef */}
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginBottom: 10 }}>
                       <div style={{ fontSize: 12, color: '#888', paddingLeft: 2 }}>
-                        <span style={{ fontWeight: 700, color: '#444' }}>A:</span> {selectedTerm.abbr} &nbsp;→&nbsp; B seç:
+                        <span style={{ fontWeight: 700, color: '#444' }}>Bu</span> → hedef seç:
                       </div>
                       <select
                         id="rh-target-select"
@@ -5156,23 +5158,68 @@ function ReklamHiyerarsisiHaritasi() {
                           const sel = document.getElementById('rh-target-select')
                           if (sel && sel.value) { handleAddConnection(sel.value); sel.value = '' }
                         }}
-                        style={{ width: '100%', padding: '8px 14px', fontSize: 13, fontWeight: 600, background: '#111', color: '#fff', border: 'none', borderRadius: 7, cursor: 'pointer' }}
+                        style={{ width: '100%', padding: '7px 14px', fontSize: 13, fontWeight: 600, background: '#111', color: '#fff', border: 'none', borderRadius: 7, cursor: 'pointer' }}
                       >
-                        + Ok Ekle
+                        + Giden Ok Ekle
                       </button>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
+                        {connections.filter(c => c.from === selectedTerm.id).map(c => {
+                          const target = termMap[c.to]
+                          if (!target) return null
+                          return (
+                            <div key={c.to} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '5px 10px', background: '#f5f5f5', border: '0.5px solid #e8e8e8', borderRadius: 7, fontSize: 13 }}>
+                              <span style={{ color: '#333' }}>→ {target.abbr}</span>
+                              <button onClick={() => handleRemoveConnection(c.to)} style={{ border: 'none', background: 'none', cursor: 'pointer', color: '#ff4d4f', fontSize: 12 }}>Kaldır</button>
+                            </div>
+                          )
+                        })}
+                      </div>
                     </div>
 
-                    <div style={{ marginTop: 12, display: 'flex', flexDirection: 'column', gap: 6 }}>
-                      {connections.filter(c => c.from === selectedTerm.id).map(c => {
-                        const target = termMap[c.to]
-                        if (!target) return null
-                        return (
-                          <div key={c.to} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '6px 10px', background: '#f5f5f5', border: '0.5px solid #e8e8e8', borderRadius: 7, fontSize: 13 }}>
-                            <span style={{ color: '#333' }}>→ {target.abbr}</span>
-                            <button onClick={() => handleRemoveConnection(c.to)} style={{ border: 'none', background: 'none', cursor: 'pointer', color: '#ff4d4f', fontSize: 12 }}>Kaldır</button>
-                          </div>
-                        )
-                      })}
+                    {/* GELEN: Kaynak → Bu */}
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 6, paddingTop: 10, borderTop: '0.5px solid #f0f0f0' }}>
+                      <div style={{ fontSize: 12, color: '#888', paddingLeft: 2 }}>
+                        kaynak seç → <span style={{ fontWeight: 700, color: '#444' }}>Bu</span>:
+                      </div>
+                      <select
+                        id="rh-source-select"
+                        style={{ width: '100%', padding: '7px 10px', fontSize: 13, border: '1px solid #ddd', borderRadius: 7, outline: 'none', background: '#fff', color: '#333' }}
+                      >
+                        <option value="">— Kaynak kutuyu seç —</option>
+                        {terms.filter(t => t.id !== selectedTerm.id).map(t => (
+                          <option key={t.id} value={t.id}>{t.abbr} ({t.sub})</option>
+                        ))}
+                      </select>
+                      <button
+                        onClick={() => {
+                          const sel = document.getElementById('rh-source-select')
+                          if (sel && sel.value) {
+                            const sourceId = sel.value
+                            if (!connections.find(c => c.from === sourceId && c.to === selectedTerm.id)) {
+                              setConnections(prev => [...prev, { from: sourceId, to: selectedTerm.id }])
+                            }
+                            sel.value = ''
+                          }
+                        }}
+                        style={{ width: '100%', padding: '7px 14px', fontSize: 13, fontWeight: 600, background: '#444', color: '#fff', border: 'none', borderRadius: 7, cursor: 'pointer' }}
+                      >
+                        + Gelen Ok Ekle
+                      </button>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
+                        {connections.filter(c => c.to === selectedTerm.id).map(c => {
+                          const source = termMap[c.from]
+                          if (!source) return null
+                          return (
+                            <div key={c.from} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '5px 10px', background: '#f5f5f5', border: '0.5px solid #e8e8e8', borderRadius: 7, fontSize: 13 }}>
+                              <span style={{ color: '#333' }}>{source.abbr} →</span>
+                              <button
+                                onClick={() => setConnections(prev => prev.filter(c2 => !(c2.from === c.from && c2.to === selectedTerm.id)))}
+                                style={{ border: 'none', background: 'none', cursor: 'pointer', color: '#ff4d4f', fontSize: 12 }}
+                              >Kaldır</button>
+                            </div>
+                          )
+                        })}
+                      </div>
                     </div>
                   </div>
 
