@@ -246,6 +246,13 @@ function GtmZihinHaritasi() {
     return () => window.removeEventListener('wheel', handleWheel)
   }, [])
 
+  useEffect(() => {
+    if (terms.length === 0) return
+    const maxX = Math.max(...terms.map(t => t.x)) + GTM_NW / 2 + 120
+    const maxY = Math.max(...terms.map(t => t.y)) + GTM_NH / 2 + 120
+    setCanvasDim(prev => ({ w: Math.max(prev.w, maxX), h: Math.max(prev.h, maxY) }))
+  }, [terms])
+
   const handleSave = async () => {
     setSaving(true)
     try {
@@ -889,6 +896,13 @@ function MantiKHaritasi() {
     window.addEventListener('wheel', handleWheel, { passive: false })
     return () => window.removeEventListener('wheel', handleWheel)
   }, [])
+
+  useEffect(() => {
+    if (terms.length === 0) return
+    const maxX = Math.max(...terms.map(t => t.x)) + NODE_W / 2 + 120
+    const maxY = Math.max(...terms.map(t => t.y)) + NODE_H / 2 + 120
+    setCanvasDim(prev => ({ w: Math.max(prev.w, maxX), h: Math.max(prev.h, maxY) }))
+  }, [terms])
 
   const handleSave = async () => {
     setSaving(true)
@@ -1608,6 +1622,13 @@ function YzHaritasi() {
     return () => window.removeEventListener('wheel', handleWheel)
   }, [])
 
+
+  useEffect(() => {
+    if (terms.length === 0) return
+    const maxX = Math.max(...terms.map(t => t.x)) + AI_NODE_W / 2 + 120
+    const maxY = Math.max(...terms.map(t => t.y)) + AI_NODE_H / 2 + 120
+    setCanvasDim(prev => ({ w: Math.max(prev.w, maxX), h: Math.max(prev.h, maxY) }))
+  }, [terms])
 
   const handleSave = async () => {
     setSaving(true)
@@ -3051,6 +3072,13 @@ function KodBloklariHaritasi() {
     window.addEventListener('wheel', handleWheel, { passive: false })
     return () => window.removeEventListener('wheel', handleWheel)
   }, [])
+
+  useEffect(() => {
+    if (terms.length === 0) return
+    const maxX = Math.max(...terms.map(t => t.x)) + KB_NODE_W / 2 + 120
+    const maxY = Math.max(...terms.map(t => t.y)) + KB_NODE_H / 2 + 120
+    setCanvasDim(prev => ({ w: Math.max(prev.w, maxX), h: Math.max(prev.h, maxY) }))
+  }, [terms])
 
   const handleSave = async () => {
     setSaving(true)
@@ -4644,7 +4672,7 @@ const RH_CAT_LABELS = {
 
 function ReklamHiyerarsisiHaritasi() {
   const containerRef = useRef(null)
-  const [canvasDim, setCanvasDim] = useState({ w: 880, h: 555 })
+  const [canvasDim, setCanvasDim] = useState({ w: 1400, h: 900 })
   const [hovered, setHovered] = useState(null)
   const [selectedIds, setSelectedIds] = useState([])
   const [selectionBox, setSelectionBox] = useState(null)
@@ -4667,7 +4695,7 @@ function ReklamHiyerarsisiHaritasi() {
         if (data && !Array.isArray(data) && data.terms) {
           setTerms(data.terms)
           setConnections(data.connections || [])
-          if (data.metadata?.w) setCanvasDim({ w: data.metadata.w, h: data.metadata.h || 600 })
+          if (data.metadata?.w) setCanvasDim({ w: Math.max(data.metadata.w, 1400), h: Math.max(data.metadata.h || 600, 900) })
         } else if (data && Array.isArray(data) && data.length > 0) {
           setTerms(data)
         }
@@ -4689,6 +4717,19 @@ function ReklamHiyerarsisiHaritasi() {
     window.addEventListener('wheel', handleWheel, { passive: false })
     return () => window.removeEventListener('wheel', handleWheel)
   }, [])
+
+  // Canvas otomatik büyür — node dışarı taşınca canvas genişler
+  useEffect(() => {
+    if (terms.length === 0) return
+    const padX = RH_NODE_W / 2 + 120
+    const padY = RH_NODE_H / 2 + 120
+    const maxX = Math.max(...terms.map(t => t.x)) + padX
+    const maxY = Math.max(...terms.map(t => t.y)) + padY
+    setCanvasDim(prev => ({
+      w: Math.max(prev.w, maxX),
+      h: Math.max(prev.h, maxY)
+    }))
+  }, [terms])
 
   const handleSave = async () => {
     setSaving(true)
@@ -5629,6 +5670,13 @@ function AnaHaritasi() {
     window.addEventListener('wheel', handleWheel, { passive: false })
     return () => window.removeEventListener('wheel', handleWheel)
   }, [])
+
+  useEffect(() => {
+    if (terms.length === 0) return
+    const maxX = Math.max(...terms.map(t => t.x)) + KB_NODE_W / 2 + 120
+    const maxY = Math.max(...terms.map(t => t.y)) + KB_NODE_H / 2 + 120
+    setCanvasDim(prev => ({ w: Math.max(prev.w, maxX), h: Math.max(prev.h, maxY) }))
+  }, [terms])
 
   const handleSave = async () => {
     setSaving(true)
