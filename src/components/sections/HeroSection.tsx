@@ -79,7 +79,9 @@ export default function HeroSection() {
       <div className={`w-[50%] lg:w-[52%] flex justify-center lg:block origin-center ${lang === 'en' ? 'scale-[1.38] sm:scale-[1.15]' : 'scale-[1.20] sm:scale-100'} -ml-16 pr-8 sm:ml-0 sm:pr-0`}>
         <div className="w-full relative">
           <MasonryGallery />
-          <HeroServiceCards />
+          <div className="hidden md:block">
+            <HeroServiceCards />
+          </div>
         </div>
       </div>
 
