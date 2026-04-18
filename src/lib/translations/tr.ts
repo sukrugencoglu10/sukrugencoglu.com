@@ -46,6 +46,61 @@ export const tr: Translations = {
       {
         title: "Pazarlama Otomasyonu (n8n & Yapay Zeka)",
         desc: "Manuel işleri operasyonunuzdan çıkarıyorum. n8n ve yapay zeka araçlarıyla; gelen potansiyel müşterileri anında CRM sisteminize aktarıyor, bildirimleri otomatize ediyor ve veri akışını insan hatasından arındırıyorum."
+      },
+      {
+        title: "SEO",
+        desc: "Sadece üst sıralara çıkmanızı değil, gelen her ziyaretçinin anlam taşımasını sağlayan veri odaklı SEO hizmeti.",
+        sections: [
+          {
+            heading: "1. Teknik SEO Denetimi ve Altyapı Optimizasyonu",
+            intro: "Sitenin arama motorları tarafından ne kadar iyi tarandığını ve dizine eklendiğini belirleyen temel aşamadır.",
+            bullets: [
+              { label: "Site Hızı ve Core Web Vitals", text: "Next.js ve Tailwind CSS gibi modern teknolojiler kullanarak sayfa yükleme hızlarının (LCP, FID, CLS) optimize edilmesi." },
+              { label: "Tarama Bütçesi ve İndeksleme Kontrolü", text: "Robots.txt, XML Site haritaları ve 404/301 yönlendirmelerinin yönetimi." },
+              { label: "Mobil Uyumluluk", text: "Sitenin tüm cihazlarda kusursuz çalışmasının sağlanması." },
+              { label: "Structured Data (Schema Markup)", text: "Google'ın site içeriğini daha iyi anlaması için JSON-LD formatında teknik veri işaretlemeleri." },
+            ],
+          },
+          {
+            heading: "2. Gelişmiş Veri Takibi ve Analitik (Growth Odaklı)",
+            intro: "Sıradan bir SEO hizmetinden sizi ayıran, 'Technical Marketing' uzmanlığını konuşturacağınız kısımdır.",
+            bullets: [
+              { label: "GTM (Server-Side) Kurulumu", text: "Veri kaybını önlemek için sunucu taraflı Google Tag Manager kurulumu." },
+              { label: "GA4 Event Takibi", text: "Sadece trafik değil, form doldurma ve buton tıklama gibi dönüşüm odaklı metriklerin takibi." },
+              { label: "Looker Studio Raporlaması", text: "SEO performansını (organik trafik, tıklanma oranı, kelime sıralamaları) canlı izleyebileceğiniz özel dashboard paneli." },
+            ],
+          },
+          {
+            heading: "3. Kelime Stratejisi ve İçerik Optimizasyonu",
+            intro: "Kullanıcı niyetine (Search Intent) uygun içerik planlaması.",
+            bullets: [
+              { label: "Rakip Analizi", text: "Sektördeki rakiplerin hangi kelimelerden trafik çektiğinin tespiti." },
+              { label: "Semantik İçerik Planı", text: "LSI (Latent Semantic Indexing) kavramına uygun, sadece anahtar kelimeyi değil konuyu kapsayan içeriklerin üretilmesi." },
+              { label: "Mevcut İçeriklerin Revizesi", text: "Düşük performans gösteren sayfaların güncellenerek tekrar sıralama kazanması." },
+            ],
+          },
+          {
+            heading: "4. Sayfa İçi (On-Page) SEO",
+            intro: undefined,
+            bullets: [
+              { label: "Meta Veri Yönetimi", text: "Tıklama oranını (CTR) artıracak başlık (Title) ve açıklama (Description) optimizasyonları." },
+              { label: "Hiyerarşik Etiketleme", text: "H1, H2, H3 yapısının anlamsal bütünlük içinde kurulması." },
+              { label: "Dahili Linkleme", text: "Site içi otorite aktarımı için stratejik link köprülerinin kurulması." },
+            ],
+          },
+          {
+            heading: "5. Sayfa Dışı (Off-Page) ve Otorite Yönetimi",
+            intro: undefined,
+            bullets: [
+              { label: "Backlink Profili Analizi", text: "Zararlı linklerin temizlenmesi ve doğal, otoriter bağlantı kazanımı stratejileri." },
+              { label: "Yerel SEO (Google Business Profile)", text: "Fiziksel işletmeler için haritalarda ve yerel aramalarda görünürlük artırma." },
+            ],
+          },
+        ],
+        closing: {
+          heading: "Neden Bu Hizmetleri Almalısınız?",
+          text: "Sunduğum hizmet, sadece üst sıralara çıkmanızı değil, gelen trafiğin anlamlı verilere dönüşmesini ve yatırım getirisinin (ROI) ölçülebilir olmasını sağlar. Modern web teknolojileri (Next.js vb.) ile birleşen teknik SEO altyapısı, uzun vadeli ve kalıcı bir dijital varlık inşa eder.",
+        },
       }
     ]
   },

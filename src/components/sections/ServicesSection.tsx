@@ -4,8 +4,8 @@ import { useState, useRef } from "react";
 import { useLanguage } from "@/context/LanguageContext";
 import Badge from "@/components/ui/Badge";
 
-const ICONS = ["⚡", "📡", "📊", "🤖"];
-const COLORS = ["#ff5f00", "#1D9E75", "#2563eb", "#7c3aed"];
+const ICONS = ["⚡", "📡", "📊", "🤖", "🔍"];
+const COLORS = ["#ff5f00", "#1D9E75", "#2563eb", "#7c3aed", "#0ea5e9"];
 
 export default function ServicesSection() {
   const { t } = useLanguage();
@@ -129,9 +129,33 @@ export default function ServicesSection() {
                 <h3 className="text-2xl lg:text-3xl font-extrabold text-ink mb-4 leading-snug">
                   {items[active].title}
                 </h3>
-                <p className="text-ink-secondary leading-relaxed text-[0.95rem]">
-                  {items[active].desc}
-                </p>
+                {items[active].sections ? (
+                  <div className="overflow-y-auto max-h-[380px] pr-2 space-y-5 text-[0.9rem]">
+                    {items[active].sections!.map((sec, si) => (
+                      <div key={si}>
+                        <p className="font-bold text-ink mb-1">{sec.heading}</p>
+                        {sec.intro && <p className="text-ink-secondary mb-2 leading-relaxed">{sec.intro}</p>}
+                        <ul className="space-y-1">
+                          {sec.bullets.map((b, bi) => (
+                            <li key={bi} className="text-ink-secondary leading-relaxed">
+                              <span className="font-semibold text-ink">{b.label}:</span> {b.text}
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    ))}
+                    {items[active].closing && (
+                      <div className="border-t border-border pt-4">
+                        <p className="font-bold text-ink mb-1">{items[active].closing!.heading}</p>
+                        <p className="text-ink-secondary leading-relaxed italic">&ldquo;{items[active].closing!.text}&rdquo;</p>
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <p className="text-ink-secondary leading-relaxed text-[0.95rem]">
+                    {items[active].desc}
+                  </p>
+                )}
               </div>
 
               {/* Progress dots */}
@@ -180,9 +204,33 @@ export default function ServicesSection() {
               <h3 className="text-xl font-extrabold text-ink mb-3 leading-snug">
                 {items[active].title}
               </h3>
-              <p className="text-ink-secondary leading-relaxed text-sm">
-                {items[active].desc}
-              </p>
+              {items[active].sections ? (
+                <div className="overflow-y-auto max-h-[340px] pr-1 space-y-4 text-sm">
+                  {items[active].sections!.map((sec, si) => (
+                    <div key={si}>
+                      <p className="font-bold text-ink mb-1">{sec.heading}</p>
+                      {sec.intro && <p className="text-ink-secondary mb-1 leading-relaxed">{sec.intro}</p>}
+                      <ul className="space-y-1">
+                        {sec.bullets.map((b, bi) => (
+                          <li key={bi} className="text-ink-secondary leading-relaxed">
+                            <span className="font-semibold text-ink">{b.label}:</span> {b.text}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  ))}
+                  {items[active].closing && (
+                    <div className="border-t border-border pt-3">
+                      <p className="font-bold text-ink mb-1">{items[active].closing!.heading}</p>
+                      <p className="text-ink-secondary leading-relaxed italic">&ldquo;{items[active].closing!.text}&rdquo;</p>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <p className="text-ink-secondary leading-relaxed text-sm">
+                  {items[active].desc}
+                </p>
+              )}
             </div>
 
             {/* Mobile nav */}

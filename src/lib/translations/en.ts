@@ -44,6 +44,61 @@ export const en = {
       {
         title: "Marketing Automation (n8n & AI)",
         desc: "I eliminate manual tasks from your operations. Using n8n and AI tools, I instantly transfer incoming leads to your CRM system, automate notifications, and free your data flow from human error."
+      },
+      {
+        title: "SEO",
+        desc: "A data-driven SEO service that doesn't just rank you higher — it makes every visitor count.",
+        sections: [
+          {
+            heading: "1. Technical SEO Audit & Infrastructure Optimization",
+            intro: "The foundational phase that determines how well your site is crawled and indexed by search engines.",
+            bullets: [
+              { label: "Site Speed & Core Web Vitals", text: "Optimizing page load metrics (LCP, FID, CLS) using modern technologies like Next.js and Tailwind CSS." },
+              { label: "Crawl Budget & Indexing Control", text: "Management of Robots.txt, XML Sitemaps, and 404/301 redirects." },
+              { label: "Mobile Compatibility", text: "Ensuring the site works flawlessly across all devices." },
+              { label: "Structured Data (Schema Markup)", text: "Technical JSON-LD markup for Google to better understand site content." },
+            ],
+          },
+          {
+            heading: "2. Advanced Data Tracking & Analytics (Growth-Focused)",
+            intro: "Where your Technical Marketing expertise sets the standard SEO service apart.",
+            bullets: [
+              { label: "GTM (Server-Side) Setup", text: "Server-side Google Tag Manager implementation to prevent data loss." },
+              { label: "GA4 Event Tracking", text: "Tracking conversion-focused metrics like form submissions and button clicks — not just traffic." },
+              { label: "Looker Studio Reporting", text: "Custom dashboard for monitoring SEO performance (organic traffic, CTR, keyword rankings) in real time." },
+            ],
+          },
+          {
+            heading: "3. Keyword Strategy & Content Optimization",
+            intro: "Content planning aligned with user intent (Search Intent).",
+            bullets: [
+              { label: "Competitor Analysis", text: "Identifying which keywords competitors are driving traffic from." },
+              { label: "Semantic Content Plan", text: "LSI-aligned content that covers the full topic, not just a single keyword." },
+              { label: "Content Revision", text: "Updating underperforming pages to regain rankings." },
+            ],
+          },
+          {
+            heading: "4. On-Page SEO",
+            intro: undefined,
+            bullets: [
+              { label: "Metadata Management", text: "Title and Description optimizations to increase click-through rates (CTR)." },
+              { label: "Hierarchical Tagging", text: "Structuring H1, H2, H3 tags with semantic coherence." },
+              { label: "Internal Linking", text: "Strategic link bridges for intra-site authority transfer." },
+            ],
+          },
+          {
+            heading: "5. Off-Page SEO & Authority Management",
+            intro: undefined,
+            bullets: [
+              { label: "Backlink Profile Analysis", text: "Cleaning harmful links and strategies for acquiring natural, authoritative backlinks." },
+              { label: "Local SEO (Google Business Profile)", text: "Increasing visibility in maps and local searches for physical businesses." },
+            ],
+          },
+        ],
+        closing: {
+          heading: "Why Choose This Service?",
+          text: "The service I offer doesn't just help you rank higher — it ensures that incoming traffic converts into meaningful data and that ROI is measurable. A technical SEO infrastructure combined with modern web technologies (Next.js, etc.) builds a long-term, lasting digital presence.",
+        },
       }
     ]
   },
@@ -213,6 +268,12 @@ export interface Translations {
     items: {
       title: string;
       desc: string;
+      sections?: {
+        heading: string;
+        intro?: string;
+        bullets: { label: string; text: string }[];
+      }[];
+      closing?: { heading: string; text: string };
     }[];
   };
   about: {
