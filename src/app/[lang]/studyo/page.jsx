@@ -5470,8 +5470,8 @@ function KisaNotlar() {
 }
 
 // ─── Araç listesi ─────────────────────────────────────────────────────────────
-// ─── NAA Blok Zihin Haritası ──────────────────────────────────────────────────
-function NaaHaritasi() {
+// ─── ANA Blok Zihin Haritası ──────────────────────────────────────────────────
+function AnaHaritasi() {
   const containerRef = useRef(null)
   const [canvasDim, setCanvasDim] = useState({ w: 880, h: 555 })
   const [hovered, setHovered] = useState(null)
@@ -5485,7 +5485,7 @@ function NaaHaritasi() {
   const [lastSaved, setLastSaved] = useState(null)
 
   useEffect(() => {
-    fetch('/api/naa-harita')
+    fetch('/api/ana-harita')
       .then(r => r.json())
       .then(data => {
         if (data && data.terms) {
@@ -5494,13 +5494,13 @@ function NaaHaritasi() {
           if (data.metadata?.w) setCanvasDim({ w: data.metadata.w, h: data.metadata.h || 555 })
         }
       })
-      .catch(err => console.error('NAA yükleme hatası:', err))
+      .catch(err => console.error('ANA yükleme hatası:', err))
   }, [])
 
   const handleSave = async () => {
     setSaving(true)
     try {
-      const res = await fetch('/api/naa-harita', {
+      const res = await fetch('/api/ana-harita', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ terms, connections, metadata: canvasDim }),
@@ -5530,7 +5530,7 @@ function NaaHaritasi() {
   const connectedIds = activeIds.size > 0 ? new Set([...activeIds, ...connections.filter(c => activeIds.has(c.from)).map(c => c.to), ...connections.filter(c => activeIds.has(c.to)).map(c => c.from)]) : null
 
   const handleAddNode = () => {
-    const id = 'naa_' + Math.random().toString(36).substr(2, 9)
+    const id = 'ana_' + Math.random().toString(36).substr(2, 9)
     const node = { id, abbr: 'Yeni Düğüm', sub: 'Alt başlık...', cat: 'frontend', x: 300 + Math.random() * 100, y: 200 + Math.random() * 100, desc: 'Açıklama...' }
     setTerms([...terms, node]); setSelectedIds([id]); setEditId(id)
   }
@@ -5545,7 +5545,7 @@ function NaaHaritasi() {
     <div style={{ padding: '2rem 1.25rem', fontFamily: 'inherit' }}>
       <div style={{ marginBottom: '1.25rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <div>
-          <h1 style={{ fontSize: 22, fontWeight: 500, margin: 0 }}>NAA Blok</h1>
+          <h1 style={{ fontSize: 22, fontWeight: 500, margin: 0 }}>ANA Blok</h1>
           <p style={{ fontSize: 13, color: '#888', marginTop: 4 }}>Zihin haritası — düğüm ekle, bağlantı kur, kaydet</p>
         </div>
         <button onClick={handleAddNode} style={{ background: '#fff', border: '1px solid #ddd', borderRadius: 8, padding: '6px 12px', fontSize: 12, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6, color: '#444' }}>
@@ -5572,15 +5572,15 @@ function NaaHaritasi() {
           >
             <svg width={canvasDim.w} height={canvasDim.h} style={{ position: 'absolute', top: 0, left: 0, pointerEvents: 'none', overflow: 'visible', zIndex: 5 }}>
               <defs>
-                <marker id="naa-arr" markerWidth="7" markerHeight="7" refX="7" refY="3.5" orient="auto"><path d="M0,0 L0,7 L7,3.5 z" fill="#ccc" /></marker>
-                <marker id="naa-arr-hi" markerWidth="7" markerHeight="7" refX="7" refY="3.5" orient="auto"><path d="M0,0 L0,7 L7,3.5 z" fill="#777" /></marker>
+                <marker id="ana-arr" markerWidth="7" markerHeight="7" refX="7" refY="3.5" orient="auto"><path d="M0,0 L0,7 L7,3.5 z" fill="#ccc" /></marker>
+                <marker id="ana-arr-hi" markerWidth="7" markerHeight="7" refX="7" refY="3.5" orient="auto"><path d="M0,0 L0,7 L7,3.5 z" fill="#777" /></marker>
               </defs>
               {connections.map((conn, i) => {
                 const from = termMap[conn.from], to = termMap[conn.to]
                 if (!from || !to) return null
                 const p1 = kbEdgePoint(from, to), p2 = kbEdgePoint(to, from)
                 const isActive = activeIds.has(conn.from) || activeIds.has(conn.to)
-                return <line key={i} x1={p1.x} y1={p1.y} x2={p2.x} y2={p2.y} stroke={isActive ? '#777' : '#ddd'} strokeWidth={isActive ? 2 : 1.5} markerEnd={isActive ? 'url(#naa-arr-hi)' : 'url(#naa-arr)'} />
+                return <line key={i} x1={p1.x} y1={p1.y} x2={p2.x} y2={p2.y} stroke={isActive ? '#777' : '#ddd'} strokeWidth={isActive ? 2 : 1.5} markerEnd={isActive ? 'url(#ana-arr-hi)' : 'url(#ana-arr)'} />
               })}
             </svg>
             {selectionBox && <div style={{ position: 'absolute', border: '1px solid rgba(29,158,117,0.5)', background: 'rgba(29,158,117,0.1)', left: Math.min(selectionBox.startX, selectionBox.currX), top: Math.min(selectionBox.startY, selectionBox.currY), width: Math.abs(selectionBox.currX - selectionBox.startX), height: Math.abs(selectionBox.currY - selectionBox.startY), pointerEvents: 'none', zIndex: 10, borderRadius: 4 }} />}
@@ -5633,11 +5633,11 @@ function NaaHaritasi() {
                     <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
                       <div style={{ padding: '5px 10px', fontSize: 12, background: '#f0f0f0', border: '0.5px solid #ccc', borderRadius: 6, fontWeight: 700, whiteSpace: 'nowrap', color: '#333' }}>A: {selectedTerm.abbr}</div>
                       <span style={{ fontSize: 16, color: '#999' }}>→</span>
-                      <select id="naa-target-select" style={{ flex: 1, padding: '6px 10px', fontSize: 12, border: '0.5px solid #ccc', borderRadius: 6, outline: 'none', background: '#fff' }}>
+                      <select id="ana-target-select" style={{ flex: 1, padding: '6px 10px', fontSize: 12, border: '0.5px solid #ccc', borderRadius: 6, outline: 'none', background: '#fff' }}>
                         <option value="">B düğümünü seç...</option>
                         {terms.filter(t => t.id !== selectedTerm.id).map(t => (<option key={t.id} value={t.id}>{t.abbr} ({t.sub})</option>))}
                       </select>
-                      <button onClick={() => { const sel = document.getElementById('naa-target-select'); if (sel.value) handleAddConnection(sel.value) }} style={{ padding: '6px 14px', fontSize: 12, background: '#f5f5f5', border: '0.5px solid #ccc', borderRadius: 6, cursor: 'pointer' }}>Ekle</button>
+                      <button onClick={() => { const sel = document.getElementById('ana-target-select'); if (sel.value) handleAddConnection(sel.value) }} style={{ padding: '6px 14px', fontSize: 12, background: '#f5f5f5', border: '0.5px solid #ccc', borderRadius: 6, cursor: 'pointer' }}>Ekle</button>
                     </div>
                     <div style={{ marginTop: 12, display: 'flex', flexDirection: 'column', gap: 6 }}>
                       {connections.filter(c => c.from === selectedTerm.id).map(c => { const target = termMap[c.to]; if (!target) return null; return (<div key={c.to} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '4px 8px', background: '#f9f9f9', border: '0.5px solid #eee', borderRadius: 6, fontSize: 11 }}><span>→ {target.abbr}</span><button onClick={() => handleRemoveConnection(c.to)} style={{ border: 'none', background: 'none', cursor: 'pointer', color: '#ff4d4f' }}>Kaldır</button></div>) })}
@@ -5740,10 +5740,10 @@ const TOOLS = [
     component: KisaNotlar,
   },
   {
-    id: 'naa-harita',
-    label: 'NAA Blok',
+    id: 'ana-harita',
+    label: 'ANA Blok',
     icon: '⬡',
-    component: NaaHaritasi,
+    component: AnaHaritasi,
   },
 ]
 
