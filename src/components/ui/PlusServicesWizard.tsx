@@ -162,16 +162,12 @@ export default function PlusServicesWizard({ showContactButton = false }: { show
                     + {otherLabel}
                   </button>
 
-                  <a
-                    href={`https://wa.me/905324072694?text=${encodeURIComponent(t.contact.whatsapp_message)}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    onClick={() => trackWhatsAppClick({ click_location: "plus_services_widget", click_text: "Bize Doğrudan Ulaşın" })}
-                    className="mt-3 w-full py-3 rounded-xl bg-[#25D366] hover:bg-[#1db954] text-white text-sm font-semibold text-center flex items-center justify-center gap-2 transition-colors"
+                  <button
+                    onClick={() => handleSelect(otherLabel)}
+                    className="mt-3 w-full py-3 rounded-xl bg-[#ff6b00] hover:bg-[#e56000] text-white text-sm font-semibold transition-colors border-none cursor-pointer"
                   >
-                    {WA_ICON}
-                    Bize Doğrudan Ulaşın
-                  </a>
+                    Seç ve İlerle →
+                  </button>
                 </>
               )}
 
