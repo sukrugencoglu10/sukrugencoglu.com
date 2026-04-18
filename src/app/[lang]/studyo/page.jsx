@@ -857,6 +857,8 @@ function MantiKHaritasi() {
   const [canvasZoom, setCanvasZoom] = useState(1)
   const canvasZoomRef = useRef(1)
   const setZoom = (z) => { canvasZoomRef.current = z; setCanvasZoom(z) }
+  const selectionBoxRef = useRef(null)
+  const canvasRef = useRef(null)
 
   useEffect(() => {
     fetch('/api/reklam-terimleri')
@@ -1015,62 +1017,50 @@ function MantiKHaritasi() {
       </div>
 
       {/* Canvas */}
-      <div ref={containerRef} style={{ overflowX: 'auto', background: '#fafafa', border: '0.5px solid #e8e8e8', borderRadius: 12, padding: '8px 0 12px' }}>
-        <div style={{ position: "relative", width: canvasDim.w, height: canvasDim.h, margin: 0, transform: `scale(${canvasZoom})`, transformOrigin: 'top left', transition: 'transform 0.15s ease-out' }}
+      <div ref={containerRef} style={{ overflow: 'auto', background: '#fafafa', border: '0.5px solid #e8e8e8', borderRadius: 12, padding: '8px 0 12px' }}>
+        <div style={{ width: canvasDim.w * canvasZoom, height: canvasDim.h * canvasZoom, flexShrink: 0 }}>
+        <div ref={canvasRef} style={{ position: "relative", width: canvasDim.w, height: canvasDim.h, margin: 0, transform: `scale(${canvasZoom})`, transformOrigin: 'top left', transition: 'transform 0.15s ease-out' }}
              onMouseDown={(e) => {
                if (e.button !== 0) return
                if (e.target !== e.currentTarget && e.target.tagName !== 'svg') return
                const cssZoom = parseFloat(getComputedStyle(document.documentElement).zoom) || 1
                const rect = e.currentTarget.getBoundingClientRect()
-               const x = (e.clientX / cssZoom - rect.left) / canvasZoom
-               const y = (e.clientY / cssZoom - rect.top) / canvasZoom
-               setSelectionBox({ startX: x, startY: y, currX: x, currY: y })
+               const x = (e.clientX / cssZoom - rect.left) / canvasZoomRef.current
+               const y = (e.clientY / cssZoom - rect.top) / canvasZoomRef.current
+               const box = { startX: x, startY: y, currX: x, currY: y }
+               selectionBoxRef.current = box
+               setSelectionBox(box)
+               const wasShift = e.shiftKey
                if (!e.shiftKey) setSelectedIds([])
                setEditId(null)
-             }}
-             onMouseMove={(e) => {
-               if (selectionBox) {
-                 const cssZoom = parseFloat(getComputedStyle(document.documentElement).zoom) || 1
-                 const rect = e.currentTarget.getBoundingClientRect()
-                 setSelectionBox({
-                   ...selectionBox,
-                   currX: (e.clientX / cssZoom - rect.left) / canvasZoom,
-                   currY: (e.clientY / cssZoom - rect.top) / canvasZoom
-                 })
+               const onWinMove = (me) => {
+                 if (!selectionBoxRef.current || !canvasRef.current) return
+                 const cz = parseFloat(getComputedStyle(document.documentElement).zoom) || 1
+                 const r = canvasRef.current.getBoundingClientRect()
+                 const nb = { ...selectionBoxRef.current, currX: (me.clientX / cz - r.left) / canvasZoomRef.current, currY: (me.clientY / cz - r.top) / canvasZoomRef.current }
+                 selectionBoxRef.current = nb
+                 setSelectionBox(nb)
                }
-             }}
-             onMouseUp={(e) => {
-               if (selectionBox) {
-                 const minX = Math.min(selectionBox.startX, selectionBox.currX)
-                 const maxX = Math.max(selectionBox.startX, selectionBox.currX)
-                 const minY = Math.min(selectionBox.startY, selectionBox.currY)
-                 const maxY = Math.max(selectionBox.startY, selectionBox.currY)
-
-                 const newlySelected = terms.filter(t => {
-                   const halfW = NODE_W / 2
-                   const halfH = NODE_H / 2
-                   const nodeMinX = t.x - halfW
-                   const nodeMaxX = t.x + halfW
-                   const nodeMinY = t.y - halfH
-                   const nodeMaxY = t.y + halfH
-
-                   return (
-                     nodeMinX < maxX &&
-                     nodeMaxX > minX &&
-                     nodeMinY < maxY &&
-                     nodeMaxY > minY
-                   )
-                 }).map(t => t.id)
-
-                 if (e.shiftKey) {
-                   setSelectedIds(prev => Array.from(new Set([...prev, ...newlySelected])))
-                 } else {
-                   setSelectedIds(newlySelected)
+               const onWinUp = () => {
+                 const sb = selectionBoxRef.current
+                 if (sb) {
+                   const minX = Math.min(sb.startX, sb.currX), maxX = Math.max(sb.startX, sb.currX)
+                   const minY = Math.min(sb.startY, sb.currY), maxY = Math.max(sb.startY, sb.currY)
+                   const newlySelected = terms.filter(t => {
+                     const hw = NODE_W / 2, hh = NODE_H / 2
+                     return t.x - hw < maxX && t.x + hw > minX && t.y - hh < maxY && t.y + hh > minY
+                   }).map(t => t.id)
+                   if (wasShift) setSelectedIds(prev => Array.from(new Set([...prev, ...newlySelected])))
+                   else setSelectedIds(newlySelected)
+                   selectionBoxRef.current = null
+                   setSelectionBox(null)
                  }
-                 setSelectionBox(null)
+                 window.removeEventListener('mousemove', onWinMove)
+                 window.removeEventListener('mouseup', onWinUp)
                }
+               window.addEventListener('mousemove', onWinMove)
+               window.addEventListener('mouseup', onWinUp)
              }}
-             onMouseLeave={() => setSelectionBox(null)}
           >
 
           {/* SVG bağlantı çizgileri */}
@@ -1196,6 +1186,7 @@ function MantiKHaritasi() {
               </div>
             )
           })}
+        </div>
         </div>
       </div>
 
@@ -1584,6 +1575,8 @@ function YzHaritasi() {
   const [canvasZoom, setCanvasZoom] = useState(1)
   const canvasZoomRef = useRef(1)
   const setZoom = (z) => { canvasZoomRef.current = z; setCanvasZoom(z) }
+  const selectionBoxRef = useRef(null)
+  const canvasRef = useRef(null)
 
   useEffect(() => {
     fetch('/api/ai-terimleri')
@@ -1745,61 +1738,49 @@ function YzHaritasi() {
 
         {/* Canvas */}
         <div ref={containerRef} style={{ flex: 1, overflow: "auto", resize: "both", minHeight: 400, background: '#fafafa', border: '0.5px solid #e8e8e8', borderRadius: 12, padding: '8px 0 10px' }}>
-          <div style={{ position: "relative", width: canvasDim.w, height: canvasDim.h, margin: 0, transform: `scale(${canvasZoom})`, transformOrigin: 'top left', transition: 'transform 0.15s ease-out' }}
+          <div style={{ width: canvasDim.w * canvasZoom, height: canvasDim.h * canvasZoom, flexShrink: 0 }}>
+          <div ref={canvasRef} style={{ position: "relative", width: canvasDim.w, height: canvasDim.h, margin: 0, transform: `scale(${canvasZoom})`, transformOrigin: 'top left', transition: 'transform 0.15s ease-out' }}
              onMouseDown={(e) => {
                if (e.button !== 0) return
                if (e.target !== e.currentTarget && e.target.tagName !== 'svg') return
                const cssZoom = parseFloat(getComputedStyle(document.documentElement).zoom) || 1
                const rect = e.currentTarget.getBoundingClientRect()
-               const x = (e.clientX / cssZoom - rect.left) / canvasZoom
-               const y = (e.clientY / cssZoom - rect.top) / canvasZoom
-               setSelectionBox({ startX: x, startY: y, currX: x, currY: y })
+               const x = (e.clientX / cssZoom - rect.left) / canvasZoomRef.current
+               const y = (e.clientY / cssZoom - rect.top) / canvasZoomRef.current
+               const box = { startX: x, startY: y, currX: x, currY: y }
+               selectionBoxRef.current = box
+               setSelectionBox(box)
+               const wasShift = e.shiftKey
                if (!e.shiftKey) setSelectedIds([])
                setEditId(null)
-             }}
-             onMouseMove={(e) => {
-               if (selectionBox) {
-                 const cssZoom = parseFloat(getComputedStyle(document.documentElement).zoom) || 1
-                 const rect = e.currentTarget.getBoundingClientRect()
-                 setSelectionBox({
-                   ...selectionBox,
-                   currX: (e.clientX / cssZoom - rect.left) / canvasZoom,
-                   currY: (e.clientY / cssZoom - rect.top) / canvasZoom
-                 })
+               const onWinMove = (me) => {
+                 if (!selectionBoxRef.current || !canvasRef.current) return
+                 const cz = parseFloat(getComputedStyle(document.documentElement).zoom) || 1
+                 const r = canvasRef.current.getBoundingClientRect()
+                 const nb = { ...selectionBoxRef.current, currX: (me.clientX / cz - r.left) / canvasZoomRef.current, currY: (me.clientY / cz - r.top) / canvasZoomRef.current }
+                 selectionBoxRef.current = nb
+                 setSelectionBox(nb)
                }
-             }}
-             onMouseUp={(e) => {
-               if (selectionBox) {
-                 const minX = Math.min(selectionBox.startX, selectionBox.currX)
-                 const maxX = Math.max(selectionBox.startX, selectionBox.currX)
-                 const minY = Math.min(selectionBox.startY, selectionBox.currY)
-                 const maxY = Math.max(selectionBox.startY, selectionBox.currY)
-
-                 const newlySelected = terms.filter(t => {
-                   const halfW = AI_NODE_W / 2
-                   const halfH = AI_NODE_H / 2
-                   const nodeMinX = t.x - halfW
-                   const nodeMaxX = t.x + halfW
-                   const nodeMinY = t.y - halfH
-                   const nodeMaxY = t.y + halfH
-
-                   return (
-                     nodeMinX < maxX &&
-                     nodeMaxX > minX &&
-                     nodeMinY < maxY &&
-                     nodeMaxY > minY
-                   )
-                 }).map(t => t.id)
-
-                 if (e.shiftKey) {
-                   setSelectedIds(prev => Array.from(new Set([...prev, ...newlySelected])))
-                 } else {
-                   setSelectedIds(newlySelected)
+               const onWinUp = () => {
+                 const sb = selectionBoxRef.current
+                 if (sb) {
+                   const minX = Math.min(sb.startX, sb.currX), maxX = Math.max(sb.startX, sb.currX)
+                   const minY = Math.min(sb.startY, sb.currY), maxY = Math.max(sb.startY, sb.currY)
+                   const newlySelected = terms.filter(t => {
+                     const hw = AI_NODE_W / 2, hh = AI_NODE_H / 2
+                     return t.x - hw < maxX && t.x + hw > minX && t.y - hh < maxY && t.y + hh > minY
+                   }).map(t => t.id)
+                   if (wasShift) setSelectedIds(prev => Array.from(new Set([...prev, ...newlySelected])))
+                   else setSelectedIds(newlySelected)
+                   selectionBoxRef.current = null
+                   setSelectionBox(null)
                  }
-                 setSelectionBox(null)
+                 window.removeEventListener('mousemove', onWinMove)
+                 window.removeEventListener('mouseup', onWinUp)
                }
+               window.addEventListener('mousemove', onWinMove)
+               window.addEventListener('mouseup', onWinUp)
              }}
-             onMouseLeave={() => setSelectionBox(null)}
           >
 
             {/* SVG çizgiler */}
@@ -1922,6 +1903,7 @@ function YzHaritasi() {
                 </div>
               )
             })}
+          </div>
           </div>
         </div>
 
@@ -3038,6 +3020,8 @@ function KodBloklariHaritasi() {
   const [canvasZoom, setCanvasZoom] = useState(1)
   const canvasZoomRef = useRef(1)
   const setZoom = (z) => { canvasZoomRef.current = z; setCanvasZoom(z) }
+  const selectionBoxRef = useRef(null)
+  const canvasRef = useRef(null)
 
   useEffect(() => {
     fetch('/api/kod-bloklari')
@@ -3197,33 +3181,44 @@ function KodBloklariHaritasi() {
 
       <div style={{ display: 'flex', gap: 16, alignItems: 'flex-start' }}>
         <div ref={containerRef} style={{ flex: 1, overflow: "auto", minHeight: 400, background: '#fafafa', border: '0.5px solid #e8e8e8', borderRadius: 12, padding: '8px 0 10px' }}>
-          <div style={{ position: "relative", width: canvasDim.w, height: canvasDim.h, margin: 0, transform: `scale(${canvasZoom})`, transformOrigin: 'top left', transition: 'transform 0.15s ease-out' }}
+          <div style={{ width: canvasDim.w * canvasZoom, height: canvasDim.h * canvasZoom, flexShrink: 0 }}>
+          <div ref={canvasRef} style={{ position: "relative", width: canvasDim.w, height: canvasDim.h, margin: 0, transform: `scale(${canvasZoom})`, transformOrigin: 'top left', transition: 'transform 0.15s ease-out' }}
              onMouseDown={(e) => {
                if (e.button !== 0) return
                if (e.target !== e.currentTarget && e.target.tagName !== 'svg') return
                const rect = e.currentTarget.getBoundingClientRect()
-               const x = (e.clientX - rect.left) / canvasZoom, y = (e.clientY - rect.top) / canvasZoom
-               setSelectionBox({ startX: x, startY: y, currX: x, currY: y })
+               const x = (e.clientX - rect.left) / canvasZoomRef.current
+               const y = (e.clientY - rect.top) / canvasZoomRef.current
+               const box = { startX: x, startY: y, currX: x, currY: y }
+               selectionBoxRef.current = box
+               setSelectionBox(box)
+               const wasShift = e.shiftKey
                if (!e.shiftKey) setSelectedIds([])
                setEditId(null)
-             }}
-             onMouseMove={(e) => {
-               if (selectionBox) {
-                 const rect = e.currentTarget.getBoundingClientRect()
-                 setSelectionBox({ ...selectionBox, currX: (e.clientX - rect.left) / canvasZoom, currY: (e.clientY - rect.top) / canvasZoom })
+               const onWinMove = (me) => {
+                 if (!selectionBoxRef.current || !canvasRef.current) return
+                 const r = canvasRef.current.getBoundingClientRect()
+                 const nb = { ...selectionBoxRef.current, currX: (me.clientX - r.left) / canvasZoomRef.current, currY: (me.clientY - r.top) / canvasZoomRef.current }
+                 selectionBoxRef.current = nb
+                 setSelectionBox(nb)
                }
-             }}
-             onMouseUp={(e) => {
-               if (selectionBox) {
-                 const x1 = Math.min(selectionBox.startX, selectionBox.currX), x2 = Math.max(selectionBox.startX, selectionBox.currX)
-                 const y1 = Math.min(selectionBox.startY, selectionBox.currY), y2 = Math.max(selectionBox.startY, selectionBox.currY)
-                 const newly = terms.filter(t => t.x > x1 && t.x < x2 && t.y > y1 && t.y < y2).map(t => t.id)
-                 if (e.shiftKey) setSelectedIds(prev => Array.from(new Set([...prev, ...newly])))
-                 else setSelectedIds(newly)
-                 setSelectionBox(null)
+               const onWinUp = () => {
+                 const sb = selectionBoxRef.current
+                 if (sb) {
+                   const x1 = Math.min(sb.startX, sb.currX), x2 = Math.max(sb.startX, sb.currX)
+                   const y1 = Math.min(sb.startY, sb.currY), y2 = Math.max(sb.startY, sb.currY)
+                   const newly = terms.filter(t => t.x > x1 && t.x < x2 && t.y > y1 && t.y < y2).map(t => t.id)
+                   if (wasShift) setSelectedIds(prev => Array.from(new Set([...prev, ...newly])))
+                   else setSelectedIds(newly)
+                   selectionBoxRef.current = null
+                   setSelectionBox(null)
+                 }
+                 window.removeEventListener('mousemove', onWinMove)
+                 window.removeEventListener('mouseup', onWinUp)
                }
+               window.addEventListener('mousemove', onWinMove)
+               window.addEventListener('mouseup', onWinUp)
              }}
-             onMouseLeave={() => setSelectionBox(null)}
           >
             <svg width={canvasDim.w} height={canvasDim.h} style={{ position: 'absolute', top: 0, left: 0, pointerEvents: 'none', overflow: 'visible', zIndex: 5 }}>
               <defs>
@@ -3264,6 +3259,7 @@ function KodBloklariHaritasi() {
                 </div>
               )
             })}
+          </div>
           </div>
         </div>
 
@@ -4661,6 +4657,8 @@ function ReklamHiyerarsisiHaritasi() {
   const [canvasZoom, setCanvasZoom] = useState(1)
   const canvasZoomRef = useRef(1)
   const setZoom = (z) => { canvasZoomRef.current = z; setCanvasZoom(z) }
+  const selectionBoxRef = useRef(null)
+  const canvasRef = useRef(null)
   const [isPanning, setIsPanning] = useState(false)
   const panStart = useRef({ x: 0, y: 0, sl: 0, st: 0 })
 
@@ -4855,61 +4853,49 @@ function ReklamHiyerarsisiHaritasi() {
             }
           }}
         >
-          <div style={{ position: "relative", width: canvasDim.w, height: canvasDim.h, margin: 0, transform: `scale(${canvasZoom})`, transformOrigin: 'top left', transition: 'transform 0.15s ease-out' }}
+          <div style={{ width: canvasDim.w * canvasZoom, height: canvasDim.h * canvasZoom, flexShrink: 0 }}>
+          <div ref={canvasRef} style={{ position: "relative", width: canvasDim.w, height: canvasDim.h, margin: 0, transform: `scale(${canvasZoom})`, transformOrigin: 'top left', transition: 'transform 0.15s ease-out' }}
              onMouseDown={(e) => {
                if (e.button !== 0) return
                if (e.target !== e.currentTarget && e.target.tagName !== 'svg') return
                const cssZoom = parseFloat(getComputedStyle(document.documentElement).zoom) || 1
                const rect = e.currentTarget.getBoundingClientRect()
-               const x = (e.clientX / cssZoom - rect.left) / canvasZoom
-               const y = (e.clientY / cssZoom - rect.top) / canvasZoom
-               setSelectionBox({ startX: x, startY: y, currX: x, currY: y })
+               const x = (e.clientX / cssZoom - rect.left) / canvasZoomRef.current
+               const y = (e.clientY / cssZoom - rect.top) / canvasZoomRef.current
+               const box = { startX: x, startY: y, currX: x, currY: y }
+               selectionBoxRef.current = box
+               setSelectionBox(box)
+               const wasShift = e.shiftKey
                if (!e.shiftKey) setSelectedIds([])
                setEditId(null)
-             }}
-             onMouseMove={(e) => {
-               if (selectionBox) {
-                 const cssZoom = parseFloat(getComputedStyle(document.documentElement).zoom) || 1
-                 const rect = e.currentTarget.getBoundingClientRect()
-                 setSelectionBox({
-                   ...selectionBox,
-                   currX: (e.clientX / cssZoom - rect.left) / canvasZoom,
-                   currY: (e.clientY / cssZoom - rect.top) / canvasZoom
-                 })
+               const onWinMove = (me) => {
+                 if (!selectionBoxRef.current || !canvasRef.current) return
+                 const cz = parseFloat(getComputedStyle(document.documentElement).zoom) || 1
+                 const r = canvasRef.current.getBoundingClientRect()
+                 const nb = { ...selectionBoxRef.current, currX: (me.clientX / cz - r.left) / canvasZoomRef.current, currY: (me.clientY / cz - r.top) / canvasZoomRef.current }
+                 selectionBoxRef.current = nb
+                 setSelectionBox(nb)
                }
-             }}
-             onMouseUp={(e) => {
-               if (selectionBox) {
-                 const minX = Math.min(selectionBox.startX, selectionBox.currX)
-                 const maxX = Math.max(selectionBox.startX, selectionBox.currX)
-                 const minY = Math.min(selectionBox.startY, selectionBox.currY)
-                 const maxY = Math.max(selectionBox.startY, selectionBox.currY)
-
-                 const newlySelected = terms.filter(t => {
-                   const halfW = RH_NODE_W / 2
-                   const halfH = RH_NODE_H / 2
-                   const nodeMinX = t.x - halfW
-                   const nodeMaxX = t.x + halfW
-                   const nodeMinY = t.y - halfH
-                   const nodeMaxY = t.y + halfH
-
-                   return (
-                     nodeMinX < maxX &&
-                     nodeMaxX > minX &&
-                     nodeMinY < maxY &&
-                     nodeMaxY > minY
-                   )
-                 }).map(t => t.id)
-
-                 if (e.shiftKey) {
-                   setSelectedIds(prev => Array.from(new Set([...prev, ...newlySelected])))
-                 } else {
-                   setSelectedIds(newlySelected)
+               const onWinUp = () => {
+                 const sb = selectionBoxRef.current
+                 if (sb) {
+                   const minX = Math.min(sb.startX, sb.currX), maxX = Math.max(sb.startX, sb.currX)
+                   const minY = Math.min(sb.startY, sb.currY), maxY = Math.max(sb.startY, sb.currY)
+                   const newlySelected = terms.filter(t => {
+                     const hw = RH_NODE_W / 2, hh = RH_NODE_H / 2
+                     return t.x - hw < maxX && t.x + hw > minX && t.y - hh < maxY && t.y + hh > minY
+                   }).map(t => t.id)
+                   if (wasShift) setSelectedIds(prev => Array.from(new Set([...prev, ...newlySelected])))
+                   else setSelectedIds(newlySelected)
+                   selectionBoxRef.current = null
+                   setSelectionBox(null)
                  }
-                 setSelectionBox(null)
+                 window.removeEventListener('mousemove', onWinMove)
+                 window.removeEventListener('mouseup', onWinUp)
                }
+               window.addEventListener('mousemove', onWinMove)
+               window.addEventListener('mouseup', onWinUp)
              }}
-             onMouseLeave={() => setSelectionBox(null)}
           >
 
             <svg width={canvasDim.w} height={canvasDim.h} style={{ position: 'absolute', top: 0, left: 0, pointerEvents: 'none', overflow: 'visible', zIndex: 5 }}>
@@ -5030,6 +5016,7 @@ function ReklamHiyerarsisiHaritasi() {
                 </div>
               )
             })}
+          </div>
           </div>
         </div>
 
@@ -5641,6 +5628,8 @@ function AnaHaritasi() {
   const [canvasZoom, setCanvasZoom] = useState(1)
   const canvasZoomRef = useRef(1)
   const setZoom = (z) => { canvasZoomRef.current = z; setCanvasZoom(z) }
+  const selectionBoxRef = useRef(null)
+  const canvasRef = useRef(null)
 
   useEffect(() => {
     fetch('/api/ana-harita')
@@ -5734,11 +5723,44 @@ function AnaHaritasi() {
 
       <div style={{ display: 'flex', gap: 16, alignItems: 'flex-start' }}>
         <div ref={containerRef} style={{ flex: 1, overflow: 'auto', minHeight: 400, background: '#fafafa', border: '0.5px solid #e8e8e8', borderRadius: 12, padding: '8px 0 10px' }}>
-          <div style={{ position: 'relative', width: canvasDim.w, height: canvasDim.h, transform: `scale(${canvasZoom})`, transformOrigin: 'top left', transition: 'transform 0.15s ease-out' }}
-            onMouseDown={(e) => { if (e.button !== 0) return; if (e.target !== e.currentTarget && e.target.tagName !== 'svg') return; const rect = e.currentTarget.getBoundingClientRect(); const x = (e.clientX - rect.left) / canvasZoom, y = (e.clientY - rect.top) / canvasZoom; setSelectionBox({ startX: x, startY: y, currX: x, currY: y }); if (!e.shiftKey) setSelectedIds([]); setEditId(null) }}
-            onMouseMove={(e) => { if (selectionBox) { const rect = e.currentTarget.getBoundingClientRect(); setSelectionBox({ ...selectionBox, currX: (e.clientX - rect.left) / canvasZoom, currY: (e.clientY - rect.top) / canvasZoom }) } }}
-            onMouseUp={(e) => { if (selectionBox) { const x1 = Math.min(selectionBox.startX, selectionBox.currX), x2 = Math.max(selectionBox.startX, selectionBox.currX), y1 = Math.min(selectionBox.startY, selectionBox.currY), y2 = Math.max(selectionBox.startY, selectionBox.currY); const newly = terms.filter(t => t.x > x1 && t.x < x2 && t.y > y1 && t.y < y2).map(t => t.id); if (e.shiftKey) setSelectedIds(prev => Array.from(new Set([...prev, ...newly]))); else setSelectedIds(newly); setSelectionBox(null) } }}
-            onMouseLeave={() => setSelectionBox(null)}
+          <div style={{ width: canvasDim.w * canvasZoom, height: canvasDim.h * canvasZoom, flexShrink: 0 }}>
+          <div ref={canvasRef} style={{ position: 'relative', width: canvasDim.w, height: canvasDim.h, transform: `scale(${canvasZoom})`, transformOrigin: 'top left', transition: 'transform 0.15s ease-out' }}
+            onMouseDown={(e) => {
+              if (e.button !== 0) return
+              if (e.target !== e.currentTarget && e.target.tagName !== 'svg') return
+              const rect = e.currentTarget.getBoundingClientRect()
+              const x = (e.clientX - rect.left) / canvasZoomRef.current
+              const y = (e.clientY - rect.top) / canvasZoomRef.current
+              const box = { startX: x, startY: y, currX: x, currY: y }
+              selectionBoxRef.current = box
+              setSelectionBox(box)
+              const wasShift = e.shiftKey
+              if (!e.shiftKey) setSelectedIds([])
+              setEditId(null)
+              const onWinMove = (me) => {
+                if (!selectionBoxRef.current || !canvasRef.current) return
+                const r = canvasRef.current.getBoundingClientRect()
+                const nb = { ...selectionBoxRef.current, currX: (me.clientX - r.left) / canvasZoomRef.current, currY: (me.clientY - r.top) / canvasZoomRef.current }
+                selectionBoxRef.current = nb
+                setSelectionBox(nb)
+              }
+              const onWinUp = () => {
+                const sb = selectionBoxRef.current
+                if (sb) {
+                  const x1 = Math.min(sb.startX, sb.currX), x2 = Math.max(sb.startX, sb.currX)
+                  const y1 = Math.min(sb.startY, sb.currY), y2 = Math.max(sb.startY, sb.currY)
+                  const newly = terms.filter(t => t.x > x1 && t.x < x2 && t.y > y1 && t.y < y2).map(t => t.id)
+                  if (wasShift) setSelectedIds(prev => Array.from(new Set([...prev, ...newly])))
+                  else setSelectedIds(newly)
+                  selectionBoxRef.current = null
+                  setSelectionBox(null)
+                }
+                window.removeEventListener('mousemove', onWinMove)
+                window.removeEventListener('mouseup', onWinUp)
+              }
+              window.addEventListener('mousemove', onWinMove)
+              window.addEventListener('mouseup', onWinUp)
+            }}
           >
             <svg width={canvasDim.w} height={canvasDim.h} style={{ position: 'absolute', top: 0, left: 0, pointerEvents: 'none', overflow: 'visible', zIndex: 5 }}>
               <defs>
@@ -5784,6 +5806,7 @@ function AnaHaritasi() {
                 </div>
               )
             })}
+          </div>
           </div>
         </div>
 
