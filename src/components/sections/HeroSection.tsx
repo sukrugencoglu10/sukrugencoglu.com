@@ -61,14 +61,14 @@ export default function HeroSection() {
               click_location: "hero_cta",
               click_text: t.hero.cta_primary,
             })}
-            className="bg-[#12b347] text-white py-[13px] px-[26px] rounded-[4px] no-underline font-semibold text-[0.9rem] inline-block transition-all duration-200 hover:bg-[#0e933a] hover:-translate-y-[2px]"
+            className="bg-[#12b347] text-white py-[13px] px-[26px] rounded-[4px] no-underline font-semibold text-[0.9rem] inline-block transition-all duration-200 hover:bg-[#0e933a] hover:-translate-y-[2px] whitespace-nowrap"
           >
             {t.hero.cta_primary}
           </a>
 
           <Link
             href="#hizmetlerimiz"
-            className="text-[#666] underline text-[0.85rem] font-medium transition-colors duration-200 hover:text-[#111]"
+            className="text-[#666] underline text-[0.85rem] font-medium transition-colors duration-200 hover:text-[#111] whitespace-nowrap"
           >
             {t.hero.cta_secondary}
           </Link>
