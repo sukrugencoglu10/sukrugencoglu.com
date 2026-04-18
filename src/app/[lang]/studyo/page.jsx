@@ -4659,25 +4659,6 @@ function ReklamHiyerarsisiHaritasi() {
   const setZoom = (z) => { canvasZoomRef.current = z; setCanvasZoom(z) }
   const selectionBoxRef = useRef(null)
   const canvasRef = useRef(null)
-  const [isPanning, setIsPanning] = useState(false)
-  const panStart = useRef({ x: 0, y: 0, sl: 0, st: 0 })
-
-  // Pan (scroll) with drag on empty areas
-  useEffect(() => {
-    if (!isPanning) return
-    const onMove = (e) => {
-      if (!containerRef.current) return
-      containerRef.current.scrollLeft = panStart.current.sl - (e.clientX - panStart.current.x)
-      containerRef.current.scrollTop  = panStart.current.st - (e.clientY - panStart.current.y)
-    }
-    const onUp = () => setIsPanning(false)
-    window.addEventListener('mousemove', onMove)
-    window.addEventListener('mouseup', onUp)
-    return () => {
-      window.removeEventListener('mousemove', onMove)
-      window.removeEventListener('mouseup', onUp)
-    }
-  }, [isPanning])
 
   useEffect(() => {
     fetch('/api/reklam-hiyerarsisi-harita')
@@ -4841,17 +4822,7 @@ function ReklamHiyerarsisiHaritasi() {
       <div style={{ display: 'flex', gap: 16, alignItems: 'flex-start' }}>
 
         <div ref={containerRef}
-          style={{ flex: 1, overflow: "auto", resize: "both", minHeight: 400, background: '#fafafa', border: '0.5px solid #e8e8e8', borderRadius: 12, padding: '8px 0 10px', cursor: isPanning ? 'grabbing' : 'grab' }}
-          onMouseDownCapture={(e) => {
-            const target = e.target
-            const isNode = target.closest('div[style*="cursor: grab"]') !== null || target.closest('div[style*="cursor: grabbing"]') !== null
-            const isButton = target.closest('button') !== null
-            if (!isNode && !isButton) {
-              panStart.current = { x: e.clientX, y: e.clientY, sl: containerRef.current?.scrollLeft || 0, st: containerRef.current?.scrollTop || 0 }
-              setIsPanning(true)
-              e.stopPropagation()
-            }
-          }}
+          style={{ flex: 1, overflow: "auto", resize: "both", minHeight: 400, background: '#fafafa', border: '0.5px solid #e8e8e8', borderRadius: 12, padding: '8px 0 10px' }}
         >
           <div style={{ width: canvasDim.w * canvasZoom, height: canvasDim.h * canvasZoom, flexShrink: 0 }}>
           <div ref={canvasRef} style={{ position: "relative", width: canvasDim.w, height: canvasDim.h, margin: 0, transform: `scale(${canvasZoom})`, transformOrigin: 'top left', transition: 'transform 0.15s ease-out' }}
