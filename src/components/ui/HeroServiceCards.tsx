@@ -1,138 +1,262 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import ServiceModal from "./ServiceModal";
+import GrowthForm from "./GrowthForm";
+import PlusServicesWizard from "./PlusServicesWizard";
 
 const CARDS = [
   {
+    id: "ads" as const,
     badge: "Reklam ve Analiz",
-    badgeColor: "#ff5f00",
+    color: "#ff5f00",
+    gradientFrom: "#fff4ee",
     icon: "📊",
-    title: "Google & Meta Ads",
+    iconBg: "linear-gradient(135deg, #ff5f00 0%, #ff8c42 100%)",
+    title: "Google & Meta Ads\nYönetimi",
+    subtitle: "Veriye dayalı kampanyalar, ölçülebilir sonuçlar.",
     bullets: [
-      "Sunucu Taraflı GTM",
-      "Dönüşüm & CAPI Takibi",
+      "Sunucu Taraflı GTM Kurulumu",
+      "Facebook CAPI & Dönüşüm Takibi",
+      "Looker Studio Raporlaması",
       "Reklam Optimizasyonu",
     ],
+    cta: "Ücretsiz Analiz Al →",
+    modalTitle: "Reklam ve Analiz",
   },
   {
+    id: "plus" as const,
     badge: "+Plus Hizmetlerimiz",
-    badgeColor: "#7c3aed",
+    color: "#7c3aed",
+    gradientFrom: "#f5f0ff",
     icon: "⚡",
-    title: "Özel Yazılım Altyapıları",
+    iconBg: "linear-gradient(135deg, #7c3aed 0%, #a78bfa 100%)",
+    title: "Özel Yazılım\nAltyapıları",
+    subtitle: "İşletmenize özel sistem, sıfır manuel iş.",
     bullets: [
       "Web Site & SEO",
       "Veri Paneli & Otomasyon",
-      "Özel CRM & Süreç Sistemleri",
+      "Müşteri Yönetimi (CRM)",
+      "Süreç Otomasyonu",
     ],
+    cta: "Hızlı Başvuru →",
+    modalTitle: "+Plus Hizmetlerimiz",
   },
 ];
 
+// 0 = gallery, 1 = ads card, 2 = plus card
+const TOTAL = CARDS.length + 1;
+const DURATIONS = [4500, 5000, 5000];
+
 export default function HeroServiceCards() {
   const [active, setActive] = useState(0);
-  const [visible, setVisible] = useState(false);
+  const [modal, setModal] = useState<"ads" | "plus" | null>(null);
+  const [paused, setPaused] = useState(false);
 
-  useEffect(() => {
-    const show = setTimeout(() => setVisible(true), 800);
-    return () => clearTimeout(show);
+  const advance = useCallback(() => {
+    setActive((prev) => (prev + 1) % TOTAL);
   }, []);
 
   useEffect(() => {
-    const interval = setInterval(() => {
-      setActive((prev) => (prev + 1) % CARDS.length);
-    }, 4000);
-    return () => clearInterval(interval);
-  }, []);
+    if (paused) return;
+    const delay = DURATIONS[active] ?? 5000;
+    const t = setTimeout(advance, delay);
+    return () => clearTimeout(t);
+  }, [active, paused, advance]);
 
-  const card = CARDS[active];
+  const openModal = (id: "ads" | "plus") => {
+    setPaused(true);
+    setModal(id);
+  };
+  const closeModal = () => {
+    setModal(null);
+    setPaused(false);
+  };
+
+  const activeCard = active > 0 ? CARDS[active - 1] : null;
 
   return (
-    <div
-      className="absolute bottom-4 left-0 right-0 px-3 pointer-events-none"
-      style={{ zIndex: 10 }}
-    >
-      <div
-        style={{
-          opacity: visible ? 1 : 0,
-          transform: visible ? "translateY(0)" : "translateY(20px)",
-          transition: "opacity 0.6s ease, transform 0.6s ease",
-        }}
-      >
-        {/* Card */}
-        <div
-          style={{
-            background: "rgba(255,255,255,0.92)",
-            backdropFilter: "blur(12px)",
-            border: "1px solid rgba(0,0,0,0.08)",
-            borderTop: `3px solid ${card.badgeColor}`,
-            boxShadow: "0 8px 32px rgba(0,0,0,0.12)",
-            transition: "border-top-color 0.5s ease",
-          }}
-          className="rounded-2xl p-4"
-        >
-          {/* Badge */}
-          <div className="flex items-center justify-between mb-3">
-            <span
+    <>
+      {/* Overlay panels — absolute inset-0 over MasonryGallery */}
+      <div className="absolute inset-0 pointer-events-none" style={{ zIndex: 8 }}>
+        <AnimatePresence mode="wait">
+          {activeCard && (
+            <motion.div
+              key={activeCard.id}
+              className="absolute inset-0 flex flex-col justify-center items-center p-6"
               style={{
-                background: `${card.badgeColor}15`,
-                color: card.badgeColor,
-                border: `1px solid ${card.badgeColor}30`,
-                transition: "all 0.5s ease",
+                background: `linear-gradient(145deg, ${activeCard.gradientFrom} 0%, #ffffff 70%)`,
+                borderRadius: 24,
+                overflow: "hidden",
+                pointerEvents: "auto",
               }}
-              className="inline-flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full"
+              initial={{ opacity: 0, scale: 0.97, y: 16 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.97, y: -16 }}
+              transition={{ duration: 0.55, ease: [0.25, 0.46, 0.45, 0.94] }}
+              onMouseEnter={() => setPaused(true)}
+              onMouseLeave={() => setPaused(false)}
             >
-              <span>{card.icon}</span>
-              {card.badge}
-            </span>
-
-            {/* Dots */}
-            <div className="flex gap-1.5">
-              {CARDS.map((_, i) => (
-                <button
-                  key={i}
-                  onClick={() => setActive(i)}
-                  style={{
-                    width: i === active ? 16 : 6,
-                    background: i === active ? card.badgeColor : "#d1d5db",
-                    transition: "all 0.3s ease",
-                    pointerEvents: "auto",
-                  }}
-                  className="h-1.5 rounded-full border-none p-0 cursor-pointer"
-                  aria-label={`Kart ${i + 1}`}
-                />
-              ))}
-            </div>
-          </div>
-
-          {/* Content with crossfade */}
-          <div style={{ position: "relative", minHeight: 64 }}>
-            {CARDS.map((c, i) => (
+              {/* Decorative blob top-right */}
               <div
-                key={i}
                 style={{
-                  opacity: i === active ? 1 : 0,
-                  transform: i === active ? "translateY(0)" : "translateY(-6px)",
-                  transition: "opacity 0.5s ease, transform 0.5s ease",
-                  position: i === active ? "relative" : "absolute",
-                  top: 0,
-                  left: 0,
-                  right: 0,
-                  pointerEvents: i === active ? "auto" : "none",
+                  position: "absolute",
+                  top: -60,
+                  right: -60,
+                  width: 200,
+                  height: 200,
+                  borderRadius: "50%",
+                  background: activeCard.color,
+                  opacity: 0.07,
+                  pointerEvents: "none",
                 }}
-              >
-                <p className="text-sm font-extrabold text-ink mb-2">{c.title}</p>
-                <ul className="space-y-1">
-                  {c.bullets.map((b, bi) => (
-                    <li key={bi} className="flex items-center gap-1.5 text-xs text-ink-secondary">
-                      <span style={{ color: CARDS[i].badgeColor }} className="font-bold">✓</span>
+              />
+              {/* Decorative blob bottom-left */}
+              <div
+                style={{
+                  position: "absolute",
+                  bottom: -40,
+                  left: -40,
+                  width: 140,
+                  height: 140,
+                  borderRadius: "50%",
+                  background: activeCard.color,
+                  opacity: 0.05,
+                  pointerEvents: "none",
+                }}
+              />
+
+              {/* Content */}
+              <div className="relative z-10 w-full max-w-xs mx-auto text-center flex flex-col items-center gap-4">
+                {/* Icon */}
+                <div
+                  style={{
+                    background: activeCard.iconBg,
+                    width: 72,
+                    height: 72,
+                    borderRadius: 20,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    fontSize: 32,
+                    boxShadow: `0 12px 32px ${activeCard.color}40`,
+                  }}
+                >
+                  {activeCard.icon}
+                </div>
+
+                {/* Badge */}
+                <span
+                  style={{
+                    background: `${activeCard.color}15`,
+                    color: activeCard.color,
+                    border: `1px solid ${activeCard.color}30`,
+                  }}
+                  className="text-[10px] font-bold uppercase tracking-widest px-3 py-1 rounded-full"
+                >
+                  {activeCard.badge}
+                </span>
+
+                {/* Title */}
+                <h3
+                  className="text-xl font-extrabold text-ink leading-tight"
+                  style={{ whiteSpace: "pre-line" }}
+                >
+                  {activeCard.title}
+                </h3>
+
+                {/* Subtitle */}
+                <p className="text-xs text-ink-secondary leading-relaxed -mt-1">
+                  {activeCard.subtitle}
+                </p>
+
+                {/* Bullets */}
+                <ul className="w-full text-left space-y-1.5">
+                  {activeCard.bullets.map((b, i) => (
+                    <li key={i} className="flex items-center gap-2 text-xs text-ink-secondary">
+                      <span
+                        style={{
+                          background: activeCard.iconBg,
+                          width: 18,
+                          height: 18,
+                          borderRadius: 6,
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          color: "#fff",
+                          fontSize: 10,
+                          fontWeight: 700,
+                          flexShrink: 0,
+                        }}
+                      >
+                        ✓
+                      </span>
                       {b}
                     </li>
                   ))}
                 </ul>
+
+                {/* CTA */}
+                <button
+                  onClick={() => openModal(activeCard.id)}
+                  style={{ background: activeCard.iconBg, boxShadow: `0 6px 20px ${activeCard.color}40` }}
+                  className="w-full py-2.5 rounded-xl text-white text-sm font-bold cursor-pointer border-none transition-opacity hover:opacity-90 mt-1"
+                >
+                  {activeCard.cta}
+                </button>
               </div>
-            ))}
-          </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* Navigation dots — always visible */}
+        <div
+          className="absolute flex gap-2 items-center"
+          style={{ bottom: 14, left: "50%", transform: "translateX(-50%)", zIndex: 20, pointerEvents: "auto" }}
+        >
+          {Array.from({ length: TOTAL }).map((_, i) => {
+            const card = i > 0 ? CARDS[i - 1] : null;
+            const isActive = i === active;
+            return (
+              <button
+                key={i}
+                onClick={() => { setActive(i); setPaused(false); }}
+                style={{
+                  width: isActive ? 20 : 7,
+                  height: 7,
+                  borderRadius: 4,
+                  background: isActive ? (card?.color ?? "#ff5f00") : "rgba(0,0,0,0.2)",
+                  border: "none",
+                  padding: 0,
+                  cursor: "pointer",
+                  transition: "all 0.3s ease",
+                }}
+                aria-label={i === 0 ? "Galeri" : CARDS[i - 1].badge}
+              />
+            );
+          })}
         </div>
       </div>
-    </div>
+
+      {/* Modals */}
+      <ServiceModal
+        isOpen={modal === "ads"}
+        onClose={closeModal}
+        title="Reklam ve Analiz"
+        color="#ff5f00"
+      >
+        <GrowthForm />
+      </ServiceModal>
+
+      <ServiceModal
+        isOpen={modal === "plus"}
+        onClose={closeModal}
+        title="+Plus Hizmetlerimiz"
+        color="#7c3aed"
+      >
+        <PlusServicesWizard />
+      </ServiceModal>
+    </>
   );
 }
