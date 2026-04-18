@@ -2,10 +2,8 @@
 
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import Link from "next/link";
 import { useLanguage } from "@/context/LanguageContext";
 import Badge from "@/components/ui/Badge";
-import { getSlug } from "@/lib/slugs";
 import { trackFormSubmissionPlus, trackWhatsAppClick } from "@/lib/gtm";
 
 const WA_ICON = (
@@ -15,7 +13,7 @@ const WA_ICON = (
 );
 
 export default function PlusServicesWizard({ showContactButton = false }: { showContactButton?: boolean }) {
-  const { t, lang } = useLanguage();
+  const { t } = useLanguage();
   const ps = t.plusServices;
 
   const [step, setStep]               = useState<1 | 2 | 3>(1);
@@ -164,12 +162,16 @@ export default function PlusServicesWizard({ showContactButton = false }: { show
                     + {otherLabel}
                   </button>
 
-                  <Link
-                    href={`/${lang}/${getSlug(lang, "contact")}`}
-                    className="mt-3 w-full py-3 rounded-xl bg-[#ff6b00] text-white text-sm font-semibold text-center block hover:bg-[#e56000] transition-colors"
+                  <a
+                    href={`https://wa.me/905324072694?text=${encodeURIComponent(t.contact.whatsapp_message)}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    onClick={() => trackWhatsAppClick({ click_location: "plus_services_widget", click_text: "Bize Doğrudan Ulaşın" })}
+                    className="mt-3 w-full py-3 rounded-xl bg-[#25D366] hover:bg-[#1db954] text-white text-sm font-semibold text-center flex items-center justify-center gap-2 transition-colors"
                   >
-                    {t.nav.cta}
-                  </Link>
+                    {WA_ICON}
+                    Bize Doğrudan Ulaşın
+                  </a>
                 </>
               )}
 
