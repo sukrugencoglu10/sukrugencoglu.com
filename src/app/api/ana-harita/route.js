@@ -12,13 +12,13 @@ export async function GET() {
   try {
     const supabase = getClient()
     const { data, error } = await supabase
-      .from('naa_harita')
+      .from('ana_harita')
       .select('items')
       .eq('id', 1)
       .maybeSingle()
 
     if (error) {
-      console.error('NAA Harita GET Hatası:', error)
+      console.error('ANA Harita GET Hatası:', error)
       return NextResponse.json({ error: error.message }, { status: 500 })
     }
 
@@ -38,20 +38,20 @@ export async function POST(req) {
     const supabase = getClient()
 
     const { error } = await supabase
-      .from('naa_harita')
+      .from('ana_harita')
       .upsert(
         { id: 1, items: body, updated_at: new Date().toISOString() },
         { onConflict: 'id' }
       )
 
     if (error) {
-      console.error('NAA Harita POST Hatası:', error)
+      console.error('ANA Harita POST Hatası:', error)
       return NextResponse.json({ error: error.message }, { status: 500 })
     }
 
     return NextResponse.json({ ok: true })
   } catch (err) {
-    console.error('NAA Harita Sunucu Hatası:', err)
+    console.error('ANA Harita Sunucu Hatası:', err)
     return NextResponse.json({ error: err.message }, { status: 500 })
   }
 }
