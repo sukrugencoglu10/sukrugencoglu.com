@@ -64,8 +64,8 @@ export default function ContactSection({ pinnedAnons, mobileFirstRight, noWrappe
               click_location: "contact_section",
               click_text: s.label,
             }) : undefined}
-            className="flex items-center gap-3 group text-ink-secondary hover:text-[#a855f7] transition-colors">
-            <span className="p-2 rounded-lg bg-surface border border-border group-hover:bg-[#a855f7]/10 group-hover:border-[#a855f7]/30 transition-all">{s.icon}</span>
+            className={`flex items-center gap-3 group text-ink-secondary transition-colors ${s.name === "WhatsApp" ? "hover:text-[#25D366]" : "hover:text-[#a855f7]"}`}>
+            <span className={`p-2 rounded-lg bg-surface border border-border transition-all ${s.name === "WhatsApp" ? "group-hover:bg-[#25D366]/10 group-hover:border-[#25D366]/30" : "group-hover:bg-[#a855f7]/10 group-hover:border-[#a855f7]/30"}`}>{s.icon}</span>
             <span className="text-sm font-medium">{s.label}</span>
           </a>
         ))}
