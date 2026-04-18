@@ -105,13 +105,14 @@ export default function ServicesSection() {
 
             {/* Content panel */}
             <div
+              onClick={next}
               style={{
                 boxShadow: `inset 0 3px 0 ${color}, var(--shadow-card)`,
                 opacity: animating ? 0 : 1,
                 transform: animating ? "translateY(8px)" : "translateY(0)",
                 transition: "opacity 0.18s ease, transform 0.18s ease",
               }}
-              className="bg-white rounded-2xl rounded-tl-none p-8 lg:p-10 border border-border flex flex-col justify-between min-h-[320px]"
+              className="bg-white rounded-2xl rounded-tl-none p-8 lg:p-10 border border-border flex flex-col justify-between min-h-[320px] cursor-pointer select-none"
             >
               <div>
                 <div
@@ -130,7 +131,7 @@ export default function ServicesSection() {
                   {items[active].title}
                 </h3>
                 {items[active].sections ? (
-                  <div className="overflow-y-auto max-h-[380px] pr-2 space-y-5 text-[0.9rem]">
+                  <div onClick={e => e.stopPropagation()} className="overflow-y-auto max-h-[380px] pr-2 space-y-5 text-[0.9rem]">
                     {items[active].sections!.map((sec, si) => (
                       <div key={si}>
                         <p className="font-bold text-ink mb-1">{sec.heading}</p>
@@ -184,13 +185,14 @@ export default function ServicesSection() {
             onTouchEnd={handleTouchEnd}
           >
             <div
+              onClick={next}
               style={{
                 boxShadow: `inset 0 3px 0 ${color}, var(--shadow-card)`,
                 opacity: animating ? 0 : 1,
                 transform: animating ? "translateX(12px)" : "translateX(0)",
                 transition: "opacity 0.18s ease, transform 0.18s ease",
               }}
-              className="bg-white rounded-2xl p-6 border border-border"
+              className="bg-white rounded-2xl p-6 border border-border cursor-pointer select-none"
             >
               <div
                 style={{ background: `${color}15`, color }}
@@ -205,7 +207,7 @@ export default function ServicesSection() {
                 {items[active].title}
               </h3>
               {items[active].sections ? (
-                <div className="overflow-y-auto max-h-[340px] pr-1 space-y-4 text-sm">
+                <div onClick={e => e.stopPropagation()} className="overflow-y-auto max-h-[340px] pr-1 space-y-4 text-sm">
                   {items[active].sections!.map((sec, si) => (
                     <div key={si}>
                       <p className="font-bold text-ink mb-1">{sec.heading}</p>
