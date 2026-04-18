@@ -52,7 +52,7 @@ export default function HeroSection() {
           )}
         </h1>
 
-        <div className="flex items-center justify-start gap-4 lg:gap-6 flex-wrap">
+        <div className="flex items-center justify-start gap-4 lg:gap-6">
           <a
             href={`https://wa.me/905324072694?text=${encodeURIComponent(t.contact.whatsapp_message)}`}
             target="_blank"
