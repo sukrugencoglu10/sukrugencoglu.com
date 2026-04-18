@@ -10,10 +10,10 @@ const CARDS = [
   {
     id: "ads" as const,
     badge: "Reklam ve Analiz",
-    color: "#ff5f00",
-    gradientFrom: "#fff4ee",
+    color: "#a855f7",
+    gradientFrom: "#faf5ff",
     icon: "📊",
-    iconBg: "linear-gradient(135deg, #ff5f00 0%, #ff8c42 100%)",
+    iconBg: "linear-gradient(135deg, #a855f7 0%, #c084fc 100%)",
     title: "Google & Meta Ads\nYönetimi",
     subtitle: "Veriye dayalı kampanyalar, ölçülebilir sonuçlar.",
     bullets: [
@@ -28,10 +28,10 @@ const CARDS = [
   {
     id: "plus" as const,
     badge: "+Plus Hizmetlerimiz",
-    color: "#7c3aed",
-    gradientFrom: "#f5f0ff",
+    color: "#ff6b00",
+    gradientFrom: "#fff4ee",
     icon: "⚡",
-    iconBg: "linear-gradient(135deg, #7c3aed 0%, #a78bfa 100%)",
+    iconBg: "linear-gradient(135deg, #ff6b00 0%, #ff8c42 100%)",
     title: "Özel Yazılım\nAltyapıları",
     subtitle: "İşletmenize özel sistem, sıfır manuel iş.",
     bullets: [
@@ -95,6 +95,7 @@ export default function HeroServiceCards() {
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.97, y: -16 }}
               transition={{ duration: 0.55, ease: [0.25, 0.46, 0.45, 0.94] }}
+              onClick={() => { setActive((prev) => (prev + 1) % TOTAL); setPaused(false); }}
               onMouseEnter={() => setPaused(true)}
               onMouseLeave={() => setPaused(false)}
             >
@@ -199,7 +200,7 @@ export default function HeroServiceCards() {
 
                 {/* CTA */}
                 <button
-                  onClick={() => openModal(activeCard.id)}
+                  onClick={(e) => { e.stopPropagation(); openModal(activeCard.id); }}
                   style={{ background: activeCard.iconBg, boxShadow: `0 6px 20px ${activeCard.color}40` }}
                   className="w-full py-2.5 rounded-xl text-white text-sm font-bold cursor-pointer border-none transition-opacity hover:opacity-90 mt-1"
                 >
