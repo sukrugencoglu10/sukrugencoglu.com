@@ -78,7 +78,7 @@ export default async function BlogPostPage({
   const title = lang === "tr" ? post.titleTR : post.titleEN;
   const content = lang === "tr" ? post.contentTR : post.contentEN;
   const backPath = lang === "tr" ? "calismalar" : "work";
-  const backLabel = lang === "tr" ? "← Çalışmalar" : "← Work";
+  const backLabel = lang === "tr" ? "← Blog Yazıları" : "← Blog Posts";
 
   const formattedDate = new Date(post.publishedAt).toLocaleDateString(
     lang === "tr" ? "tr-TR" : "en-US",
