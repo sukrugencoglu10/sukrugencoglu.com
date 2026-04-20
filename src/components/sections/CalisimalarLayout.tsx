@@ -224,12 +224,8 @@ function BlogCards() {
   );
 
   return (
-    <div style={{ padding: "2rem", animation: "fadeInDetail 0.2s ease-out" }}>
-      <div style={{
-        display: "grid",
-        gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))",
-        gap: "1.25rem",
-      }}>
+    <div style={{ animation: "fadeInDetail 0.2s ease-out" }}>
+      <div className="cal-blog-grid">
         {posts.map(post => {
           const title = lang === "tr" ? post.titleTR : post.titleEN;
           const summary = lang === "tr" ? post.summaryTR : post.summaryEN;
@@ -327,54 +323,23 @@ export default function CalisimalarLayout() {
     <div style={{ minHeight: "calc(100vh - 80px)", background: "#fafafa", fontFamily: "inherit" }}>
 
       {/* ── Top tab bar ── */}
-      <div style={{
-        position: "sticky",
-        top: 80,
-        zIndex: 20,
-        background: "#fff",
-        borderBottom: "0.5px solid #e8e8e8",
-        display: "flex",
-        alignItems: "stretch",
-        justifyContent: "center",
-        gap: 0,
-      }}>
-        {/* Tab buttons */}
+      <div className="cal-tabbar">
         {SECTIONS.map(sec => {
           const isActive = activeSection === sec.id;
           return (
             <button
               key={sec.id}
               onClick={() => handleSectionClick(sec.id)}
-              style={{
-                display: "flex", alignItems: "center", gap: 7,
-                padding: "14px 18px",
-                border: "none",
-                borderBottom: `2.5px solid ${isActive ? "#111" : "transparent"}`,
-                background: "transparent",
-                cursor: "pointer",
-                fontFamily: "inherit",
-                fontSize: 13,
-                fontWeight: isActive ? 700 : 500,
-                color: isActive ? "#111" : "#888",
-                transition: "all 0.15s",
-                whiteSpace: "nowrap",
-              }}>
-              <span style={{ fontSize: 15 }}>{sec.icon}</span>
-              <span>{sec.label}</span>
+              className={`cal-tab${isActive ? " cal-tab--active" : ""}`}>
+              <span className="cal-tab-icon">{sec.icon}</span>
+              <span className="cal-tab-label">{sec.label}</span>
             </button>
           );
         })}
-
-        {/* Close button when section active */}
         {activeSection && (
           <button
             onClick={() => { setActiveSection(null); setActiveItemId(null); }}
-            style={{
-              marginLeft: "auto", marginRight: "0.75rem",
-              padding: "0 12px", border: "none", background: "transparent",
-              cursor: "pointer", fontSize: 18, color: "#ccc", fontFamily: "inherit",
-              transition: "color 0.15s",
-            }}
+            className="cal-tab-close"
             title="Kapat">
             ✕
           </button>
@@ -384,13 +349,13 @@ export default function CalisimalarLayout() {
       {/* ── Content area ── */}
       {!activeSection ? (
         /* Maps view */
-        <div style={{ padding: "2rem 1.5rem" }}>
-          <div style={{ marginBottom: "2rem", textAlign: "center" }}>
-            <h1 style={{ fontSize: "clamp(22px, 3vw, 34px)", fontWeight: 800, color: "#111",
-              margin: "8px 0 12px", lineHeight: 1.2 }}>
+        <div className="cal-maps-wrap">
+          <div style={{ marginBottom: "1.5rem", textAlign: "center" }}>
+            <h1 style={{ fontSize: "clamp(20px, 3vw, 32px)", fontWeight: 800, color: "#111",
+              margin: "0 0 10px", lineHeight: 1.2 }}>
               Canlı Reklam & Web Hiyerarşisi
             </h1>
-            <p style={{ fontSize: 14, color: "#888", maxWidth: 560, margin: "0 auto", lineHeight: 1.7 }}>
+            <p style={{ fontSize: 14, color: "#888", maxWidth: 520, margin: "0 auto", lineHeight: 1.7 }}>
               Aşağıdaki harita, Şükrü Gençoğlu tarafından Stüdyo üzerinde oluşturulan
               ve gerçek zamanlı olarak güncellenen dijital büyüme stratejisini göstermektedir.
             </p>
@@ -403,17 +368,10 @@ export default function CalisimalarLayout() {
         <BlogCards />
       ) : (
         /* Diğer sekmeler — iç liste + detay */
-        <div style={{ display: "flex", minHeight: "calc(100vh - 130px)" }}>
+        <div className={`cal-split${activeItemId ? " cal-split--detail" : ""}`}>
 
           {/* Inner list panel */}
-          <div style={{
-            width: 240,
-            flexShrink: 0,
-            background: "#f7f7f7",
-            borderRight: "0.5px solid #e8e8e8",
-            overflowY: "auto",
-            animation: "slideInLeft 0.18s ease-out",
-          }}>
+          <div className="cal-list-panel">
             <div style={{ padding: "14px 16px 8px", borderBottom: "0.5px solid #ebebeb" }}>
               <div style={{ fontSize: 10, fontWeight: 700, color: "#bbb", letterSpacing: "0.08em" }}>
                 {SECTIONS.find(s => s.id === activeSection)?.label.toUpperCase()}
@@ -425,15 +383,23 @@ export default function CalisimalarLayout() {
           </div>
 
           {/* Detail panel */}
-          <main style={{ flex: 1, minWidth: 0, overflowY: "auto" }}>
+          <main className="cal-detail-panel">
+            {/* Mobile geri butonu */}
+            {activeItemId && (
+              <button
+                onClick={() => setActiveItemId(null)}
+                className="cal-back-btn">
+                ← Listeye Dön
+              </button>
+            )}
             {!activeItemId ? (
               <div style={{ display: "flex", flexDirection: "column", alignItems: "center",
-                justifyContent: "center", height: "100%", minHeight: 360, color: "#ccc", gap: 12 }}>
-                <span style={{ fontSize: 40 }}>{SECTIONS.find(s => s.id === activeSection)?.icon}</span>
-                <span style={{ fontSize: 13 }}>Soldaki listeden bir öğe seç</span>
+                justifyContent: "center", height: "100%", minHeight: 300, color: "#ccc", gap: 12 }}>
+                <span style={{ fontSize: 36 }}>{SECTIONS.find(s => s.id === activeSection)?.icon}</span>
+                <span style={{ fontSize: 13 }}>Listeden bir öğe seç</span>
               </div>
             ) : (
-              <div style={{ animation: "fadeInDetail 0.2s ease-out", minHeight: "100%" }}>
+              <div style={{ animation: "fadeInDetail 0.2s ease-out" }}>
                 {activeSection === "hiyerarsi" && <HiyerarsiDetail itemId={activeItemId} />}
                 {activeSection === "sss"       && <SssDetail       itemId={activeItemId} />}
                 {activeSection === "notlar"    && <NotlarDetail    itemId={activeItemId} />}
@@ -444,6 +410,103 @@ export default function CalisimalarLayout() {
       )}
 
       <style>{`
+        /* ── Tab bar ── */
+        .cal-tabbar {
+          position: sticky;
+          top: 80px;
+          z-index: 20;
+          background: #fff;
+          border-bottom: 0.5px solid #e8e8e8;
+          display: flex;
+          align-items: stretch;
+          justify-content: center;
+          overflow-x: auto;
+          -webkit-overflow-scrolling: touch;
+          scrollbar-width: none;
+        }
+        .cal-tabbar::-webkit-scrollbar { display: none; }
+
+        .cal-tab {
+          display: flex;
+          align-items: center;
+          gap: 7px;
+          padding: 14px 16px;
+          border: none;
+          border-bottom: 2.5px solid transparent;
+          background: transparent;
+          cursor: pointer;
+          font-family: inherit;
+          font-size: 13px;
+          font-weight: 500;
+          color: #888;
+          transition: all 0.15s;
+          white-space: nowrap;
+          flex-shrink: 0;
+        }
+        .cal-tab--active {
+          border-bottom-color: #111;
+          color: #111;
+          font-weight: 700;
+        }
+        .cal-tab-icon { font-size: 15px; }
+        .cal-tab-close {
+          margin-left: auto;
+          margin-right: 0.5rem;
+          padding: 0 12px;
+          border: none;
+          background: transparent;
+          cursor: pointer;
+          font-size: 16px;
+          color: #ccc;
+          flex-shrink: 0;
+        }
+
+        /* ── Maps wrapper ── */
+        .cal-maps-wrap {
+          padding: 1.5rem 1rem;
+        }
+
+        /* ── Split layout ── */
+        .cal-split {
+          display: flex;
+          min-height: calc(100vh - 130px);
+        }
+        .cal-list-panel {
+          width: 240px;
+          flex-shrink: 0;
+          background: #f7f7f7;
+          border-right: 0.5px solid #e8e8e8;
+          overflow-y: auto;
+          animation: slideInLeft 0.18s ease-out;
+        }
+        .cal-detail-panel {
+          flex: 1;
+          min-width: 0;
+          overflow-y: auto;
+        }
+        .cal-back-btn {
+          display: none;
+          margin: 1rem 1rem 0;
+          padding: 7px 14px;
+          border: 0.5px solid #e0e0e0;
+          border-radius: 8px;
+          background: #f5f5f5;
+          font-size: 12px;
+          font-weight: 600;
+          color: #555;
+          cursor: pointer;
+          font-family: inherit;
+        }
+
+        /* ── Blog cards grid ── */
+        .cal-blog-grid {
+          display: grid;
+          grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+          gap: 1.25rem;
+          padding: 1.5rem 1rem;
+        }
+
+        /* ── Animations ── */
         @keyframes slideInLeft {
           from { opacity: 0; transform: translateX(-12px); }
           to   { opacity: 1; transform: translateX(0); }
@@ -451,6 +514,33 @@ export default function CalisimalarLayout() {
         @keyframes fadeInDetail {
           from { opacity: 0; transform: translateY(8px); }
           to   { opacity: 1; transform: translateY(0); }
+        }
+
+        /* ── Mobile ── */
+        @media (max-width: 640px) {
+          .cal-tabbar { justify-content: flex-start; }
+          .cal-tab { padding: 12px 12px; gap: 5px; font-size: 12px; }
+          .cal-tab-label { display: none; }
+          .cal-tab-icon { font-size: 18px; }
+          .cal-tab--active .cal-tab-label { display: inline; }
+
+          .cal-maps-wrap { padding: 1rem 0.75rem; }
+
+          .cal-split { flex-direction: column; }
+          .cal-list-panel { width: 100%; border-right: none; border-bottom: 0.5px solid #e8e8e8; }
+          .cal-split--detail .cal-list-panel { display: none; }
+          .cal-split--detail .cal-detail-panel { display: block; }
+          .cal-back-btn { display: inline-flex; align-items: center; gap: 4px; }
+
+          .cal-blog-grid {
+            grid-template-columns: 1fr;
+            padding: 1rem 0.75rem;
+            gap: 1rem;
+          }
+        }
+
+        @media (max-width: 400px) {
+          .cal-tab { padding: 10px 10px; }
         }
       `}</style>
     </div>

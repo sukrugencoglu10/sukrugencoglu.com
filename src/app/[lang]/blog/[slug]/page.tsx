@@ -90,7 +90,7 @@ export default async function BlogPostPage({
   return (
     <div style={{ minHeight: "100vh", background: "#fafafa" }}>
       {/* Hero */}
-      <div style={{ borderBottom: `2px solid ${accentColor}22`, padding: "1.5rem 1.5rem 1.25rem" }}>
+      <div style={{ borderBottom: `2px solid ${accentColor}22`, padding: "1.25rem 1rem 1rem" }}>
         <div style={{ maxWidth: 720, margin: "0 auto" }}>
           <h1 style={{ fontSize: "clamp(22px, 4vw, 36px)", fontWeight: 800, color: "#111", lineHeight: 1.2, margin: "0 0 10px" }}>
             {title}
@@ -117,7 +117,7 @@ export default async function BlogPostPage({
       </div>
 
       {/* Content */}
-      <div style={{ maxWidth: 720, margin: "0 auto", padding: "2rem 1.5rem 5rem" }}>
+      <div style={{ maxWidth: 720, margin: "0 auto", padding: "1.5rem 1rem 4rem" }}>
         <div className="blog-content">
           <ReactMarkdown>{content}</ReactMarkdown>
         </div>
@@ -151,8 +151,8 @@ export default async function BlogPostPage({
 
       <style>{`
         .blog-content {
-          font-size: 16px;
-          line-height: 1.8;
+          font-size: clamp(15px, 2.5vw, 17px);
+          line-height: 1.85;
           color: #333;
         }
         .blog-content h1,
@@ -219,15 +219,25 @@ export default async function BlogPostPage({
           border-collapse: collapse;
           margin: 0 0 1.5em;
           font-size: 14px;
+          display: block;
+          overflow-x: auto;
+          -webkit-overflow-scrolling: touch;
         }
         .blog-content th, .blog-content td {
           padding: 8px 12px;
           border: 1px solid #e8e8e8;
           text-align: left;
+          white-space: nowrap;
         }
         .blog-content th {
           background: #f5f5f5;
           font-weight: 600;
+        }
+        @media (max-width: 640px) {
+          .blog-content h1 { font-size: 1.5em; }
+          .blog-content h2 { font-size: 1.25em; }
+          .blog-content h3 { font-size: 1.1em; }
+          .blog-content pre { padding: 0.9rem 1rem; font-size: 0.82em; }
         }
       `}</style>
     </div>
