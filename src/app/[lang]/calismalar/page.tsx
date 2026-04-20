@@ -25,9 +25,7 @@ export const metadata: Metadata = {
 import AdvertisingHierarchyLiveMap from "@/components/ui/AdvertisingHierarchyLiveMap";
 import ReklamKpiLiveMap from "@/components/ui/ReklamKpiLiveMap";
 import Badge from "@/components/ui/Badge";
-import StudyoShowcase from "@/components/sections/StudyoShowcase";
-import FaqShowcase from "@/components/sections/FaqShowcase";
-import BlogSection from "@/components/sections/BlogSection";
+import CalisimalarSidebar from "@/components/sections/CalisimalarSidebar";
 
 export default function CalisimalarPage() {
   return (
@@ -44,9 +42,7 @@ export default function CalisimalarPage() {
         <AdvertisingHierarchyLiveMap />
         <ReklamKpiLiveMap />
       </div>
-      <StudyoShowcase />
-      <FaqShowcase />
-      <BlogSection />
+      <CalisimalarSidebar />
     </div>
   );
 }
