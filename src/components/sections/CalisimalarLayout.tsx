@@ -65,19 +65,6 @@ function NotlarInner({ activeItemId, onSelect }: { activeItemId: string | null; 
   );
 }
 
-function DusuncelerInner({ activeItemId, onSelect }: { activeItemId: string | null; onSelect: (id: string) => void }) {
-  const { lang } = useLanguage();
-  const [items, setItems] = useState<any[]>([]);
-  useEffect(() => {
-    fetch("/api/blog-yazilari").then(r => r.json())
-      .then(d => { if (Array.isArray(d)) setItems(d.filter((p: any) => p.published)); }).catch(() => {});
-  }, []);
-  return (
-    <InnerList
-      items={items.map(i => ({ id: String(i.id), label: (lang === "tr" ? i.titleTR : i.titleEN) || "(başlıksız)", emoji: i.coverEmoji }))}
-      activeId={activeItemId} onSelect={onSelect} />
-  );
-}
 
 function InnerList({ items, activeId, onSelect }: {
   items: { id: string; label: string; emoji?: string }[];
@@ -211,50 +198,106 @@ function NotlarDetail({ itemId }: { itemId: string }) {
   );
 }
 
-function DusuncelerDetail({ itemId }: { itemId: string }) {
+/* ─── Blog cards grid ─────────────────────────────────────────── */
+const ACCENT: Record<string, string> = {
+  gtm: "#1D9E75", analytics: "#3B82F6", cro: "#F59E0B",
+  otomasyon: "#8B5CF6", genel: "#6B7280", reklam: "#EF4444",
+};
+
+function BlogCards() {
   const { lang } = useLanguage();
   const router = useRouter();
-  const [data, setData] = useState<any[]>([]);
+  const [posts, setPosts] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
   useEffect(() => {
     fetch("/api/blog-yazilari").then(r => r.json())
-      .then(d => { if (Array.isArray(d)) setData(d.filter((p: any) => p.published)); }).catch(() => {});
+      .then(d => { if (Array.isArray(d)) setPosts(d.filter((p: any) => p.published)); })
+      .catch(() => {})
+      .finally(() => setLoading(false));
   }, []);
-  const post = data.find(p => String(p.id) === itemId);
-  if (!post) return <Loading />;
-  const ACCENT: Record<string, string> = {
-    gtm: "#1D9E75", analytics: "#3B82F6", cro: "#F59E0B",
-    otomasyon: "#8B5CF6", genel: "#6B7280", reklam: "#EF4444",
-  };
-  const accent = ACCENT[post.category] || "#1D9E75";
-  const title = lang === "tr" ? post.titleTR : post.titleEN;
-  const summary = lang === "tr" ? post.summaryTR : post.summaryEN;
-  const date = (() => { try { return new Date(post.publishedAt).toLocaleDateString(lang === "tr" ? "tr-TR" : "en-US", { year: "numeric", month: "long", day: "numeric" }); } catch { return post.publishedAt; } })();
+
+  if (loading) return <Loading />;
+  if (!posts.length) return (
+    <div style={{ padding: "3rem", textAlign: "center", color: "#bbb", fontSize: 13 }}>
+      Henüz yayınlanmış blog yazısı yok.
+    </div>
+  );
+
   return (
-    <div style={{ padding: "2rem" }}>
-      <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 16 }}>
-        <span style={{ fontSize: 32 }}>{post.coverEmoji || "📝"}</span>
-        <div>
-          <span style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase" as const, color: accent }}>
-            {post.category}
-          </span>
-          <div style={{ fontSize: 11, color: "#aaa", marginTop: 1 }}>{date} · {post.readingMinutes} dk</div>
-        </div>
+    <div style={{ padding: "2rem", animation: "fadeInDetail 0.2s ease-out" }}>
+      <div style={{
+        display: "grid",
+        gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))",
+        gap: "1.25rem",
+      }}>
+        {posts.map(post => {
+          const title = lang === "tr" ? post.titleTR : post.titleEN;
+          const summary = lang === "tr" ? post.summaryTR : post.summaryEN;
+          const accent = ACCENT[post.category] || "#1D9E75";
+          const date = (() => {
+            try { return new Date(post.publishedAt).toLocaleDateString(lang === "tr" ? "tr-TR" : "en-US", { year: "numeric", month: "short", day: "numeric" }); }
+            catch { return post.publishedAt; }
+          })();
+          return (
+            <div
+              key={post.id}
+              onClick={() => router.push(`/${lang}/blog/${post.slug}`)}
+              style={{
+                background: "#fff",
+                border: "0.5px solid #e8e8e8",
+                borderRadius: 14,
+                overflow: "hidden",
+                cursor: "pointer",
+                transition: "transform 0.15s, box-shadow 0.15s",
+                display: "flex",
+                flexDirection: "column",
+              }}
+              onMouseEnter={e => {
+                (e.currentTarget as HTMLDivElement).style.transform = "translateY(-3px)";
+                (e.currentTarget as HTMLDivElement).style.boxShadow = "0 8px 24px rgba(0,0,0,0.08)";
+              }}
+              onMouseLeave={e => {
+                (e.currentTarget as HTMLDivElement).style.transform = "translateY(0)";
+                (e.currentTarget as HTMLDivElement).style.boxShadow = "none";
+              }}
+            >
+              {/* Colour strip + emoji */}
+              <div style={{
+                height: 80, background: accent + "18",
+                display: "flex", alignItems: "center", justifyContent: "center",
+                borderBottom: `2px solid ${accent}22`,
+                fontSize: 36,
+              }}>
+                {post.coverEmoji || "📝"}
+              </div>
+              {/* Body */}
+              <div style={{ padding: "1rem 1.25rem", flex: 1, display: "flex", flexDirection: "column", gap: 6 }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                  <span style={{
+                    fontSize: 10, fontWeight: 700, letterSpacing: "0.07em",
+                    textTransform: "uppercase" as const, color: accent,
+                  }}>{post.category}</span>
+                  <span style={{ fontSize: 10, color: "#bbb" }}>·</span>
+                  <span style={{ fontSize: 10, color: "#bbb" }}>{post.readingMinutes} dk</span>
+                </div>
+                <h3 style={{ margin: 0, fontSize: 15, fontWeight: 700, color: "#111", lineHeight: 1.35 }}>{title}</h3>
+                <p style={{ margin: 0, fontSize: 12, color: "#888", lineHeight: 1.65, flex: 1 }}>{summary}</p>
+                {post.tags?.length > 0 && (
+                  <div style={{ display: "flex", gap: 5, flexWrap: "wrap", marginTop: 4 }}>
+                    {post.tags.slice(0, 3).map((tag: string) => (
+                      <span key={tag} style={{
+                        fontSize: 10, padding: "2px 8px", borderRadius: 10,
+                        background: "#f0f0f0", color: "#777",
+                      }}>{tag}</span>
+                    ))}
+                  </div>
+                )}
+                <div style={{ fontSize: 10, color: "#ccc", marginTop: 4 }}>{date}</div>
+              </div>
+            </div>
+          );
+        })}
       </div>
-      <h2 style={{ fontSize: 22, fontWeight: 700, color: "#111", margin: "0 0 0.75rem", lineHeight: 1.25 }}>{title}</h2>
-      <p style={{ fontSize: 14, color: "#777", lineHeight: 1.7, margin: "0 0 1.5rem" }}>{summary}</p>
-      {post.tags?.length > 0 && (
-        <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginBottom: "1.25rem" }}>
-          {post.tags.map((tag: string) => (
-            <span key={tag} style={{ fontSize: 11, padding: "3px 10px", borderRadius: 12,
-              background: "#f0f0f0", color: "#666", fontWeight: 500 }}>{tag}</span>
-          ))}
-        </div>
-      )}
-      <button onClick={() => router.push(`/${lang}/blog/${post.slug}`)}
-        style={{ padding: "10px 20px", background: accent, color: "#fff", border: "none",
-          borderRadius: 10, fontSize: 13, fontWeight: 600, cursor: "pointer", fontFamily: "inherit" }}>
-        Yazıyı Oku →
-      </button>
     </div>
   );
 }
@@ -355,8 +398,11 @@ export default function CalisimalarLayout() {
           <AdvertisingHierarchyLiveMap />
           <ReklamKpiLiveMap />
         </div>
+      ) : activeSection === "dusunceler" ? (
+        /* Blog yazıları — tam genişlik kart grid */
+        <BlogCards />
       ) : (
-        /* Section selected — inner list + detail side by side */
+        /* Diğer sekmeler — iç liste + detay */
         <div style={{ display: "flex", minHeight: "calc(100vh - 130px)" }}>
 
           {/* Inner list panel */}
@@ -373,10 +419,9 @@ export default function CalisimalarLayout() {
                 {SECTIONS.find(s => s.id === activeSection)?.label.toUpperCase()}
               </div>
             </div>
-            {activeSection === "hiyerarsi"  && <HiyerarsiInner  activeItemId={activeItemId} onSelect={handleItemSelect} />}
-            {activeSection === "sss"        && <SssInner        activeItemId={activeItemId} onSelect={handleItemSelect} />}
-            {activeSection === "notlar"     && <NotlarInner     activeItemId={activeItemId} onSelect={handleItemSelect} />}
-            {activeSection === "dusunceler" && <DusuncelerInner activeItemId={activeItemId} onSelect={handleItemSelect} />}
+            {activeSection === "hiyerarsi" && <HiyerarsiInner activeItemId={activeItemId} onSelect={handleItemSelect} />}
+            {activeSection === "sss"       && <SssInner       activeItemId={activeItemId} onSelect={handleItemSelect} />}
+            {activeSection === "notlar"    && <NotlarInner    activeItemId={activeItemId} onSelect={handleItemSelect} />}
           </div>
 
           {/* Detail panel */}
@@ -389,10 +434,9 @@ export default function CalisimalarLayout() {
               </div>
             ) : (
               <div style={{ animation: "fadeInDetail 0.2s ease-out", minHeight: "100%" }}>
-                {activeSection === "hiyerarsi"  && <HiyerarsiDetail  itemId={activeItemId} />}
-                {activeSection === "sss"        && <SssDetail        itemId={activeItemId} />}
-                {activeSection === "notlar"     && <NotlarDetail     itemId={activeItemId} />}
-                {activeSection === "dusunceler" && <DusuncelerDetail itemId={activeItemId} />}
+                {activeSection === "hiyerarsi" && <HiyerarsiDetail itemId={activeItemId} />}
+                {activeSection === "sss"       && <SssDetail       itemId={activeItemId} />}
+                {activeSection === "notlar"    && <NotlarDetail    itemId={activeItemId} />}
               </div>
             )}
           </main>
