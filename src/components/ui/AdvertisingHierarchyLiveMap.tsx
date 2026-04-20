@@ -218,7 +218,7 @@ export default function AdvertisingHierarchyLiveMap() {
             onMouseUp={handleMouseUp}
             onMouseLeave={handleMouseUp}
             className={`w-full overflow-auto p-3 sm:p-6 md:p-12 transition-all ${isPanning ? 'cursor-grabbing select-none' : 'cursor-grab'}`}
-            style={{ maxHeight: '78vh', minHeight: '320px' }}
+            style={{ minHeight: '320px' }}
           >
             {/* Zoomable Canvas */}
             <div style={{ width: canvasDim.w * zoom, height: canvasDim.h * zoom, flexShrink: 0, margin: '0 auto' }}>
