@@ -45,6 +45,7 @@ export default function AdvertisingHierarchyLiveMap() {
   const [zoom, setZoom] = useState(1);
   const canvasAreaRef = useRef<HTMLDivElement>(null);
   const infoPanelRef = useRef<HTMLDivElement>(null);
+  const didAutoFit = useRef(false);
 
   // States for Panning
   const [isPanning, setIsPanning] = useState(false);
@@ -74,6 +75,18 @@ export default function AdvertisingHierarchyLiveMap() {
       });
   }, []);
 
+
+  // Auto-fit: tüm düğümler container'a sığacak şekilde zoom hesapla
+  useEffect(() => {
+    if (terms.length === 0 || didAutoFit.current || !canvasAreaRef.current) return;
+    const el = canvasAreaRef.current;
+    const PAD = 48;
+    const fitW = (el.clientWidth - PAD * 2) / canvasDim.w;
+    const fitH = (el.clientHeight - PAD * 2) / canvasDim.h;
+    const fit = parseFloat(Math.min(fitW, fitH, 1).toFixed(2));
+    setZoom(Math.max(fit, 0.15));
+    didAutoFit.current = true;
+  }, [terms, canvasDim]);
 
   // Zoom logic for wheel
   useEffect(() => {
@@ -207,7 +220,7 @@ export default function AdvertisingHierarchyLiveMap() {
             onMouseUp={handleMouseUp}
             onMouseLeave={handleMouseUp}
             className={`w-full overflow-auto p-3 sm:p-6 md:p-12 transition-all ${isPanning ? 'cursor-grabbing select-none' : 'cursor-grab'}`}
-            style={{ minHeight: '320px' }}
+            style={{ height: '68vh', minHeight: '400px' }}
           >
             {/* Zoomable Canvas */}
             <div style={{ width: canvasDim.w * zoom, height: canvasDim.h * zoom, flexShrink: 0, margin: '0 auto' }}>
