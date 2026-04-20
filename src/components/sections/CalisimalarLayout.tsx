@@ -25,7 +25,7 @@ const SECTIONS: { id: SectionId; label: string; icon: string }[] = [
   { id: "hiyerarsi",  label: "Reklam Hiyerarşisi", icon: "⬡" },
   { id: "sss",        label: "SSS",                icon: "❓" },
   { id: "notlar",     label: "Notlar",              icon: "📝" },
-  { id: "dusunceler", label: "Düşünceler",          icon: "✍️" },
+  { id: "dusunceler", label: "Blog Yazıları",         icon: "✍️" },
 ];
 
 /* ─── inner lists ─────────────────────────────────────────────── */
