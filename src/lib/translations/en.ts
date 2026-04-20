@@ -233,6 +233,16 @@ export const en = {
     whatsapp_message_prefix: "Hello Şükrü, I'm interested in the +Plus service:",
     back: "← Back",
   },
+  blog: {
+    badge: "Blog Posts",
+    title: "Notes &",
+    title_accent: "Thoughts",
+    subtitle: "Practical posts on GTM, analytics, CRO and digital marketing.",
+    readMore: "Read More →",
+    backToWork: "← Work",
+    minRead: "min read",
+    noPosts: "No published posts yet.",
+  },
 };
 
 export interface Translations {
@@ -371,5 +381,15 @@ export interface Translations {
     whatsapp_cta: string;
     whatsapp_message_prefix: string;
     back: string;
+  };
+  blog: {
+    badge: string;
+    title: string;
+    title_accent: string;
+    subtitle: string;
+    readMore: string;
+    backToWork: string;
+    minRead: string;
+    noPosts: string;
   };
 }

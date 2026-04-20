@@ -27,6 +27,7 @@ import ReklamKpiLiveMap from "@/components/ui/ReklamKpiLiveMap";
 import Badge from "@/components/ui/Badge";
 import StudyoShowcase from "@/components/sections/StudyoShowcase";
 import FaqShowcase from "@/components/sections/FaqShowcase";
+import BlogSection from "@/components/sections/BlogSection";
 
 export default function CalisimalarPage() {
   return (
@@ -36,7 +37,7 @@ export default function CalisimalarPage() {
           <Badge color="blue">Strateji Stüdyosu</Badge>
           <h1 className="text-2xl sm:text-4xl font-extrabold text-ink tracking-tight">Canlı Reklam & Web Hiyerarşisi</h1>
           <p className="text-sm sm:text-base text-ink-muted max-w-2xl">
-            Aşağıdaki harita, Şükrü Gençoğlu tarafından Stüdyo üzerinde oluşturulan 
+            Aşağıdaki harita, Şükrü Gençoğlu tarafından Stüdyo üzerinde oluşturulan
             ve gerçek zamanlı olarak güncellenen dijital büyüme stratejisini göstermektedir.
           </p>
         </div>
@@ -45,6 +46,7 @@ export default function CalisimalarPage() {
       </div>
       <StudyoShowcase />
       <FaqShowcase />
+      <BlogSection />
     </div>
   );
 }

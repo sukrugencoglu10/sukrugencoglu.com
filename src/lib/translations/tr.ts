@@ -235,4 +235,14 @@ export const tr: Translations = {
     whatsapp_message_prefix: "Merhaba Şükrü Bey, +Plus hizmetinizle ilgili bilgi almak istiyorum:",
     back: "← Geri Dön",
   },
+  blog: {
+    badge: "Blog Yazıları",
+    title: "Notlar &",
+    title_accent: "Düşünceler",
+    subtitle: "GTM, analitik, CRO ve dijital pazarlama üzerine pratik yazılar.",
+    readMore: "Devamını Oku →",
+    backToWork: "← Çalışmalar",
+    minRead: "dk okuma",
+    noPosts: "Henüz yayınlanmış yazı yok.",
+  },
 };

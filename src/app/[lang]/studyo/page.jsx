@@ -5622,6 +5622,264 @@ function KisaNotlar() {
   )
 }
 
+// ─── Blog Yazıları Editörü ────────────────────────────────────────────────────
+function BlogYazilari() {
+  const [posts, setPosts] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [saving, setSaving] = useState(false)
+  const [lastSaved, setLastSaved] = useState(null)
+  const [editId, setEditId] = useState(null)
+  const [preview, setPreview] = useState(false)
+
+  const emptyPost = () => ({
+    id: 'blog_' + Math.random().toString(36).substr(2, 9),
+    slug: '',
+    titleTR: '',
+    titleEN: '',
+    summaryTR: '',
+    summaryEN: '',
+    contentTR: '',
+    contentEN: '',
+    tags: [],
+    category: 'genel',
+    coverEmoji: '📝',
+    coverColor: '#1D9E75',
+    publishedAt: new Date().toISOString().split('T')[0],
+    readingMinutes: 5,
+    published: false,
+  })
+
+  useEffect(() => {
+    fetch('/api/blog-yazilari')
+      .then(r => r.json())
+      .then(data => { if (Array.isArray(data)) setPosts(data) })
+      .catch(() => {})
+      .finally(() => setLoading(false))
+  }, [])
+
+  const save = async (newPosts) => {
+    setSaving(true)
+    try {
+      const res = await fetch('/api/blog-yazilari', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(newPosts),
+      })
+      const result = await res.json()
+      if (res.ok && result.ok) setLastSaved(new Date().toLocaleTimeString())
+      else alert('Kaydedilemedi: ' + (result.error || 'Bilinmeyen hata'))
+    } catch (err) { alert('Hata: ' + err.message) }
+    setSaving(false)
+  }
+
+  const handleNew = () => {
+    const p = emptyPost()
+    const updated = [p, ...posts]
+    setPosts(updated)
+    setEditId(p.id)
+    setPreview(false)
+  }
+
+  const handleDelete = (id) => {
+    if (!confirm('Bu yazıyı silmek istediğinize emin misiniz?')) return
+    const updated = posts.filter(p => p.id !== id)
+    setPosts(updated)
+    save(updated)
+    if (editId === id) setEditId(null)
+  }
+
+  const handleSave = () => save(posts)
+
+  const updatePost = (id, field, value) => {
+    setPosts(prev => prev.map(p => p.id === id ? { ...p, [field]: value } : p))
+  }
+
+  const autoSlug = (title) =>
+    title.toLowerCase()
+      .replace(/ğ/g, 'g').replace(/ü/g, 'u').replace(/ş/g, 's')
+      .replace(/ı/g, 'i').replace(/ö/g, 'o').replace(/ç/g, 'c')
+      .replace(/[^a-z0-9\s-]/g, '')
+      .trim().replace(/\s+/g, '-')
+
+  const editPost = editId ? posts.find(p => p.id === editId) : null
+
+  const CATEGORIES = ['genel', 'gtm', 'analytics', 'cro', 'otomasyon']
+  const CAT_COLORS = { gtm: '#1D9E75', analytics: '#3B82F6', cro: '#F59E0B', otomasyon: '#8B5CF6', genel: '#6B7280' }
+
+  if (loading) return <div style={{ padding: '2rem', color: '#888', fontSize: 14 }}>Yükleniyor...</div>
+
+  return (
+    <div style={{ padding: '2rem 1.25rem', fontFamily: 'inherit' }}>
+      {/* Header */}
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1.5rem', flexWrap: 'wrap', gap: 10 }}>
+        <div>
+          <h1 style={{ fontSize: 22, fontWeight: 500, margin: 0 }}>Blog Yazıları</h1>
+          <p style={{ fontSize: 12, color: '#888', marginTop: 4 }}>{posts.length} yazı · {posts.filter(p => p.published).length} yayında</p>
+        </div>
+        <div style={{ display: 'flex', gap: 8 }}>
+          {lastSaved && <span style={{ fontSize: 11, color: '#1D9E75', alignSelf: 'center' }}>Kaydedildi: {lastSaved}</span>}
+          <button onClick={handleNew} style={{ background: '#fff', border: '1px solid #ddd', borderRadius: 8, padding: '6px 14px', fontSize: 12, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6 }}>
+            <span style={{ fontSize: 16, fontWeight: 'bold' }}>+</span> Yeni Yazı
+          </button>
+          <button onClick={handleSave} disabled={saving} style={{ background: '#111', color: '#fff', border: 'none', borderRadius: 8, padding: '6px 14px', fontSize: 12, cursor: saving ? 'not-allowed' : 'pointer', opacity: saving ? 0.7 : 1 }}>
+            {saving ? 'Kaydediliyor...' : 'Değişiklikleri Kaydet'}
+          </button>
+        </div>
+      </div>
+
+      <div style={{ display: 'flex', gap: 16, alignItems: 'flex-start' }}>
+        {/* Post List */}
+        <div style={{ width: 260, flexShrink: 0 }}>
+          {posts.length === 0 ? (
+            <div style={{ padding: '2rem', textAlign: 'center', color: '#bbb', fontSize: 13, background: '#fafafa', borderRadius: 10, border: '1px dashed #e0e0e0' }}>
+              Henüz yazı yok.<br />Yeni yazı ekle →
+            </div>
+          ) : (
+            posts.map(p => (
+              <div
+                key={p.id}
+                onClick={() => { setEditId(p.id); setPreview(false) }}
+                style={{ padding: '10px 14px', borderRadius: 8, marginBottom: 6, cursor: 'pointer', border: `1px solid ${editId === p.id ? '#1D9E75' : '#eee'}`, background: editId === p.id ? 'rgba(29,158,117,0.05)' : '#fff', transition: 'all 0.12s' }}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <span style={{ fontSize: 18 }}>{p.coverEmoji || '📝'}</span>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontSize: 13, fontWeight: 600, color: '#111', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{p.titleTR || '(başlıksız)'}</div>
+                    <div style={{ fontSize: 11, color: '#aaa', marginTop: 2 }}>{p.publishedAt}</div>
+                  </div>
+                  <span style={{ fontSize: 10, padding: '2px 6px', borderRadius: 10, background: p.published ? 'rgba(29,158,117,0.1)' : '#f5f5f5', color: p.published ? '#1D9E75' : '#999', fontWeight: 600, whiteSpace: 'nowrap' }}>
+                    {p.published ? 'Yayında' : 'Taslak'}
+                  </span>
+                </div>
+              </div>
+            ))
+          )}
+        </div>
+
+        {/* Editor / Preview */}
+        <div style={{ flex: 1, minWidth: 0 }}>
+          {!editPost ? (
+            <div style={{ padding: '3rem', textAlign: 'center', color: '#bbb', background: '#fafafa', borderRadius: 12, border: '1px dashed #e0e0e0', fontSize: 13 }}>
+              Soldaki listeden bir yazı seç veya yeni yazı ekle
+            </div>
+          ) : (
+            <div style={{ background: '#fff', border: '1px solid #e8e8e8', borderRadius: 12, overflow: 'hidden' }}>
+              {/* Editor Tabs */}
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid #eee', padding: '0 16px' }}>
+                <div style={{ display: 'flex', gap: 0 }}>
+                  {['Düzenle', 'Önizleme'].map(tab => (
+                    <button key={tab} onClick={() => setPreview(tab === 'Önizleme')} style={{ padding: '12px 16px', fontSize: 12, fontWeight: 600, border: 'none', borderBottom: `2px solid ${(preview ? 'Önizleme' : 'Düzenle') === tab ? '#111' : 'transparent'}`, background: 'none', cursor: 'pointer', color: (preview ? 'Önizleme' : 'Düzenle') === tab ? '#111' : '#999', transition: 'all 0.15s' }}>{tab}</button>
+                  ))}
+                </div>
+                <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                  <label style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, cursor: 'pointer', color: editPost.published ? '#1D9E75' : '#888' }}>
+                    <input type="checkbox" checked={editPost.published} onChange={e => updatePost(editPost.id, 'published', e.target.checked)} style={{ accentColor: '#1D9E75' }} />
+                    {editPost.published ? 'Yayında' : 'Taslak'}
+                  </label>
+                  <button onClick={() => handleDelete(editPost.id)} style={{ fontSize: 11, color: '#ff4d4f', background: 'none', border: 'none', cursor: 'pointer', padding: '4px 8px' }}>Sil</button>
+                </div>
+              </div>
+
+              {preview ? (
+                /* Önizleme */
+                <div style={{ padding: '2rem', maxHeight: '70vh', overflowY: 'auto' }}>
+                  <div style={{ display: 'flex', gap: 12, alignItems: 'center', marginBottom: 20 }}>
+                    <span style={{ fontSize: 36 }}>{editPost.coverEmoji}</span>
+                    <div>
+                      <div style={{ fontSize: 18, fontWeight: 700, color: '#111' }}>{editPost.titleTR || '(başlık yok)'}</div>
+                      <div style={{ fontSize: 12, color: '#888', marginTop: 4 }}>{editPost.summaryTR}</div>
+                    </div>
+                  </div>
+                  <div style={{ fontSize: 14, color: '#555', lineHeight: 1.7, whiteSpace: 'pre-wrap', fontFamily: 'monospace', background: '#f8f8f8', padding: 16, borderRadius: 8, border: '1px solid #eee' }}>
+                    {editPost.contentTR || '(içerik yok)'}
+                  </div>
+                </div>
+              ) : (
+                /* Form */
+                <div style={{ padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: 16, maxHeight: '75vh', overflowY: 'auto' }}>
+                  {/* Başlıklar */}
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                    <div>
+                      <label style={{ fontSize: 11, color: '#888', display: 'block', marginBottom: 4 }}>Başlık (TR)</label>
+                      <input value={editPost.titleTR} onChange={e => { updatePost(editPost.id, 'titleTR', e.target.value); if (!editPost.slug) updatePost(editPost.id, 'slug', autoSlug(e.target.value)) }} style={{ width: '100%', padding: '7px 10px', fontSize: 13, border: '1px solid #ddd', borderRadius: 6, outline: 'none', boxSizing: 'border-box' }} placeholder="GTM Sunucu Tarafı Nedir?" />
+                    </div>
+                    <div>
+                      <label style={{ fontSize: 11, color: '#888', display: 'block', marginBottom: 4 }}>Başlık (EN)</label>
+                      <input value={editPost.titleEN} onChange={e => updatePost(editPost.id, 'titleEN', e.target.value)} style={{ width: '100%', padding: '7px 10px', fontSize: 13, border: '1px solid #ddd', borderRadius: 6, outline: 'none', boxSizing: 'border-box' }} placeholder="What is Server-Side GTM?" />
+                    </div>
+                  </div>
+
+                  {/* Slug & Meta */}
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr auto auto auto', gap: 10, alignItems: 'end' }}>
+                    <div>
+                      <label style={{ fontSize: 11, color: '#888', display: 'block', marginBottom: 4 }}>Slug (URL)</label>
+                      <input value={editPost.slug} onChange={e => updatePost(editPost.id, 'slug', e.target.value)} style={{ width: '100%', padding: '7px 10px', fontSize: 12, border: '1px solid #ddd', borderRadius: 6, outline: 'none', fontFamily: 'monospace', boxSizing: 'border-box' }} placeholder="gtm-sunucu-tarafi-nedir" />
+                    </div>
+                    <div>
+                      <label style={{ fontSize: 11, color: '#888', display: 'block', marginBottom: 4 }}>Emoji</label>
+                      <input value={editPost.coverEmoji} onChange={e => updatePost(editPost.id, 'coverEmoji', e.target.value)} style={{ width: 52, padding: '7px 8px', fontSize: 20, border: '1px solid #ddd', borderRadius: 6, outline: 'none', textAlign: 'center' }} />
+                    </div>
+                    <div>
+                      <label style={{ fontSize: 11, color: '#888', display: 'block', marginBottom: 4 }}>Renk</label>
+                      <input type="color" value={editPost.coverColor} onChange={e => updatePost(editPost.id, 'coverColor', e.target.value)} style={{ width: 44, height: 34, padding: 2, border: '1px solid #ddd', borderRadius: 6, cursor: 'pointer' }} />
+                    </div>
+                    <div>
+                      <label style={{ fontSize: 11, color: '#888', display: 'block', marginBottom: 4 }}>Dk okuma</label>
+                      <input type="number" value={editPost.readingMinutes} onChange={e => updatePost(editPost.id, 'readingMinutes', Number(e.target.value))} style={{ width: 60, padding: '7px 8px', fontSize: 13, border: '1px solid #ddd', borderRadius: 6, outline: 'none' }} min={1} max={60} />
+                    </div>
+                  </div>
+
+                  {/* Kategori & Tarih & Tags */}
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 12 }}>
+                    <div>
+                      <label style={{ fontSize: 11, color: '#888', display: 'block', marginBottom: 4 }}>Kategori</label>
+                      <select value={editPost.category} onChange={e => updatePost(editPost.id, 'category', e.target.value)} style={{ width: '100%', padding: '7px 10px', fontSize: 13, border: '1px solid #ddd', borderRadius: 6, outline: 'none', background: '#fff' }}>
+                        {CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
+                      </select>
+                    </div>
+                    <div>
+                      <label style={{ fontSize: 11, color: '#888', display: 'block', marginBottom: 4 }}>Yayın Tarihi</label>
+                      <input type="date" value={editPost.publishedAt} onChange={e => updatePost(editPost.id, 'publishedAt', e.target.value)} style={{ width: '100%', padding: '7px 10px', fontSize: 13, border: '1px solid #ddd', borderRadius: 6, outline: 'none', boxSizing: 'border-box' }} />
+                    </div>
+                    <div>
+                      <label style={{ fontSize: 11, color: '#888', display: 'block', marginBottom: 4 }}>Etiketler (virgülle)</label>
+                      <input value={editPost.tags?.join(', ') || ''} onChange={e => updatePost(editPost.id, 'tags', e.target.value.split(',').map(t => t.trim()).filter(Boolean))} style={{ width: '100%', padding: '7px 10px', fontSize: 13, border: '1px solid #ddd', borderRadius: 6, outline: 'none', boxSizing: 'border-box' }} placeholder="GTM, GA4, Analitik" />
+                    </div>
+                  </div>
+
+                  {/* Özet */}
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                    <div>
+                      <label style={{ fontSize: 11, color: '#888', display: 'block', marginBottom: 4 }}>Özet (TR)</label>
+                      <textarea value={editPost.summaryTR} onChange={e => updatePost(editPost.id, 'summaryTR', e.target.value)} rows={3} style={{ width: '100%', padding: '7px 10px', fontSize: 13, border: '1px solid #ddd', borderRadius: 6, outline: 'none', resize: 'vertical', fontFamily: 'inherit', boxSizing: 'border-box' }} placeholder="Kısa özet (kart görünümünde gösterilir)..." />
+                    </div>
+                    <div>
+                      <label style={{ fontSize: 11, color: '#888', display: 'block', marginBottom: 4 }}>Özet (EN)</label>
+                      <textarea value={editPost.summaryEN} onChange={e => updatePost(editPost.id, 'summaryEN', e.target.value)} rows={3} style={{ width: '100%', padding: '7px 10px', fontSize: 13, border: '1px solid #ddd', borderRadius: 6, outline: 'none', resize: 'vertical', fontFamily: 'inherit', boxSizing: 'border-box' }} placeholder="Short summary for card view..." />
+                    </div>
+                  </div>
+
+                  {/* İçerik */}
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                    <div>
+                      <label style={{ fontSize: 11, color: '#888', display: 'block', marginBottom: 4 }}>İçerik — Markdown (TR)</label>
+                      <textarea value={editPost.contentTR} onChange={e => updatePost(editPost.id, 'contentTR', e.target.value)} rows={18} style={{ width: '100%', padding: '10px 12px', fontSize: 13, lineHeight: 1.6, border: '1px solid #ddd', borderRadius: 6, outline: 'none', resize: 'vertical', fontFamily: 'monospace', background: '#f9f9f9', boxSizing: 'border-box' }} placeholder="## Giriş&#10;&#10;Burada Markdown formatında yazı yazabilirsiniz.&#10;&#10;- Madde 1&#10;- Madde 2&#10;&#10;```js&#10;console.log('Kod bloğu')&#10;```" />
+                    </div>
+                    <div>
+                      <label style={{ fontSize: 11, color: '#888', display: 'block', marginBottom: 4 }}>İçerik — Markdown (EN)</label>
+                      <textarea value={editPost.contentEN} onChange={e => updatePost(editPost.id, 'contentEN', e.target.value)} rows={18} style={{ width: '100%', padding: '10px 12px', fontSize: 13, lineHeight: 1.6, border: '1px solid #ddd', borderRadius: 6, outline: 'none', resize: 'vertical', fontFamily: 'monospace', background: '#f9f9f9', boxSizing: 'border-box' }} placeholder="## Introduction&#10;&#10;Write your post in Markdown here." />
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  )
+}
+
 // ─── Araç listesi ─────────────────────────────────────────────────────────────
 // ─── ANA Blok Zihin Haritası ──────────────────────────────────────────────────
 function AnaHaritasi() {
@@ -5966,6 +6224,12 @@ const TOOLS = [
     label: 'ANA Blok',
     icon: '⬡',
     component: AnaHaritasi,
+  },
+  {
+    id: 'blog-yazilari',
+    label: 'Blog Yazıları',
+    icon: '✍️',
+    component: BlogYazilari,
   },
 ]
 
