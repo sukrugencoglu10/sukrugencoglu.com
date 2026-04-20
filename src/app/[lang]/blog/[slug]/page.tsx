@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import ReactMarkdown from "react-markdown";
+import remarkBreaks from "remark-breaks";
+import remarkGfm from "remark-gfm";
 
 const baseUrl = "https://www.sukrugencoglu.com";
 
@@ -119,7 +121,7 @@ export default async function BlogPostPage({
       {/* Content */}
       <div style={{ maxWidth: 720, margin: "0 auto", padding: "1.5rem 1rem 4rem" }}>
         <div className="blog-content">
-          <ReactMarkdown>{content}</ReactMarkdown>
+          <ReactMarkdown remarkPlugins={[remarkGfm, remarkBreaks]}>{content}</ReactMarkdown>
         </div>
 
         <div
