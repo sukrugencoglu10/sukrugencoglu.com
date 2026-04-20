@@ -90,90 +90,24 @@ export default async function BlogPostPage({
   return (
     <div style={{ minHeight: "100vh", background: "#fafafa" }}>
       {/* Hero */}
-      <div
-        style={{
-          background: accentColor + "0f",
-          borderBottom: `3px solid ${accentColor}`,
-          padding: "3.5rem 1.5rem 2.5rem",
-        }}
-      >
+      <div style={{ borderBottom: `2px solid ${accentColor}22`, padding: "1.5rem 1.5rem 1.25rem" }}>
         <div style={{ maxWidth: 720, margin: "0 auto" }}>
-          <Link
-            href={`/${lang}/${backPath}`}
-            style={{
-              display: "inline-flex",
-              alignItems: "center",
-              fontSize: 13,
-              color: "#666",
-              textDecoration: "none",
-              marginBottom: 24,
-              gap: 4,
-            }}
-          >
-            {backLabel}
-          </Link>
-
-          <div style={{ display: "flex", alignItems: "center", gap: 14, marginBottom: 16 }}>
-            <span style={{ fontSize: 48 }}>{post.coverEmoji || "📝"}</span>
-            <span
-              style={{
-                fontSize: 11,
-                fontWeight: 700,
-                letterSpacing: "0.1em",
-                textTransform: "uppercase",
-                color: accentColor,
-                background: accentColor + "18",
-                padding: "4px 10px",
-                borderRadius: 20,
-              }}
-            >
-              {post.category}
-            </span>
-          </div>
-
-          <h1
-            style={{
-              fontSize: "clamp(24px, 4vw, 38px)",
-              fontWeight: 800,
-              color: "#111",
-              lineHeight: 1.2,
-              margin: "0 0 16px",
-            }}
-          >
+          <h1 style={{ fontSize: "clamp(22px, 4vw, 36px)", fontWeight: 800, color: "#111", lineHeight: 1.2, margin: "0 0 10px" }}>
             {title}
           </h1>
-
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: 16,
-              fontSize: 13,
-              color: "#888",
-              flexWrap: "wrap",
-            }}
-          >
-            <span>{formattedDate}</span>
-            <span>·</span>
-            <span>
-              {post.readingMinutes} {lang === "tr" ? "dk okuma" : "min read"}
+          <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
+            <span style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", color: accentColor, background: accentColor + "18", padding: "3px 9px", borderRadius: 20 }}>
+              {post.category}
             </span>
+            <span style={{ fontSize: 12, color: "#bbb" }}>·</span>
+            <span style={{ fontSize: 12, color: "#aaa" }}>{formattedDate}</span>
+            <span style={{ fontSize: 12, color: "#bbb" }}>·</span>
+            <span style={{ fontSize: 12, color: "#aaa" }}>{post.readingMinutes} {lang === "tr" ? "dk okuma" : "min read"}</span>
           </div>
-
           {post.tags?.length > 0 && (
-            <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginTop: 16 }}>
+            <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginTop: 10 }}>
               {post.tags.map((tag) => (
-                <span
-                  key={tag}
-                  style={{
-                    fontSize: 11,
-                    padding: "3px 10px",
-                    borderRadius: 12,
-                    background: "#efefef",
-                    color: "#666",
-                    fontWeight: 500,
-                  }}
-                >
+                <span key={tag} style={{ fontSize: 11, padding: "2px 9px", borderRadius: 10, background: "#f0f0f0", color: "#666", fontWeight: 500 }}>
                   {tag}
                 </span>
               ))}
@@ -183,7 +117,7 @@ export default async function BlogPostPage({
       </div>
 
       {/* Content */}
-      <div style={{ maxWidth: 720, margin: "0 auto", padding: "3rem 1.5rem 5rem" }}>
+      <div style={{ maxWidth: 720, margin: "0 auto", padding: "2rem 1.5rem 5rem" }}>
         <div className="blog-content">
           <ReactMarkdown>{content}</ReactMarkdown>
         </div>
