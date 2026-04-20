@@ -5703,8 +5703,8 @@ function BlogYazilari() {
 
   const editPost = editId ? posts.find(p => p.id === editId) : null
 
-  const CATEGORIES = ['genel', 'gtm', 'analytics', 'cro', 'otomasyon']
-  const CAT_COLORS = { gtm: '#1D9E75', analytics: '#3B82F6', cro: '#F59E0B', otomasyon: '#8B5CF6', genel: '#6B7280' }
+  const CATEGORIES = ['genel', 'gtm', 'analytics', 'cro', 'otomasyon', 'reklam']
+  const CAT_COLORS = { gtm: '#1D9E75', analytics: '#3B82F6', cro: '#F59E0B', otomasyon: '#8B5CF6', genel: '#6B7280', reklam: '#EF4444' }
 
   if (loading) return <div style={{ padding: '2rem', color: '#888', fontSize: 14 }}>Yükleniyor...</div>
 
