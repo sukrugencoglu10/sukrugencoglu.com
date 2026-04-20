@@ -292,19 +292,9 @@ export default function CalisimalarLayout() {
         borderBottom: "0.5px solid #e8e8e8",
         display: "flex",
         alignItems: "stretch",
+        justifyContent: "center",
         gap: 0,
-        paddingLeft: "1rem",
       }}>
-        {/* Logo/brand area */}
-        <div style={{
-          display: "flex", alignItems: "center", paddingRight: "1.5rem",
-          borderRight: "0.5px solid #e8e8e8", marginRight: "0.5rem",
-        }}>
-          <span style={{ fontSize: 11, fontWeight: 700, color: "#aaa", letterSpacing: "0.1em", textTransform: "uppercase" }}>
-            Strateji Stüdyosu
-          </span>
-        </div>
-
         {/* Tab buttons */}
         {SECTIONS.map(sec => {
           const isActive = activeSection === sec.id;
