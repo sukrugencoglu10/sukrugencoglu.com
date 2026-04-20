@@ -71,7 +71,6 @@ export default function ReklamKpiLiveMap() {
   const [zoom, setZoom] = useState(1);
   const canvasAreaRef = useRef<HTMLDivElement>(null);
   const infoPanelRef = useRef<HTMLDivElement>(null);
-  const didAutoFit = useRef(false);
   const [isPanning, setIsPanning] = useState(false);
   const [panStart, setPanStart] = useState({ x: 0, y: 0, scrollLeft: 0, scrollTop: 0 });
 
@@ -130,16 +129,6 @@ export default function ReklamKpiLiveMap() {
 
   const handleMouseUp = () => setIsPanning(false);
 
-  // Auto-fit zoom: tüm düğümler görünsün
-  useEffect(() => {
-    if (terms.length === 0 || didAutoFit.current || !canvasAreaRef.current) return;
-    const el = canvasAreaRef.current;
-    const fitW = el.clientWidth / (canvasDim.w + 80);
-    const fitH = (window.innerHeight * 0.72) / (canvasDim.h + 80);
-    const fit = parseFloat(Math.min(fitW, fitH, 1).toFixed(2));
-    setZoom(Math.max(fit, 0.2));
-    didAutoFit.current = true;
-  }, [terms, canvasDim]);
 
   const termMap = Object.fromEntries(terms.map(t => [t.id, t]));
   const activeIds = new Set<string>();
