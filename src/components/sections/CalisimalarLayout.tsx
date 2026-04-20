@@ -23,7 +23,7 @@ type SectionId = "hiyerarsi" | "sss" | "notlar" | "dusunceler";
 
 const SECTIONS: { id: SectionId; label: string; icon: string }[] = [
   { id: "hiyerarsi",  label: "Reklam Hiyerarşisi", icon: "⬡" },
-  { id: "sss",        label: "SSS",                icon: "?" },
+  { id: "sss",        label: "SSS",                icon: "❓" },
   { id: "notlar",     label: "Notlar",              icon: "📝" },
   { id: "dusunceler", label: "Düşünceler",          icon: "✍️" },
 ];
@@ -97,7 +97,7 @@ function InnerList({ items, activeId, onSelect }: {
           <button key={item.id} onClick={() => onSelect(item.id)}
             style={{
               display: "flex", alignItems: "center", gap: 8,
-              padding: "9px 16px",
+              padding: "10px 16px",
               border: "none", borderLeft: `3px solid ${isActive ? "#111" : "transparent"}`,
               background: isActive ? "#fff" : "transparent",
               cursor: "pointer", textAlign: "left", fontFamily: "inherit",
@@ -112,7 +112,7 @@ function InnerList({ items, activeId, onSelect }: {
                 </span>
             }
             <span style={{ fontSize: 12, fontWeight: isActive ? 700 : 400,
-              color: isActive ? "#111" : "#666", lineHeight: 1.35,
+              color: isActive ? "#111" : "#555", lineHeight: 1.35,
               overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
               {item.label}
             </span>
@@ -281,117 +281,133 @@ export default function CalisimalarLayout() {
   const handleItemSelect = (id: string) => setActiveItemId(id);
 
   return (
-    <div style={{ display: "flex", minHeight: "calc(100vh - 80px)", background: "#fafafa", fontFamily: "inherit" }}>
+    <div style={{ minHeight: "calc(100vh - 80px)", background: "#fafafa", fontFamily: "inherit" }}>
 
-      {/* ── Left sidebar ── */}
-      <aside style={{
-        width: 52,
-        flexShrink: 0,
-        background: "#fff",
-        borderRight: "0.5px solid #e8e8e8",
-        display: "flex",
-        flexDirection: "column",
-        paddingTop: "1.5rem",
-        gap: 4,
+      {/* ── Top tab bar ── */}
+      <div style={{
         position: "sticky",
         top: 80,
-        height: "calc(100vh - 80px)",
-        overflowY: "auto",
-        zIndex: 10,
+        zIndex: 20,
+        background: "#fff",
+        borderBottom: "0.5px solid #e8e8e8",
+        display: "flex",
+        alignItems: "stretch",
+        gap: 0,
+        paddingLeft: "1rem",
       }}>
+        {/* Logo/brand area */}
+        <div style={{
+          display: "flex", alignItems: "center", paddingRight: "1.5rem",
+          borderRight: "0.5px solid #e8e8e8", marginRight: "0.5rem",
+        }}>
+          <span style={{ fontSize: 11, fontWeight: 700, color: "#aaa", letterSpacing: "0.1em", textTransform: "uppercase" }}>
+            Strateji Stüdyosu
+          </span>
+        </div>
+
+        {/* Tab buttons */}
         {SECTIONS.map(sec => {
           const isActive = activeSection === sec.id;
           return (
             <button
               key={sec.id}
               onClick={() => handleSectionClick(sec.id)}
-              title={sec.label}
               style={{
-                width: "100%",
-                padding: "14px 0",
+                display: "flex", alignItems: "center", gap: 7,
+                padding: "14px 18px",
                 border: "none",
-                borderRight: `2.5px solid ${isActive ? "#111" : "transparent"}`,
-                background: isActive ? "#f5f5f5" : "transparent",
+                borderBottom: `2.5px solid ${isActive ? "#111" : "transparent"}`,
+                background: "transparent",
                 cursor: "pointer",
-                display: "flex",
-                flexDirection: "column",
-                alignItems: "center",
-                gap: 4,
+                fontFamily: "inherit",
+                fontSize: 13,
+                fontWeight: isActive ? 700 : 500,
+                color: isActive ? "#111" : "#888",
                 transition: "all 0.15s",
+                whiteSpace: "nowrap",
               }}>
-              <span style={{ fontSize: 18, lineHeight: 1 }}>{sec.icon}</span>
+              <span style={{ fontSize: 15 }}>{sec.icon}</span>
+              <span>{sec.label}</span>
             </button>
           );
         })}
-      </aside>
 
-      {/* ── Inner list (visible when section selected) ── */}
-      {activeSection && (
-        <div style={{
-          width: 220,
-          flexShrink: 0,
-          background: "#f5f5f5",
-          borderRight: "0.5px solid #e8e8e8",
-          position: "sticky",
-          top: 80,
-          height: "calc(100vh - 80px)",
-          overflowY: "auto",
-          animation: "slideInLeft 0.18s ease-out",
-        }}>
-          {/* Section header */}
-          <div style={{ padding: "16px 16px 8px", borderBottom: "0.5px solid #e8e8e8" }}>
-            <div style={{ fontSize: 10, fontWeight: 700, color: "#bbb", letterSpacing: "0.08em", marginBottom: 4 }}>
-              {SECTIONS.find(s => s.id === activeSection)?.label.toUpperCase()}
+        {/* Close button when section active */}
+        {activeSection && (
+          <button
+            onClick={() => { setActiveSection(null); setActiveItemId(null); }}
+            style={{
+              marginLeft: "auto", marginRight: "0.75rem",
+              padding: "0 12px", border: "none", background: "transparent",
+              cursor: "pointer", fontSize: 18, color: "#ccc", fontFamily: "inherit",
+              transition: "color 0.15s",
+            }}
+            title="Kapat">
+            ✕
+          </button>
+        )}
+      </div>
+
+      {/* ── Content area ── */}
+      {!activeSection ? (
+        /* Maps view */
+        <div style={{ padding: "2rem 1.5rem" }}>
+          <div style={{ marginBottom: "2rem", textAlign: "center" }}>
+            <h1 style={{ fontSize: "clamp(22px, 3vw, 34px)", fontWeight: 800, color: "#111",
+              margin: "8px 0 12px", lineHeight: 1.2 }}>
+              Canlı Reklam & Web Hiyerarşisi
+            </h1>
+            <p style={{ fontSize: 14, color: "#888", maxWidth: 560, margin: "0 auto", lineHeight: 1.7 }}>
+              Aşağıdaki harita, Şükrü Gençoğlu tarafından Stüdyo üzerinde oluşturulan
+              ve gerçek zamanlı olarak güncellenen dijital büyüme stratejisini göstermektedir.
+            </p>
+          </div>
+          <AdvertisingHierarchyLiveMap />
+          <ReklamKpiLiveMap />
+        </div>
+      ) : (
+        /* Section selected — inner list + detail side by side */
+        <div style={{ display: "flex", minHeight: "calc(100vh - 130px)" }}>
+
+          {/* Inner list panel */}
+          <div style={{
+            width: 240,
+            flexShrink: 0,
+            background: "#f7f7f7",
+            borderRight: "0.5px solid #e8e8e8",
+            overflowY: "auto",
+            animation: "slideInLeft 0.18s ease-out",
+          }}>
+            <div style={{ padding: "14px 16px 8px", borderBottom: "0.5px solid #ebebeb" }}>
+              <div style={{ fontSize: 10, fontWeight: 700, color: "#bbb", letterSpacing: "0.08em" }}>
+                {SECTIONS.find(s => s.id === activeSection)?.label.toUpperCase()}
+              </div>
             </div>
+            {activeSection === "hiyerarsi"  && <HiyerarsiInner  activeItemId={activeItemId} onSelect={handleItemSelect} />}
+            {activeSection === "sss"        && <SssInner        activeItemId={activeItemId} onSelect={handleItemSelect} />}
+            {activeSection === "notlar"     && <NotlarInner     activeItemId={activeItemId} onSelect={handleItemSelect} />}
+            {activeSection === "dusunceler" && <DusuncelerInner activeItemId={activeItemId} onSelect={handleItemSelect} />}
           </div>
 
-          {activeSection === "hiyerarsi"  && <HiyerarsiInner  activeItemId={activeItemId} onSelect={handleItemSelect} />}
-          {activeSection === "sss"        && <SssInner        activeItemId={activeItemId} onSelect={handleItemSelect} />}
-          {activeSection === "notlar"     && <NotlarInner     activeItemId={activeItemId} onSelect={handleItemSelect} />}
-          {activeSection === "dusunceler" && <DusuncelerInner activeItemId={activeItemId} onSelect={handleItemSelect} />}
+          {/* Detail panel */}
+          <main style={{ flex: 1, minWidth: 0, overflowY: "auto" }}>
+            {!activeItemId ? (
+              <div style={{ display: "flex", flexDirection: "column", alignItems: "center",
+                justifyContent: "center", height: "100%", minHeight: 360, color: "#ccc", gap: 12 }}>
+                <span style={{ fontSize: 40 }}>{SECTIONS.find(s => s.id === activeSection)?.icon}</span>
+                <span style={{ fontSize: 13 }}>Soldaki listeden bir öğe seç</span>
+              </div>
+            ) : (
+              <div style={{ animation: "fadeInDetail 0.2s ease-out", minHeight: "100%" }}>
+                {activeSection === "hiyerarsi"  && <HiyerarsiDetail  itemId={activeItemId} />}
+                {activeSection === "sss"        && <SssDetail        itemId={activeItemId} />}
+                {activeSection === "notlar"     && <NotlarDetail     itemId={activeItemId} />}
+                {activeSection === "dusunceler" && <DusuncelerDetail itemId={activeItemId} />}
+              </div>
+            )}
+          </main>
         </div>
       )}
-
-      {/* ── Main content area ── */}
-      <main style={{ flex: 1, minWidth: 0, overflowY: "auto" }}>
-        {!activeSection ? (
-          /* Maps view */
-          <div style={{ padding: "2rem 1.5rem" }}>
-            <div style={{ marginBottom: "2rem", textAlign: "center" }}>
-              <span style={{ fontSize: 10, fontWeight: 700, color: "#bbb", letterSpacing: "0.08em" }}>
-                STRATEJİ STÜDYOSU
-              </span>
-              <h1 style={{ fontSize: "clamp(22px, 3vw, 34px)", fontWeight: 800, color: "#111",
-                margin: "8px 0 12px", lineHeight: 1.2 }}>
-                Canlı Reklam & Web Hiyerarşisi
-              </h1>
-              <p style={{ fontSize: 14, color: "#888", maxWidth: 560, margin: "0 auto", lineHeight: 1.7 }}>
-                Aşağıdaki harita, Şükrü Gençoğlu tarafından Stüdyo üzerinde oluşturulan
-                ve gerçek zamanlı olarak güncellenen dijital büyüme stratejisini göstermektedir.
-              </p>
-            </div>
-            <AdvertisingHierarchyLiveMap />
-            <ReklamKpiLiveMap />
-          </div>
-        ) : !activeItemId ? (
-          /* Section selected but no item — placeholder */
-          <div style={{ display: "flex", flexDirection: "column", alignItems: "center",
-            justifyContent: "center", height: "100%", minHeight: 400, color: "#ccc", gap: 12 }}>
-            <span style={{ fontSize: 40 }}>{SECTIONS.find(s => s.id === activeSection)?.icon}</span>
-            <span style={{ fontSize: 13 }}>
-              Soldaki listeden bir öğe seç
-            </span>
-          </div>
-        ) : (
-          /* Detail panel */
-          <div style={{ animation: "fadeInDetail 0.2s ease-out", minHeight: "100%" }}>
-            {activeSection === "hiyerarsi"  && <HiyerarsiDetail  itemId={activeItemId} />}
-            {activeSection === "sss"        && <SssDetail        itemId={activeItemId} />}
-            {activeSection === "notlar"     && <NotlarDetail     itemId={activeItemId} />}
-            {activeSection === "dusunceler" && <DusuncelerDetail itemId={activeItemId} />}
-          </div>
-        )}
-      </main>
 
       <style>{`
         @keyframes slideInLeft {
