@@ -257,15 +257,26 @@ function BlogCards() {
                 (e.currentTarget as HTMLDivElement).style.boxShadow = "none";
               }}
             >
-              {/* Colour strip + emoji */}
-              <div style={{
-                height: 80, background: accent + "18",
-                display: "flex", alignItems: "center", justifyContent: "center",
-                borderBottom: `2px solid ${accent}22`,
-                fontSize: 36,
-              }}>
-                {post.coverEmoji || "📝"}
-              </div>
+              {/* Cover: image or emoji strip */}
+              {post.coverImage ? (
+                <img
+                  src={post.coverImage}
+                  alt=""
+                  style={{
+                    width: "100%", height: 140, objectFit: "cover", display: "block",
+                    borderBottom: `2px solid ${accent}22`,
+                  }}
+                />
+              ) : (
+                <div style={{
+                  height: 80, background: accent + "18",
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                  borderBottom: `2px solid ${accent}22`,
+                  fontSize: 36,
+                }}>
+                  {post.coverEmoji || "📝"}
+                </div>
+              )}
               {/* Body */}
               <div style={{ padding: "1rem 1.25rem", flex: 1, display: "flex", flexDirection: "column", gap: 6 }}>
                 <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
