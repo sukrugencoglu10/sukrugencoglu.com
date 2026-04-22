@@ -24,6 +24,81 @@ const slugify = (s) =>
 
 const readingMin = (text) => Math.max(1, Math.round((text || '').trim().split(/\s+/).filter(Boolean).length / 200))
 
+// Yapıştırılan HTML'i (tablolar dahil) markdown'a dönüştürür.
+// Google Sheets / Excel / Notion / Word kopyalamalarını destekler.
+function htmlToMarkdown(html) {
+  if (!html) return ''
+  const doc = new DOMParser().parseFromString(html, 'text/html')
+
+  // Hücre içeriği: walk() ile <b>, <a>, <i> vs. markdown'a çevrilsin; satır sonları ve | kaçırılsın
+  const cellText = (c) => {
+    const inner = Array.from(c.childNodes).map(walk).join('')
+    return inner.trim().replace(/\s*\n+\s*/g, ' ').replace(/\|/g, '\\|')
+  }
+  const tableToMd = (table) => {
+    const rows = Array.from(table.querySelectorAll('tr'))
+    if (!rows.length) return ''
+    const arrs = rows.map(r => Array.from(r.querySelectorAll('th,td')).map(cellText))
+    const cols = Math.max(...arrs.map(r => r.length))
+    if (!cols) return ''
+    const padded = arrs.map(r => { while (r.length < cols) r.push(''); return r })
+    const firstHasTh = !!rows[0].querySelector('th')
+    const header = firstHasTh ? padded[0] : Array(cols).fill(' ')
+    const body = firstHasTh ? padded.slice(1) : padded
+    const line = (a) => '| ' + a.join(' | ') + ' |'
+    const sep = '| ' + Array(cols).fill('---').join(' | ') + ' |'
+    return '\n\n' + line(header) + '\n' + sep + '\n' + body.map(line).join('\n') + '\n\n'
+  }
+
+  const walk = (node) => {
+    if (node.nodeType === 3) return node.textContent
+    if (node.nodeType !== 1) return ''
+    const tag = node.tagName.toLowerCase()
+    const kids = () => Array.from(node.childNodes).map(walk).join('')
+    switch (tag) {
+      case 'table': return tableToMd(node)
+      case 'thead': case 'tbody': case 'tfoot': case 'tr': case 'td': case 'th': case 'colgroup': case 'col': case 'caption':
+        return '' // parent <table> handles content
+      case 'h1': return '\n\n# ' + kids().trim() + '\n\n'
+      case 'h2': return '\n\n## ' + kids().trim() + '\n\n'
+      case 'h3': return '\n\n### ' + kids().trim() + '\n\n'
+      case 'h4': case 'h5': case 'h6': return '\n\n#### ' + kids().trim() + '\n\n'
+      case 'b': case 'strong': { const t = kids(); return t.trim() ? '**' + t + '**' : t }
+      case 'i': case 'em': { const t = kids(); return t.trim() ? '*' + t + '*' : t }
+      case 'code': return '`' + kids() + '`'
+      case 'pre': return '\n\n```\n' + node.textContent + '\n```\n\n'
+      case 'a': {
+        const href = node.getAttribute('href') || ''
+        const text = kids()
+        return href ? `[${text}](${href})` : text
+      }
+      case 'ul': {
+        const items = Array.from(node.children).filter(c => c.tagName?.toLowerCase() === 'li')
+          .map(li => '- ' + walk(li).trim().replace(/\s*\n+\s*/g, ' '))
+        return '\n\n' + items.join('\n') + '\n\n'
+      }
+      case 'ol': {
+        const items = Array.from(node.children).filter(c => c.tagName?.toLowerCase() === 'li')
+          .map((li, i) => (i + 1) + '. ' + walk(li).trim().replace(/\s*\n+\s*/g, ' '))
+        return '\n\n' + items.join('\n') + '\n\n'
+      }
+      case 'li': return kids()
+      case 'br': return '  \n'
+      case 'p': case 'div': case 'section': case 'article': return kids() + '\n\n'
+      case 'blockquote': return '\n> ' + kids().trim().replace(/\n/g, '\n> ') + '\n\n'
+      case 'hr': return '\n\n---\n\n'
+      case 'script': case 'style': case 'noscript': case 'meta': case 'link': return ''
+      default: return kids()
+    }
+  }
+
+  let md = walk(doc.body)
+  md = md.replace(/\u00A0/g, ' ') // non-breaking space → normal space
+  md = md.replace(/[ \t]+\n/g, '\n') // trim trailing whitespace on lines
+  md = md.replace(/\n{3,}/g, '\n\n') // collapse 3+ blank lines
+  return md.trim()
+}
+
 const emptyPost = () => ({
   id: 'blog_' + Math.random().toString(36).substr(2, 9),
   slug: '',
@@ -215,8 +290,24 @@ export default function BlogWizard({ initialPost, onCancel, onSave }) {
           <textarea
             value={post.contentTR}
             onChange={e => update({ contentTR: e.target.value })}
+            onPaste={e => {
+              const html = e.clipboardData?.getData('text/html')
+              if (!html) return // düz metin yapıştırmaları default davranışla geçer
+              const md = htmlToMarkdown(html)
+              if (!md) return
+              e.preventDefault()
+              const ta = e.target
+              const start = ta.selectionStart ?? ta.value.length
+              const end = ta.selectionEnd ?? ta.value.length
+              const next = ta.value.slice(0, start) + md + ta.value.slice(end)
+              update({ contentTR: next })
+              requestAnimationFrame(() => {
+                const pos = start + md.length
+                try { ta.setSelectionRange(pos, pos); ta.focus() } catch {}
+              })
+            }}
             rows={20}
-            placeholder={'## Giriş\n\nBurada yazının gövdesi yer alır...\n\n- Madde 1\n- Madde 2'}
+            placeholder={'## Giriş\n\nBurada yazının gövdesi yer alır...\n\n- Madde 1\n- Madde 2\n\nİpucu: Google Sheets / Excel / Notion\'dan tablo yapıştırabilirsin — otomatik markdown tablosuna dönüşür.'}
             style={{ width: '100%', padding: 14, fontSize: 14, lineHeight: 1.6, border: '1px solid #ddd', borderRadius: 8, outline: 'none', resize: 'vertical', fontFamily: 'monospace', background: '#f9f9f9', boxSizing: 'border-box' }}
           />
           <div style={{ fontSize: 11, color: '#aaa', marginTop: 6 }}>
