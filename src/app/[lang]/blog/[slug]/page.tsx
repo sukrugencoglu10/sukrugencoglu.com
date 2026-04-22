@@ -20,6 +20,7 @@ interface BlogPost {
   category: string;
   coverEmoji: string;
   coverColor: string;
+  coverImage?: string;
   publishedAt: string;
   readingMinutes: number;
   published: boolean;
@@ -91,6 +92,17 @@ export default async function BlogPostPage({
 
   return (
     <div style={{ minHeight: "100vh", background: "#fafafa" }}>
+      {/* Cover image banner */}
+      {post.coverImage && (
+        <div style={{ width: "100%", maxHeight: 420, overflow: "hidden" }}>
+          <img
+            src={post.coverImage}
+            alt={title}
+            style={{ width: "100%", height: "auto", maxHeight: 420, objectFit: "cover", display: "block" }}
+          />
+        </div>
+      )}
+
       {/* Hero */}
       <div style={{ borderBottom: `2px solid ${accentColor}22`, padding: "1.25rem 1rem 1rem" }}>
         <div style={{ maxWidth: 720, margin: "0 auto" }}>
