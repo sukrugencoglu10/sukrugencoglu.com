@@ -19,12 +19,11 @@ function renderWithLinks(text: string) {
 }
 
 /* ─── section definitions ────────────────────────────────────── */
-type SectionId = "hiyerarsi" | "sss" | "notlar" | "dusunceler";
+type SectionId = "hiyerarsi" | "sss" | "dusunceler";
 
 const SECTIONS: { id: SectionId; label: string; icon: string }[] = [
   { id: "hiyerarsi",  label: "Reklam Hiyerarşisi", icon: "⬡" },
   { id: "sss",        label: "SSS",                icon: "❓" },
-  { id: "notlar",     label: "Notlar",              icon: "📝" },
   { id: "dusunceler", label: "Blog Yazıları",         icon: "✍️" },
 ];
 
@@ -390,7 +389,6 @@ export default function CalisimalarLayout() {
             </div>
             {activeSection === "hiyerarsi" && <HiyerarsiInner activeItemId={activeItemId} onSelect={handleItemSelect} />}
             {activeSection === "sss"       && <SssInner       activeItemId={activeItemId} onSelect={handleItemSelect} />}
-            {activeSection === "notlar"    && <NotlarInner    activeItemId={activeItemId} onSelect={handleItemSelect} />}
           </div>
 
           {/* Detail panel */}
@@ -413,7 +411,6 @@ export default function CalisimalarLayout() {
               <div style={{ animation: "fadeInDetail 0.2s ease-out" }}>
                 {activeSection === "hiyerarsi" && <HiyerarsiDetail itemId={activeItemId} />}
                 {activeSection === "sss"       && <SssDetail       itemId={activeItemId} />}
-                {activeSection === "notlar"    && <NotlarDetail    itemId={activeItemId} />}
               </div>
             )}
           </main>
