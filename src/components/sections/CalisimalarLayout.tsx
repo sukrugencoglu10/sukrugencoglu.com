@@ -39,15 +39,53 @@ function HiyerarsiInner({ activeItemId, onSelect }: { activeItemId: string | nul
   );
 }
 
-function SssInner({ activeItemId, onSelect }: { activeItemId: string | null; onSelect: (id: string) => void }) {
+function SssAccordion() {
   const [items, setItems] = useState<any[]>([]);
+  const [openIds, setOpenIds] = useState<Set<string>>(new Set());
   useEffect(() => {
     fetch("/api/sss").then(r => r.json())
       .then(d => { if (Array.isArray(d)) setItems(d); }).catch(() => {});
   }, []);
+  const toggle = (id: string) =>
+    setOpenIds(prev => { const s = new Set(prev); s.has(id) ? s.delete(id) : s.add(id); return s; });
+  if (!items.length) return <Loading />;
   return (
-    <InnerList items={items.map(i => ({ id: String(i.id), label: i.title }))}
-      activeId={activeItemId} onSelect={onSelect} />
+    <div style={{ maxWidth: 820, margin: "0 auto", padding: "2.5rem 1.25rem", animation: "fadeInDetail 0.2s ease-out" }}>
+      <h2 style={{ fontSize: "clamp(22px, 3vw, 30px)", fontWeight: 800, color: "#111",
+        textAlign: "center", margin: "0 0 1.75rem", letterSpacing: "-0.01em" }}>
+        Sıkça Sorulan Sorular
+      </h2>
+      <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+        {items.map(item => {
+          const id = String(item.id);
+          const isOpen = openIds.has(id);
+          return (
+            <div key={id} style={{
+              border: "0.5px solid #e8e8e8", borderRadius: 12, overflow: "hidden",
+              background: "#fff", boxShadow: isOpen ? "0 4px 14px rgba(0,0,0,0.04)" : "none",
+              transition: "box-shadow 0.15s",
+            }}>
+              <button onClick={() => toggle(id)}
+                style={{ width: "100%", padding: "14px 18px",
+                  background: isOpen ? "#fafafa" : "#fff",
+                  border: "none", cursor: "pointer", textAlign: "left", fontFamily: "inherit",
+                  display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12 }}>
+                <span style={{ fontSize: 14, fontWeight: 600, color: "#222", lineHeight: 1.45 }}>{item.title}</span>
+                <span style={{ fontSize: 20, color: "#1e6296", flexShrink: 0, fontWeight: 300, lineHeight: 1 }}>
+                  {isOpen ? "−" : "+"}
+                </span>
+              </button>
+              {isOpen && (
+                <div style={{ padding: "14px 18px 16px", fontSize: 13.5, color: "#555", lineHeight: 1.75,
+                  borderTop: "0.5px solid #eee", background: "#fcfcfc", whiteSpace: "pre-wrap" }}>
+                  {renderWithLinks(item.description || "")}
+                </div>
+              )}
+            </div>
+          );
+        })}
+      </div>
+    </div>
   );
 }
 
@@ -150,23 +188,6 @@ function HiyerarsiDetail({ itemId }: { itemId: string }) {
           ))}
         </div>
       )}
-    </div>
-  );
-}
-
-function SssDetail({ itemId }: { itemId: string }) {
-  const [data, setData] = useState<any[]>([]);
-  useEffect(() => {
-    fetch("/api/sss").then(r => r.json()).then(d => { if (Array.isArray(d)) setData(d); }).catch(() => {});
-  }, []);
-  const item = data.find(i => String(i.id) === itemId);
-  if (!item) return <Loading />;
-  return (
-    <div style={{ padding: "2rem" }}>
-      <h2 style={{ fontSize: 22, fontWeight: 700, color: "#111", margin: "0 0 1rem", lineHeight: 1.25 }}>{item.title}</h2>
-      <p style={{ fontSize: 14, color: "#555", lineHeight: 1.8, margin: 0, whiteSpace: "pre-wrap" }}>
-        {renderWithLinks(item.description || "")}
-      </p>
     </div>
   );
 }
@@ -375,6 +396,9 @@ export default function CalisimalarLayout() {
       ) : activeSection === "dusunceler" ? (
         /* Blog yazıları — tam genişlik kart grid */
         <BlogCards />
+      ) : activeSection === "sss" ? (
+        /* SSS — tek kolon accordion */
+        <SssAccordion />
       ) : (
         /* Diğer sekmeler — iç liste + detay */
         <div className={`cal-split${activeItemId ? " cal-split--detail" : ""}`}>
@@ -386,7 +410,6 @@ export default function CalisimalarLayout() {
                 {SECTIONS.find(s => s.id === activeSection)?.label.toUpperCase()}
               </div>
             </div>
-            {activeSection === "sss"       && <SssInner       activeItemId={activeItemId} onSelect={handleItemSelect} />}
           </div>
 
           {/* Detail panel */}
@@ -407,8 +430,7 @@ export default function CalisimalarLayout() {
               </div>
             ) : (
               <div style={{ animation: "fadeInDetail 0.2s ease-out" }}>
-                {activeSection === "sss"       && <SssDetail       itemId={activeItemId} />}
-              </div>
+                  </div>
             )}
           </main>
         </div>

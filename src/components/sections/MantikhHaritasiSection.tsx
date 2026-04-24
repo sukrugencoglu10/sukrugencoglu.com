@@ -20,14 +20,6 @@ export default function MantikhHaritasiSection({ belowDashboard }: { belowDashbo
             <span className="text-[#1e6296]">{mh.title_accent}</span>
           </h2>
           <p className="text-ink-muted max-w-lg">{mh.subtitle}</p>
-          <a
-            href={`https://wa.me/905324072694?text=${encodeURIComponent("Merhaba Şükrü Bey, hizmetleriniz hakkında bilgi alabilir miyim?")}`}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-[#1e6296] hover:bg-[#174f7a] text-white text-sm font-semibold transition-colors"
-          >
-            {mh.cta_label}
-          </a>
         </div>
 
         {/* Content: 2 columns */}
