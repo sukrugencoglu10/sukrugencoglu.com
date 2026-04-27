@@ -143,7 +143,7 @@ export default function GrowthForm() {
                 onClick={() => { setFormData({ ...formData, goal: gf.goals[gf.goals.length - 1] }); nextStep(); }}
                 className="mt-1 w-full py-3 rounded-xl bg-[#a855f7] hover:bg-[#9333ea] text-white text-sm font-semibold transition-colors border-none cursor-pointer"
               >
-                Seç ve İlerle →
+                Görüşme İçin Seç ve İlerle →
               </button>
             </div>
           )}
