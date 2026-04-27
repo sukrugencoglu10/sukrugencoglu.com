@@ -131,6 +131,7 @@ export default function BlogWizard({ initialPost, onCancel, onSave }) {
   const [uploadError, setUploadError] = useState('')
   const [manualTag, setManualTag] = useState('')
   const [publishing, setPublishing] = useState(false)
+  const [showPreview, setShowPreview] = useState(false)
   const fileInputRef = useRef(null)
 
   const update = (patch) => setPost(p => ({ ...p, ...patch }))
@@ -283,33 +284,89 @@ export default function BlogWizard({ initialPost, onCancel, onSave }) {
       {/* STEP 1 — Content */}
       {step === 1 && (
         <div>
-          <h2 style={{ fontSize: 18, margin: '0 0 6px', fontWeight: 700 }}>Blog metnini yapıştır</h2>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
+            <h2 style={{ fontSize: 18, margin: 0, fontWeight: 700 }}>Blog metnini yapıştır</h2>
+            <button
+              onClick={() => setShowPreview(p => !p)}
+              style={{
+                padding: '5px 12px', fontSize: 12, fontWeight: 600, borderRadius: 6, cursor: 'pointer',
+                background: showPreview ? accent + '18' : '#f5f5f5',
+                border: `1px solid ${showPreview ? accent : '#ddd'}`,
+                color: showPreview ? accent : '#555',
+                transition: 'all 0.15s',
+              }}
+            >
+              {showPreview ? '✎ Sadece Editör' : '⊞ Önizleme'}
+            </button>
+          </div>
           <p style={{ fontSize: 13, color: '#888', margin: '0 0 16px' }}>
             Markdown destekler (## başlık, **kalın**, - liste, vb.). Metin girildikten sonra başlık, kategori, etiket ve özet önerileri otomatik üretilir.
           </p>
-          <textarea
-            value={post.contentTR}
-            onChange={e => update({ contentTR: e.target.value })}
-            onPaste={e => {
-              const html = e.clipboardData?.getData('text/html')
-              if (!html) return // düz metin yapıştırmaları default davranışla geçer
-              const md = htmlToMarkdown(html)
-              if (!md) return
-              e.preventDefault()
-              const ta = e.target
-              const start = ta.selectionStart ?? ta.value.length
-              const end = ta.selectionEnd ?? ta.value.length
-              const next = ta.value.slice(0, start) + md + ta.value.slice(end)
-              update({ contentTR: next })
-              requestAnimationFrame(() => {
-                const pos = start + md.length
-                try { ta.setSelectionRange(pos, pos); ta.focus() } catch {}
-              })
-            }}
-            rows={20}
-            placeholder={'## Giriş\n\nBurada yazının gövdesi yer alır...\n\n- Madde 1\n- Madde 2\n\nİpucu: Google Sheets / Excel / Notion\'dan tablo yapıştırabilirsin — otomatik markdown tablosuna dönüşür.'}
-            style={{ width: '100%', padding: 14, fontSize: 14, lineHeight: 1.6, border: '1px solid #ddd', borderRadius: 8, outline: 'none', resize: 'vertical', fontFamily: 'monospace', background: '#f9f9f9', boxSizing: 'border-box' }}
-          />
+          <div style={{ display: 'flex', gap: 12 }}>
+            <textarea
+              value={post.contentTR}
+              onChange={e => update({ contentTR: e.target.value })}
+              onPaste={e => {
+                const html = e.clipboardData?.getData('text/html')
+                if (!html) return
+                const md = htmlToMarkdown(html)
+                if (!md) return
+                e.preventDefault()
+                const ta = e.target
+                const start = ta.selectionStart ?? ta.value.length
+                const end = ta.selectionEnd ?? ta.value.length
+                const next = ta.value.slice(0, start) + md + ta.value.slice(end)
+                update({ contentTR: next })
+                requestAnimationFrame(() => {
+                  const pos = start + md.length
+                  try { ta.setSelectionRange(pos, pos); ta.focus() } catch {}
+                })
+              }}
+              rows={20}
+              placeholder={'## Giriş\n\nBurada yazının gövdesi yer alır...\n\n- Madde 1\n- Madde 2\n\nİpucu: Google Sheets / Excel / Notion\'dan tablo yapıştırabilirsin — otomatik markdown tablosuna dönüşür.'}
+              style={{
+                flex: 1, padding: 14, fontSize: 13, lineHeight: 1.6,
+                border: '1px solid #ddd', borderRadius: 8, outline: 'none',
+                resize: 'vertical', fontFamily: 'monospace', background: '#f9f9f9',
+                boxSizing: 'border-box', minHeight: 420,
+              }}
+            />
+            {showPreview && (
+              <div style={{
+                flex: 1, padding: 16, fontSize: 14, lineHeight: 1.8,
+                border: '1px solid #eee', borderRadius: 8, background: '#fff',
+                overflowY: 'auto', minHeight: 420, maxHeight: 600,
+                color: '#222',
+              }}>
+                {post.contentTR.trim() ? (
+                  <ReactMarkdown
+                    remarkPlugins={[remarkGfm, remarkBreaks]}
+                    components={{
+                      h1: ({node, ...p}) => <h1 style={{ fontSize: 22, fontWeight: 700, margin: '0 0 12px', borderBottom: '1px solid #eee', paddingBottom: 6 }} {...p} />,
+                      h2: ({node, ...p}) => <h2 style={{ fontSize: 18, fontWeight: 700, margin: '20px 0 8px' }} {...p} />,
+                      h3: ({node, ...p}) => <h3 style={{ fontSize: 15, fontWeight: 600, margin: '16px 0 6px' }} {...p} />,
+                      p: ({node, ...p}) => <p style={{ margin: '0 0 12px' }} {...p} />,
+                      ul: ({node, ...p}) => <ul style={{ paddingLeft: 20, margin: '0 0 12px' }} {...p} />,
+                      ol: ({node, ...p}) => <ol style={{ paddingLeft: 20, margin: '0 0 12px' }} {...p} />,
+                      li: ({node, ...p}) => <li style={{ marginBottom: 4 }} {...p} />,
+                      strong: ({node, ...p}) => <strong style={{ fontWeight: 700 }} {...p} />,
+                      table: ({node, ...p}) => <table style={{ borderCollapse: 'collapse', width: '100%', margin: '0 0 12px', fontSize: 13 }} {...p} />,
+                      th: ({node, ...p}) => <th style={{ border: '1px solid #ddd', padding: '6px 10px', background: '#f5f5f5', fontWeight: 600, textAlign: 'left' }} {...p} />,
+                      td: ({node, ...p}) => <td style={{ border: '1px solid #ddd', padding: '6px 10px' }} {...p} />,
+                      hr: ({node, ...p}) => <hr style={{ border: 'none', borderTop: '1px solid #eee', margin: '16px 0' }} {...p} />,
+                      code: ({node, inline, ...p}) => inline
+                        ? <code style={{ background: '#f0f0f0', padding: '1px 5px', borderRadius: 4, fontSize: 12, fontFamily: 'monospace' }} {...p} />
+                        : <pre style={{ background: '#f6f8fa', padding: 12, borderRadius: 6, overflow: 'auto', fontSize: 12 }}><code {...p} /></pre>,
+                    }}
+                  >
+                    {post.contentTR}
+                  </ReactMarkdown>
+                ) : (
+                  <span style={{ color: '#bbb', fontStyle: 'italic', fontSize: 13 }}>Önizleme için solda yazmaya başlayın...</span>
+                )}
+              </div>
+            )}
+          </div>
           <div style={{ fontSize: 11, color: '#aaa', marginTop: 6 }}>
             {post.contentTR.trim().split(/\s+/).filter(Boolean).length} kelime · ~{readingMin(post.contentTR)} dk okuma
           </div>
