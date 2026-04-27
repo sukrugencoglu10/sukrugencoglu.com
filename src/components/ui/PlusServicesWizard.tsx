@@ -166,7 +166,7 @@ export default function PlusServicesWizard({ showContactButton = false }: { show
                     onClick={() => handleSelect(otherLabel)}
                     className="mt-3 w-full py-3 rounded-xl bg-[#ff6b00] hover:bg-[#e56000] text-white text-sm font-semibold transition-colors border-none cursor-pointer"
                   >
-                    Seç ve İlerle →
+                    Görüşme İçin Seç ve İlerle →
                   </button>
                 </>
               )}

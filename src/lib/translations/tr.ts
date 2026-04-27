@@ -166,7 +166,7 @@ export const tr: Translations = {
     copyright: "© 2025 Şükrü Gençoğlu. Tüm hakları saklıdır.",
   },
   mantikhHaritasi: {
-    badge: "Mantık Haritası",
+    badge: "Reklam Stratejisi",
     title: "Reklam Yönetiminde",
     title_accent: "Doğru Strateji",
     subtitle: "Dönüşüm sağlayan reklamlar için sistematik bir yaklaşım — her adımda, her kararla.",
