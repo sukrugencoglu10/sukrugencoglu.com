@@ -385,6 +385,20 @@ export default function CalisimalarLayout() {
   return (
     <div style={{ minHeight: "calc(100vh - 80px)", background: "#fafafa", fontFamily: "inherit" }}>
 
+      {/* ── İki tıklanabilir kart ── */}
+      <div className="cal-nav-cards">
+        <a href={`/${lang}/sss`} className="cal-nav-card">
+          <span className="cal-nav-icon">❓</span>
+          <span className="cal-nav-label">SSS</span>
+          <span className="cal-nav-arrow">→</span>
+        </a>
+        <a href={`/${lang}/blog`} className="cal-nav-card">
+          <span className="cal-nav-icon">✍️</span>
+          <span className="cal-nav-label">Blog Yazıları</span>
+          <span className="cal-nav-arrow">→</span>
+        </a>
+      </div>
+
       {/* ── Maps section ── */}
       <div className="cal-maps-wrap">
         <div style={{ marginBottom: "1.5rem", textAlign: "center" }}>
@@ -399,20 +413,6 @@ export default function CalisimalarLayout() {
         </div>
         <AdvertisingHierarchyLiveMap />
         <ReklamKpiLiveMap />
-      </div>
-
-      {/* ── İki tıklanabilir kart ── */}
-      <div className="cal-nav-cards">
-        <a href={`/${lang}/sss`} className="cal-nav-card">
-          <span className="cal-nav-icon">❓</span>
-          <span className="cal-nav-label">SSS</span>
-          <span className="cal-nav-arrow">→</span>
-        </a>
-        <a href={`/${lang}/blog`} className="cal-nav-card">
-          <span className="cal-nav-icon">✍️</span>
-          <span className="cal-nav-label">Blog Yazıları</span>
-          <span className="cal-nav-arrow">→</span>
-        </a>
       </div>
 
       <style>{`
