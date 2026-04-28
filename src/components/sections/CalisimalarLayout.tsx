@@ -381,6 +381,7 @@ function Loading() {
 
 /* ─── Main Layout ─────────────────────────────────────────────── */
 export default function CalisimalarLayout() {
+  const { lang } = useLanguage();
   return (
     <div style={{ minHeight: "calc(100vh - 80px)", background: "#fafafa", fontFamily: "inherit" }}>
 
@@ -400,70 +401,62 @@ export default function CalisimalarLayout() {
         <ReklamKpiLiveMap />
       </div>
 
-      {/* ── İki sütun: SSS (dar sol) + Blog Yazıları (geniş sağ) ── */}
-      <div className="cal-two-col">
-        {/* Sol: SSS */}
-        <div className="cal-sss-col">
-          <div className="cal-col-header">❓ SSS</div>
-          <SssCards />
-        </div>
-        {/* Sağ: Blog Yazıları */}
-        <div className="cal-blog-col">
-          <div className="cal-col-header">✍️ Blog Yazıları</div>
-          <BlogCards />
-        </div>
+      {/* ── İki tıklanabilir kart ── */}
+      <div className="cal-nav-cards">
+        <a href={`/${lang}/sss`} className="cal-nav-card">
+          <span className="cal-nav-icon">❓</span>
+          <span className="cal-nav-label">SSS</span>
+          <span className="cal-nav-arrow">→</span>
+        </a>
+        <a href={`/${lang}/blog`} className="cal-nav-card">
+          <span className="cal-nav-icon">✍️</span>
+          <span className="cal-nav-label">Blog Yazıları</span>
+          <span className="cal-nav-arrow">→</span>
+        </a>
       </div>
 
       <style>{`
         /* ── Maps wrapper ── */
         .cal-maps-wrap { padding: 1.5rem 1rem; }
 
-        /* ── İki sütun ── */
-        .cal-two-col {
+        /* ── Nav kartlar ── */
+        .cal-nav-cards {
           display: flex;
-          align-items: stretch;
+          gap: 1rem;
+          padding: 1.5rem 1rem;
           border-top: 0.5px solid #e8e8e8;
         }
-        .cal-col-header {
-          padding: 12px 16px;
-          font-size: 11px;
-          font-weight: 700;
-          letter-spacing: 0.07em;
-          color: #aaa;
-          border-bottom: 0.5px solid #e8e8e8;
-          background: #fff;
-          position: sticky;
-          top: 80px;
-          z-index: 10;
-        }
-
-        /* SSS kolonu — dar, hover'da genişler */
-        .cal-sss-col {
-          flex: 0 0 300px;
-          width: 300px;
-          border-right: 0.5px solid #e8e8e8;
-          background: #fafafa;
-          transition: flex-basis 0.3s ease, width 0.3s ease;
-          overflow: hidden;
-        }
-        .cal-sss-col:hover {
-          flex-basis: 480px;
-          width: 480px;
-        }
-
-        /* Blog kolonu — geniş */
-        .cal-blog-col {
+        .cal-nav-card {
           flex: 1;
-          min-width: 0;
-          background: #fafafa;
+          display: flex;
+          align-items: center;
+          gap: 12px;
+          padding: 1.5rem 2rem;
+          background: #fff;
+          border: 1px solid #e8e8e8;
+          border-radius: 14px;
+          text-decoration: none;
+          color: #111;
+          font-family: inherit;
+          transition: border-color 0.15s, box-shadow 0.15s, transform 0.15s;
+          cursor: pointer;
         }
+        .cal-nav-card:hover {
+          border-color: #111;
+          box-shadow: 0 6px 20px rgba(0,0,0,0.07);
+          transform: translateY(-2px);
+        }
+        .cal-nav-icon { font-size: 28px; }
+        .cal-nav-label { font-size: 16px; font-weight: 700; flex: 1; }
+        .cal-nav-arrow { font-size: 20px; color: #bbb; transition: color 0.15s, transform 0.15s; }
+        .cal-nav-card:hover .cal-nav-arrow { color: #111; transform: translateX(4px); }
 
-        /* ── Blog/SSS kart grid ── */
+        /* ── Blog grid (blog sayfasında kullanılır) ── */
         .cal-blog-grid {
           display: grid;
-          grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-          gap: 1rem;
-          padding: 1.25rem 1rem;
+          grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+          gap: 1.25rem;
+          padding: 1.5rem 1rem;
         }
 
         /* ── Animations ── */
@@ -473,11 +466,8 @@ export default function CalisimalarLayout() {
         }
 
         /* ── Mobile ── */
-        @media (max-width: 768px) {
-          .cal-two-col { flex-direction: column; }
-          .cal-sss-col { flex: none; width: 100%; border-right: none; border-bottom: 0.5px solid #e8e8e8; }
-          .cal-sss-col:hover { flex-basis: auto; width: 100%; }
-          .cal-blog-col { width: 100%; }
+        @media (max-width: 640px) {
+          .cal-nav-cards { flex-direction: column; }
           .cal-blog-grid { grid-template-columns: 1fr; }
         }
 
