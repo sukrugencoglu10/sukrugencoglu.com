@@ -4506,28 +4506,145 @@ function DijitalAnons() {
   )
 }
 
-// ─── SSS aracı — ReklamHiyerarsisi'nin SSS varyantı ──────────────────────────
+// ─── SSS aracı — Kart tabanlı düzen ──────────────────────────────────────────
 function SSS() {
+  const [items, setItems] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [saving, setSaving] = useState(false)
+  const [active, setActive] = useState(null) // null → grid, obje → editör
+
+  useEffect(() => {
+    fetch('/api/sss')
+      .then(r => r.json())
+      .then(data => { if (Array.isArray(data)) setItems(data) })
+      .catch(() => {})
+      .finally(() => setLoading(false))
+  }, [])
+
+  const persist = async (newItems) => {
+    setSaving(true)
+    try {
+      const res = await fetch('/api/sss', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(newItems),
+      })
+      const result = await res.json()
+      if (!res.ok || !result.ok) { alert('Kaydedilemedi: ' + (result.error || 'Hata')); return false }
+      return true
+    } catch (err) { alert('Hata: ' + err.message); return false }
+    finally { setSaving(false) }
+  }
+
+  const handleNew = () => {
+    const item = { id: Date.now(), title: '', description: '', faq: [], expanded: false }
+    setActive(item)
+  }
+
+  const handleSave = async () => {
+    const exists = items.some(i => i.id === active.id)
+    const updated = exists ? items.map(i => i.id === active.id ? active : i) : [active, ...items]
+    if (await persist(updated)) { setItems(updated); setActive(null) }
+  }
+
+  const handleDelete = async (id) => {
+    if (!confirm('Bu soruyu silmek istediğinize emin misiniz?')) return
+    const updated = items.filter(i => i.id !== id)
+    if (await persist(updated)) setItems(updated)
+  }
+
+  if (loading) return <div style={{ padding: '2rem', color: '#888', fontSize: 14 }}>Yükleniyor...</div>
+
+  // ─── Editör ─────────────────────────────────────────────────────
+  if (active !== null) {
+    return (
+      <div style={{ padding: '2rem 1.25rem', fontFamily: 'inherit', maxWidth: 800 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 20 }}>
+          <button
+            onClick={() => { if (confirm('Değişiklikler kaybolabilir. Geri dön?')) setActive(null) }}
+            style={{ padding: '6px 12px', background: '#fff', border: '1px solid #ddd', borderRadius: 6, cursor: 'pointer', fontSize: 12, color: '#555' }}>
+            ← SSS Listesi
+          </button>
+          {saving && <span style={{ fontSize: 11, color: '#888' }}>Kaydediliyor...</span>}
+        </div>
+        <div style={{ marginBottom: 14 }}>
+          <label style={{ fontSize: 11, color: '#888', display: 'block', marginBottom: 4 }}>SORU</label>
+          <textarea
+            value={active.title}
+            onChange={e => setActive(a => ({ ...a, title: e.target.value }))}
+            rows={3}
+            placeholder="Soru..."
+            style={{ width: '100%', padding: 12, fontSize: 14, border: '1px solid #ddd', borderRadius: 8, outline: 'none', resize: 'vertical', fontFamily: 'inherit', boxSizing: 'border-box' }}
+          />
+        </div>
+        <div style={{ marginBottom: 20 }}>
+          <label style={{ fontSize: 11, color: '#888', display: 'block', marginBottom: 4 }}>CEVAP</label>
+          <textarea
+            value={active.description}
+            onChange={e => setActive(a => ({ ...a, description: e.target.value }))}
+            rows={12}
+            placeholder="Cevap yaz..."
+            style={{ width: '100%', padding: 12, fontSize: 14, lineHeight: 1.7, border: '1px solid #ddd', borderRadius: 8, outline: 'none', resize: 'vertical', fontFamily: 'inherit', boxSizing: 'border-box' }}
+          />
+        </div>
+        <button
+          onClick={handleSave}
+          disabled={saving || !active.title.trim()}
+          style={{ padding: '10px 24px', background: '#111', color: '#fff', border: 'none', borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>
+          Kaydet
+        </button>
+      </div>
+    )
+  }
+
+  // ─── Kart grid ──────────────────────────────────────────────────
   return (
-    <ReklamHiyerarsisi
-      apiPath="/api/sss"
-      headerText="Sık Sorulan Sorular"
-      headerSubtext="Soru ve cevapları düzenle, kaydet"
-      emptyText="Henüz soru yok."
-      emptyIcon="?"
-      titlePlaceholder="Soru..."
-      descPlaceholder="Cevap yaz..."
-      searchPlaceholder="Soru veya cevapta ara..."
-      titleFallback="Soru yok"
-      descFallback="Cevap yok"
-      showNestedFaq={false}
-      addToTop={true}
-      descMinHeight={200}
-      focusedLeftWidth={220}
-      focusedDescMinHeight={520}
-      focusedDescFontSize={15}
-      focusedDescLineHeight={1.9}
-    />
+    <div style={{ padding: '2rem 1.25rem', fontFamily: 'inherit' }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1.5rem', flexWrap: 'wrap', gap: 10 }}>
+        <div>
+          <h1 style={{ fontSize: 22, fontWeight: 500, margin: 0 }}>Sık Sorulan Sorular</h1>
+          <p style={{ fontSize: 12, color: '#888', marginTop: 4 }}>{items.length} soru</p>
+        </div>
+        <button
+          onClick={handleNew}
+          style={{ background: '#111', color: '#fff', border: 'none', borderRadius: 8, padding: '8px 18px', fontSize: 13, fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6 }}>
+          <span style={{ fontSize: 16, fontWeight: 'bold' }}>+</span> Yeni Soru
+        </button>
+      </div>
+
+      {items.length === 0 ? (
+        <div style={{ padding: '4rem 2rem', textAlign: 'center', color: '#bbb', fontSize: 14, background: '#fafafa', borderRadius: 12, border: '1px dashed #e0e0e0' }}>
+          Henüz soru yok. Yeni bir soru ekle.
+        </div>
+      ) : (
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 14 }}>
+          {items.map(item => (
+            <div
+              key={item.id}
+              onClick={() => setActive({ ...item })}
+              style={{ background: '#fff', border: '1px solid #eee', borderRadius: 10, padding: '16px 18px', cursor: 'pointer', transition: 'all 0.15s', position: 'relative' }}
+              onMouseEnter={e => { e.currentTarget.style.borderColor = '#111'; e.currentTarget.style.boxShadow = '0 4px 14px rgba(0,0,0,0.06)' }}
+              onMouseLeave={e => { e.currentTarget.style.borderColor = '#eee'; e.currentTarget.style.boxShadow = 'none' }}
+            >
+              <div style={{ fontSize: 13, fontWeight: 700, color: '#111', lineHeight: 1.4, marginBottom: 8 }}>
+                {item.title || '(başlıksız)'}
+              </div>
+              <div style={{ fontSize: 12, color: '#999', lineHeight: 1.5, display: '-webkit-box', WebkitLineClamp: 3, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
+                {item.description || '(cevap yok)'}
+              </div>
+              <button
+                onClick={e => { e.stopPropagation(); handleDelete(item.id) }}
+                style={{ position: 'absolute', top: 10, right: 10, background: 'none', border: 'none', color: '#ff4d4f', cursor: 'pointer', fontSize: 11, padding: '2px 6px', opacity: 0 }}
+                onMouseEnter={e => e.currentTarget.style.opacity = 1}
+                onMouseLeave={e => e.currentTarget.style.opacity = 0}
+              >
+                Sil
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
   )
 }
 
