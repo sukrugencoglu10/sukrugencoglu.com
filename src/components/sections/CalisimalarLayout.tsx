@@ -196,6 +196,74 @@ function NotlarDetail({ itemId }: { itemId: string }) {
   );
 }
 
+/* ─── SSS cards grid ─────────────────────────────────────────── */
+function SssCards() {
+  const [items, setItems] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [openId, setOpenId] = useState<string | null>(null);
+
+  useEffect(() => {
+    fetch("/api/sss").then(r => r.json())
+      .then(d => { if (Array.isArray(d)) setItems(d); })
+      .catch(() => {})
+      .finally(() => setLoading(false));
+  }, []);
+
+  if (loading) return <Loading />;
+  if (!items.length) return (
+    <div style={{ padding: "3rem", textAlign: "center", color: "#bbb", fontSize: 13 }}>
+      Henüz SSS eklenmemiş.
+    </div>
+  );
+
+  return (
+    <div style={{ padding: "1.5rem", animation: "fadeInDetail 0.2s ease-out" }}>
+      <div className="cal-blog-grid">
+        {items.map(item => {
+          const isOpen = openId === String(item.id);
+          return (
+            <div
+              key={item.id}
+              onClick={() => setOpenId(isOpen ? null : String(item.id))}
+              style={{
+                background: "#fff",
+                border: `1px solid ${isOpen ? "#111" : "#e8e8e8"}`,
+                borderRadius: 14,
+                padding: "1.25rem 1.5rem",
+                cursor: "pointer",
+                transition: "all 0.15s",
+                display: "flex",
+                flexDirection: "column",
+                gap: 8,
+              }}
+              onMouseEnter={e => { if (!isOpen) (e.currentTarget as HTMLDivElement).style.borderColor = "#aaa"; }}
+              onMouseLeave={e => { if (!isOpen) (e.currentTarget as HTMLDivElement).style.borderColor = "#e8e8e8"; }}
+            >
+              <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 8 }}>
+                <h3 style={{ margin: 0, fontSize: 14, fontWeight: 700, color: "#111", lineHeight: 1.4 }}>
+                  {item.title}
+                </h3>
+                <span style={{ flexShrink: 0, fontSize: 14, color: "#888", transform: isOpen ? "rotate(180deg)" : "rotate(0deg)", transition: "transform 0.15s" }}>▾</span>
+              </div>
+              {!isOpen && (
+                <p style={{ margin: 0, fontSize: 12, color: "#999", lineHeight: 1.6,
+                  display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical" as const, overflow: "hidden" }}>
+                  {item.description}
+                </p>
+              )}
+              {isOpen && (
+                <p style={{ margin: 0, fontSize: 13, color: "#444", lineHeight: 1.8, whiteSpace: "pre-wrap" }}>
+                  {renderWithLinks(item.description || "")}
+                </p>
+              )}
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 /* ─── Blog cards grid ─────────────────────────────────────────── */
 const ACCENT: Record<string, string> = {
   gtm: "#1D9E75", analytics: "#3B82F6", cro: "#F59E0B",
@@ -376,42 +444,8 @@ export default function CalisimalarLayout() {
         /* Blog yazıları — tam genişlik kart grid */
         <BlogCards />
       ) : (
-        /* Diğer sekmeler — iç liste + detay */
-        <div className={`cal-split${activeItemId ? " cal-split--detail" : ""}`}>
-
-          {/* Inner list panel */}
-          <div className="cal-list-panel">
-            <div style={{ padding: "14px 16px 8px", borderBottom: "0.5px solid #ebebeb" }}>
-              <div style={{ fontSize: 10, fontWeight: 700, color: "#bbb", letterSpacing: "0.08em" }}>
-                {SECTIONS.find(s => s.id === activeSection)?.label.toUpperCase()}
-              </div>
-            </div>
-            {activeSection === "sss"       && <SssInner       activeItemId={activeItemId} onSelect={handleItemSelect} />}
-          </div>
-
-          {/* Detail panel */}
-          <main className="cal-detail-panel">
-            {/* Mobile geri butonu */}
-            {activeItemId && (
-              <button
-                onClick={() => setActiveItemId(null)}
-                className="cal-back-btn">
-                ← Listeye Dön
-              </button>
-            )}
-            {!activeItemId ? (
-              <div style={{ display: "flex", flexDirection: "column", alignItems: "center",
-                justifyContent: "center", height: "100%", minHeight: 300, color: "#ccc", gap: 12 }}>
-                <span style={{ fontSize: 36 }}>{SECTIONS.find(s => s.id === activeSection)?.icon}</span>
-                <span style={{ fontSize: 13 }}>Listeden bir öğe seç</span>
-              </div>
-            ) : (
-              <div style={{ animation: "fadeInDetail 0.2s ease-out" }}>
-                {activeSection === "sss"       && <SssDetail       itemId={activeItemId} />}
-              </div>
-            )}
-          </main>
-        </div>
+        /* SSS — kart grid */
+        <SssCards />
       )}
 
       <style>{`
