@@ -342,21 +342,21 @@ export default function BlogWizard({ initialPost, onCancel, onSave }) {
                   <ReactMarkdown
                     remarkPlugins={[remarkGfm, remarkBreaks]}
                     components={{
-                      h1: ({node, ...p}) => <h1 style={{ fontSize: 22, fontWeight: 700, margin: '0 0 12px', borderBottom: '1px solid #eee', paddingBottom: 6 }} {...p} />,
-                      h2: ({node, ...p}) => <h2 style={{ fontSize: 18, fontWeight: 700, margin: '20px 0 8px' }} {...p} />,
-                      h3: ({node, ...p}) => <h3 style={{ fontSize: 15, fontWeight: 600, margin: '16px 0 6px' }} {...p} />,
-                      p: ({node, ...p}) => <p style={{ margin: '0 0 12px' }} {...p} />,
-                      ul: ({node, ...p}) => <ul style={{ paddingLeft: 20, margin: '0 0 12px' }} {...p} />,
-                      ol: ({node, ...p}) => <ol style={{ paddingLeft: 20, margin: '0 0 12px' }} {...p} />,
-                      li: ({node, ...p}) => <li style={{ marginBottom: 4 }} {...p} />,
-                      strong: ({node, ...p}) => <strong style={{ fontWeight: 700 }} {...p} />,
-                      table: ({node, ...p}) => <table style={{ borderCollapse: 'collapse', width: '100%', margin: '0 0 12px', fontSize: 13 }} {...p} />,
-                      th: ({node, ...p}) => <th style={{ border: '1px solid #ddd', padding: '6px 10px', background: '#f5f5f5', fontWeight: 600, textAlign: 'left' }} {...p} />,
-                      td: ({node, ...p}) => <td style={{ border: '1px solid #ddd', padding: '6px 10px' }} {...p} />,
-                      hr: ({node, ...p}) => <hr style={{ border: 'none', borderTop: '1px solid #eee', margin: '16px 0' }} {...p} />,
-                      code: ({node, inline, ...p}) => inline
-                        ? <code style={{ background: '#f0f0f0', padding: '1px 5px', borderRadius: 4, fontSize: 12, fontFamily: 'monospace' }} {...p} />
-                        : <pre style={{ background: '#f6f8fa', padding: 12, borderRadius: 6, overflow: 'auto', fontSize: 12 }}><code {...p} /></pre>,
+                      h1: ({children}) => <h1 style={{ fontSize: 22, fontWeight: 700, margin: '0 0 12px', borderBottom: '1px solid #eee', paddingBottom: 6 }}>{children}</h1>,
+                      h2: ({children}) => <h2 style={{ fontSize: 18, fontWeight: 700, margin: '20px 0 8px' }}>{children}</h2>,
+                      h3: ({children}) => <h3 style={{ fontSize: 15, fontWeight: 600, margin: '16px 0 6px' }}>{children}</h3>,
+                      p: ({children}) => <p style={{ margin: '0 0 12px' }}>{children}</p>,
+                      ul: ({children}) => <ul style={{ paddingLeft: 20, margin: '0 0 12px' }}>{children}</ul>,
+                      ol: ({children}) => <ol style={{ paddingLeft: 20, margin: '0 0 12px' }}>{children}</ol>,
+                      li: ({children}) => <li style={{ marginBottom: 4 }}>{children}</li>,
+                      strong: ({children}) => <strong style={{ fontWeight: 700 }}>{children}</strong>,
+                      table: ({children}) => <table style={{ borderCollapse: 'collapse', width: '100%', margin: '0 0 12px', fontSize: 13 }}>{children}</table>,
+                      th: ({children}) => <th style={{ border: '1px solid #ddd', padding: '6px 10px', background: '#f5f5f5', fontWeight: 600, textAlign: 'left' }}>{children}</th>,
+                      td: ({children}) => <td style={{ border: '1px solid #ddd', padding: '6px 10px' }}>{children}</td>,
+                      hr: () => <hr style={{ border: 'none', borderTop: '1px solid #eee', margin: '16px 0' }} />,
+                      code: ({children, className}) => className
+                        ? <pre style={{ background: '#f6f8fa', padding: 12, borderRadius: 6, overflow: 'auto', fontSize: 12 }}><code className={className}>{children}</code></pre>
+                        : <code style={{ background: '#f0f0f0', padding: '1px 5px', borderRadius: 4, fontSize: 12, fontFamily: 'monospace' }}>{children}</code>,
                     }}
                   >
                     {post.contentTR}
