@@ -25,7 +25,7 @@ export const metadata: Metadata = {
 export default function IletisimPage() {
   return (
     <ContactSection
-      pinnedAnons={<PlusServicesWizard showContactButton />}
+      pinnedAnons={<PlusServicesWizard />}
     />
   );
 }
