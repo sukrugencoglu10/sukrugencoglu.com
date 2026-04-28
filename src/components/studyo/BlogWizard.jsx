@@ -8,10 +8,10 @@ import ReactMarkdown from 'react-markdown'
 import remarkBreaks from 'remark-breaks'
 import remarkGfm from 'remark-gfm'
 
-const CATEGORIES = ['genel', 'gtm', 'analytics', 'cro', 'otomasyon', 'reklam']
+const CATEGORIES = ['genel', 'gtm', 'analytics', 'cro', 'otomasyon', 'reklam', 'seo']
 const CAT_COLORS = {
   gtm: '#1D9E75', analytics: '#3B82F6', cro: '#F59E0B',
-  otomasyon: '#8B5CF6', genel: '#6B7280', reklam: '#EF4444',
+  otomasyon: '#8B5CF6', genel: '#6B7280', reklam: '#EF4444', seo: '#0EA5E9',
 }
 const STEP_LABELS = ['İçerik', 'Başlık', 'Görsel', 'Kategori & Etiket', 'Önizle & Yayınla']
 
