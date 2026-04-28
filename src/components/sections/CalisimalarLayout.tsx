@@ -217,8 +217,8 @@ function SssCards() {
   );
 
   return (
-    <div style={{ padding: "1.5rem", animation: "fadeInDetail 0.2s ease-out" }}>
-      <div className="cal-blog-grid">
+    <div style={{ animation: "fadeInDetail 0.2s ease-out" }}>
+      <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem", padding: "1rem" }}>
         {items.map(item => {
           const isOpen = openId === String(item.id);
           return (
@@ -381,163 +381,77 @@ function Loading() {
 
 /* ─── Main Layout ─────────────────────────────────────────────── */
 export default function CalisimalarLayout() {
-  const [activeSection, setActiveSection] = useState<SectionId | null>(null);
-  const [activeItemId, setActiveItemId] = useState<string | null>(null);
-
-  const handleSectionClick = (id: SectionId) => {
-    if (activeSection === id) {
-      setActiveSection(null);
-      setActiveItemId(null);
-    } else {
-      setActiveSection(id);
-      setActiveItemId(null);
-    }
-  };
-
-  const handleItemSelect = (id: string) => setActiveItemId(id);
-
+  const { lang } = useLanguage();
   return (
     <div style={{ minHeight: "calc(100vh - 80px)", background: "#fafafa", fontFamily: "inherit" }}>
 
-      {/* ── Top tab bar ── */}
-      <div className="cal-tabbar">
-        {SECTIONS.map(sec => {
-          const isActive = activeSection === sec.id;
-          return (
-            <button
-              key={sec.id}
-              onClick={() => handleSectionClick(sec.id)}
-              className={`cal-tab${isActive ? " cal-tab--active" : ""}`}>
-              <span className="cal-tab-icon">{sec.icon}</span>
-              <span className="cal-tab-label">{sec.label}</span>
-            </button>
-          );
-        })}
-        {activeSection && (
-          <button
-            onClick={() => { setActiveSection(null); setActiveItemId(null); }}
-            className="cal-tab-close"
-            title="Kapat">
-            ✕
-          </button>
-        )}
+      {/* ── Maps section ── */}
+      <div className="cal-maps-wrap">
+        <div style={{ marginBottom: "1.5rem", textAlign: "center" }}>
+          <h1 style={{ fontSize: "clamp(20px, 3vw, 32px)", fontWeight: 800, color: "#111",
+            margin: "0 0 10px", lineHeight: 1.2 }}>
+            Canlı Reklam & Web Hiyerarşisi
+          </h1>
+          <p style={{ fontSize: 14, color: "#888", maxWidth: 520, margin: "0 auto", lineHeight: 1.7 }}>
+            Aşağıdaki harita, Şükrü Gençoğlu tarafından Stüdyo üzerinde oluşturulan
+            ve gerçek zamanlı olarak güncellenen dijital büyüme stratejisini göstermektedir.
+          </p>
+        </div>
+        <AdvertisingHierarchyLiveMap />
+        <ReklamKpiLiveMap />
       </div>
 
-      {/* ── Content area ── */}
-      {!activeSection ? (
-        /* Maps view */
-        <div className="cal-maps-wrap">
-          <div style={{ marginBottom: "1.5rem", textAlign: "center" }}>
-            <h1 style={{ fontSize: "clamp(20px, 3vw, 32px)", fontWeight: 800, color: "#111",
-              margin: "0 0 10px", lineHeight: 1.2 }}>
-              Canlı Reklam & Web Hiyerarşisi
-            </h1>
-            <p style={{ fontSize: 14, color: "#888", maxWidth: 520, margin: "0 auto", lineHeight: 1.7 }}>
-              Aşağıdaki harita, Şükrü Gençoğlu tarafından Stüdyo üzerinde oluşturulan
-              ve gerçek zamanlı olarak güncellenen dijital büyüme stratejisini göstermektedir.
-            </p>
-          </div>
-          <AdvertisingHierarchyLiveMap />
-          <ReklamKpiLiveMap />
-        </div>
-      ) : activeSection === "dusunceler" ? (
-        /* Blog yazıları — tam genişlik kart grid */
-        <BlogCards />
-      ) : (
-        /* SSS — kart grid */
-        <SssCards />
-      )}
+      {/* ── İki tıklanabilir kart ── */}
+      <div className="cal-nav-cards">
+        <a href={`/${lang}/sss`} className="cal-nav-card">
+          <span className="cal-nav-icon">❓</span>
+          <span className="cal-nav-label">SSS</span>
+          <span className="cal-nav-arrow">→</span>
+        </a>
+        <a href={`/${lang}/blog`} className="cal-nav-card">
+          <span className="cal-nav-icon">✍️</span>
+          <span className="cal-nav-label">Blog Yazıları</span>
+          <span className="cal-nav-arrow">→</span>
+        </a>
+      </div>
 
       <style>{`
-        /* ── Tab bar ── */
-        .cal-tabbar {
-          position: sticky;
-          top: 80px;
-          z-index: 20;
-          background: #fff;
-          border-bottom: 0.5px solid #e8e8e8;
-          display: flex;
-          align-items: stretch;
-          justify-content: center;
-          overflow-x: auto;
-          -webkit-overflow-scrolling: touch;
-          scrollbar-width: none;
-        }
-        .cal-tabbar::-webkit-scrollbar { display: none; }
+        /* ── Maps wrapper ── */
+        .cal-maps-wrap { padding: 1.5rem 1rem; }
 
-        .cal-tab {
+        /* ── Nav kartlar ── */
+        .cal-nav-cards {
+          display: flex;
+          gap: 1rem;
+          padding: 1.5rem 1rem;
+          border-top: 0.5px solid #e8e8e8;
+        }
+        .cal-nav-card {
+          flex: 1;
           display: flex;
           align-items: center;
-          gap: 7px;
-          padding: 14px 16px;
-          border: none;
-          border-bottom: 2.5px solid transparent;
-          background: transparent;
-          cursor: pointer;
-          font-family: inherit;
-          font-size: 13px;
-          font-weight: 500;
-          color: #888;
-          transition: all 0.15s;
-          white-space: nowrap;
-          flex-shrink: 0;
-        }
-        .cal-tab--active {
-          border-bottom-color: #111;
+          gap: 12px;
+          padding: 1.5rem 2rem;
+          background: #fff;
+          border: 1px solid #e8e8e8;
+          border-radius: 14px;
+          text-decoration: none;
           color: #111;
-          font-weight: 700;
-        }
-        .cal-tab-icon { font-size: 15px; }
-        .cal-tab-close {
-          margin-left: auto;
-          margin-right: 0.5rem;
-          padding: 0 12px;
-          border: none;
-          background: transparent;
-          cursor: pointer;
-          font-size: 16px;
-          color: #ccc;
-          flex-shrink: 0;
-        }
-
-        /* ── Maps wrapper ── */
-        .cal-maps-wrap {
-          padding: 1.5rem 1rem;
-        }
-
-        /* ── Split layout ── */
-        .cal-split {
-          display: flex;
-          min-height: calc(100vh - 130px);
-        }
-        .cal-list-panel {
-          width: 240px;
-          flex-shrink: 0;
-          background: #f7f7f7;
-          border-right: 0.5px solid #e8e8e8;
-          overflow-y: auto;
-          animation: slideInLeft 0.18s ease-out;
-        }
-        .cal-detail-panel {
-          flex: 1;
-          min-width: 0;
-          overflow-y: auto;
-        }
-        .cal-back-btn {
-          display: none;
-          margin: 1rem 1rem 0;
-          padding: 7px 14px;
-          border: 0.5px solid #e0e0e0;
-          border-radius: 8px;
-          background: #f5f5f5;
-          font-size: 12px;
-          font-weight: 600;
-          color: #555;
-          cursor: pointer;
           font-family: inherit;
+          transition: border-color 0.15s, box-shadow 0.15s, transform 0.15s;
+          cursor: pointer;
         }
+        .cal-nav-card:hover {
+          border-color: #111;
+          box-shadow: 0 6px 20px rgba(0,0,0,0.07);
+          transform: translateY(-2px);
+        }
+        .cal-nav-icon { font-size: 28px; }
+        .cal-nav-label { font-size: 16px; font-weight: 700; flex: 1; }
+        .cal-nav-arrow { font-size: 20px; color: #bbb; transition: color 0.15s, transform 0.15s; }
+        .cal-nav-card:hover .cal-nav-arrow { color: #111; transform: translateX(4px); }
 
-        /* ── Blog cards grid ── */
+        /* ── Blog grid (blog sayfasında kullanılır) ── */
         .cal-blog-grid {
           display: grid;
           grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
@@ -546,10 +460,6 @@ export default function CalisimalarLayout() {
         }
 
         /* ── Animations ── */
-        @keyframes slideInLeft {
-          from { opacity: 0; transform: translateX(-12px); }
-          to   { opacity: 1; transform: translateX(0); }
-        }
         @keyframes fadeInDetail {
           from { opacity: 0; transform: translateY(8px); }
           to   { opacity: 1; transform: translateY(0); }
@@ -557,25 +467,8 @@ export default function CalisimalarLayout() {
 
         /* ── Mobile ── */
         @media (max-width: 640px) {
-          .cal-tabbar { justify-content: flex-start; }
-          .cal-tab { padding: 12px 12px; gap: 5px; font-size: 12px; }
-          .cal-tab-label { display: none; }
-          .cal-tab-icon { font-size: 18px; }
-          .cal-tab--active .cal-tab-label { display: inline; }
-
-          .cal-maps-wrap { padding: 1rem 0.75rem; }
-
-          .cal-split { flex-direction: column; }
-          .cal-list-panel { width: 100%; border-right: none; border-bottom: 0.5px solid #e8e8e8; }
-          .cal-split--detail .cal-list-panel { display: none; }
-          .cal-split--detail .cal-detail-panel { display: block; }
-          .cal-back-btn { display: inline-flex; align-items: center; gap: 4px; }
-
-          .cal-blog-grid {
-            grid-template-columns: 1fr;
-            padding: 1rem 0.75rem;
-            gap: 1rem;
-          }
+          .cal-nav-cards { flex-direction: column; }
+          .cal-blog-grid { grid-template-columns: 1fr; }
         }
 
         @media (max-width: 400px) {
