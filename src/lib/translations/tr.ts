@@ -188,7 +188,7 @@ export const tr: Translations = {
       },
       {
         title: "Reklam Neticesi",
-        subs: [],
+        subs: ["Google'da ilk sıraya çıkma", "WhatsApp tıklamaları", "Telefon aramaları", "Form Talebi"],
       },
       {
         title: "Reklamların optimize edilmesi",
