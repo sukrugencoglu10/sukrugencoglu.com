@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter, useParams } from "next/navigation";
+import CardShare from "@/components/blog/CardShare";
 
 const ACCENT: Record<string, string> = {
   gtm: "#1D9E75", analytics: "#3B82F6", cro: "#F59E0B",
@@ -92,7 +93,14 @@ export default function BlogListePage() {
                       ))}
                     </div>
                   )}
-                  <div style={{ fontSize: 11, color: "#ccc" }}>{date}</div>
+                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                    <span style={{ fontSize: 11, color: "#ccc" }}>{date}</span>
+                    <CardShare
+                      url={`${window.location.origin}/${lang}/blog/${post.slug}`}
+                      title={title}
+                      lang={lang}
+                    />
+                  </div>
                 </div>
               </div>
             );
