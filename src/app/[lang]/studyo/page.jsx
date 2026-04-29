@@ -5434,11 +5434,6 @@ function ReklamHiyerarsisiHaritasi({
         </div>
       )}
 
-      {/* Reklam Hiyerarşisi içerik editörü — haritanın altında */}
-      <div style={{ marginTop: 32, borderTop: '1px solid #eee', paddingTop: 24 }}>
-        <ReklamHiyerarsisi />
-      </div>
-
     </div>
   )
 }
