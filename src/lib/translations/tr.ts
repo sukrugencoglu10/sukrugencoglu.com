@@ -183,6 +183,10 @@ export const tr: Translations = {
         subs: [],
       },
       {
+        title: "Reklam Neticesi",
+        subs: [],
+      },
+      {
         title: "Doğru reklam kampanyası ile doğru amaca hizmet ederek doğru hedef kitleye ulaşma",
         subs: ["Niş hedef kitleye stratejik kampanya kurulumu", "Özel optimizasyon"],
       },
