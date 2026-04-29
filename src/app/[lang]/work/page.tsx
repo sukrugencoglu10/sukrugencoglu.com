@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
+import { BreadcrumbLd } from "@/lib/seo/JsonLd";
+import { siteConfig } from "@/lib/seo/config";
 
-const baseUrl = "https://www.sukrugencoglu.com";
+const baseUrl = siteConfig.baseUrl;
 
 export const metadata: Metadata = {
   title: "Work | Şükrü Gençoğlu",
@@ -29,7 +31,14 @@ import StudyoShowcase from "@/components/sections/StudyoShowcase";
 import FaqShowcase from "@/components/sections/FaqShowcase";
 
 export default function WorkPage() {
+  const breadcrumbs = [
+    { name: "Home", url: `${baseUrl}/en` },
+    { name: "Work", url: `${baseUrl}/en/work` },
+  ];
+
   return (
+    <>
+      <BreadcrumbLd items={breadcrumbs} />
     <div className="section-padding bg-surface-secondary min-h-screen">
       <div className="container-site">
         <div className="flex flex-col items-center gap-4 text-center mb-12">
@@ -46,5 +55,6 @@ export default function WorkPage() {
       <StudyoShowcase />
       <FaqShowcase />
     </div>
+    </>
   );
 }

@@ -1,8 +1,9 @@
 import type { Metadata } from "next";
 import AboutSection from "@/components/sections/AboutSection";
-import { PersonLd } from "@/lib/seo/JsonLd";
+import { PersonLd, BreadcrumbLd } from "@/lib/seo/JsonLd";
+import { siteConfig } from "@/lib/seo/config";
 
-const baseUrl = "https://www.sukrugencoglu.com";
+const baseUrl = siteConfig.baseUrl;
 
 export const metadata: Metadata = {
   title: "Hakkımda | Şükrü Gençoğlu",
@@ -25,8 +26,14 @@ export const metadata: Metadata = {
 };
 
 export default function HakkimdaPage() {
+  const breadcrumbs = [
+    { name: "Ana Sayfa", url: `${baseUrl}/tr` },
+    { name: "Hakkımda", url: `${baseUrl}/tr/hakkimda` },
+  ];
+
   return (
     <>
+      <BreadcrumbLd items={breadcrumbs} />
       <PersonLd lang="tr" />
       <AboutSection />
     </>

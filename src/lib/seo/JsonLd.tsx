@@ -98,7 +98,7 @@ export function ArticleLd({ post, lang = "tr" }: { post: ArticleInput; lang?: st
     ? post.coverImage.startsWith("http")
       ? post.coverImage
       : `${siteConfig.baseUrl}${post.coverImage}`
-    : `${siteConfig.baseUrl}${siteConfig.defaultOgImage}`;
+    : `${siteConfig.baseUrl}/${lang}/opengraph-image`;
 
   const data = {
     "@context": "https://schema.org",
@@ -139,6 +139,34 @@ export function FaqLd({ items }: { items: FaqItem[] }) {
       "@type": "Question",
       name: q.question,
       acceptedAnswer: { "@type": "Answer", text: q.answer },
+    })),
+  };
+  return <Ld data={data} />;
+}
+
+type ServiceItem = { name: string; description?: string; url?: string };
+
+export function ServiceListLd({ items, lang = "tr" }: { items: ServiceItem[]; lang?: string }) {
+  if (!items?.length) return null;
+  const data = {
+    "@context": "https://schema.org",
+    "@type": "ItemList",
+    name: lang === "tr" ? "Hizmetler" : "Services",
+    url: `${siteConfig.baseUrl}/${lang}/${lang === "tr" ? "hizmetler" : "services"}`,
+    itemListElement: items.map((item, i) => ({
+      "@type": "ListItem",
+      position: i + 1,
+      item: {
+        "@type": "Service",
+        name: item.name,
+        description: item.description,
+        url: item.url ?? `${siteConfig.baseUrl}/${lang}/${lang === "tr" ? "hizmetler" : "services"}`,
+        provider: {
+          "@type": "Person",
+          name: siteConfig.organization.name,
+          url: `${siteConfig.baseUrl}/${lang}/${lang === "tr" ? "hakkimda" : "about"}`,
+        },
+      },
     })),
   };
   return <Ld data={data} />;

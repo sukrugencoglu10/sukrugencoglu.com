@@ -1,5 +1,5 @@
 import { createClient } from "@supabase/supabase-js";
-import { FaqLd } from "@/lib/seo/JsonLd";
+import { FaqLd, BreadcrumbLd } from "@/lib/seo/JsonLd";
 import { siteConfig } from "@/lib/seo/config";
 import SssList from "./SssList";
 
@@ -47,15 +47,22 @@ export async function generateMetadata({ params }: { params: Promise<{ lang: str
   };
 }
 
-export default async function SssPage() {
+export default async function SssPage({ params }: { params: Promise<{ lang: string }> }) {
+  const { lang } = await params;
   const items = await getItems();
   const faqItems = items.map((i) => ({
     question: i.title,
     answer: i.description,
   }));
 
+  const breadcrumbs = [
+    { name: lang === "tr" ? "Ana Sayfa" : "Home", url: `${siteConfig.baseUrl}/${lang}` },
+    { name: lang === "tr" ? "Sık Sorulan Sorular" : "FAQ", url: `${siteConfig.baseUrl}/${lang}/sss` },
+  ];
+
   return (
     <div style={{ maxWidth: 800, margin: "0 auto", padding: "3rem 1.25rem", fontFamily: "inherit" }}>
+      <BreadcrumbLd items={breadcrumbs} />
       <FaqLd items={faqItems} />
       <div style={{ marginBottom: "2.5rem" }}>
         <h1

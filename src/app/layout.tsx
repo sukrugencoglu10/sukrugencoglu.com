@@ -33,9 +33,12 @@ export const metadata: Metadata = {
     },
   },
   icons: { icon: "/g.svg" },
-  verification: siteConfig.searchConsoleVerification
-    ? { google: siteConfig.searchConsoleVerification }
-    : undefined,
+  verification: {
+    ...(siteConfig.searchConsoleVerification
+      ? { google: siteConfig.searchConsoleVerification }
+      : {}),
+    other: { "msvalidate.01": "02D9C5F711359A698CD7F511CF3801FB" },
+  },
 };
 
 export default async function RootLayout({

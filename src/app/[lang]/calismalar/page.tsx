@@ -1,6 +1,9 @@
 import type { Metadata } from "next";
+import CalisimalarLayout from "@/components/sections/CalisimalarLayout";
+import { BreadcrumbLd } from "@/lib/seo/JsonLd";
+import { siteConfig } from "@/lib/seo/config";
 
-const baseUrl = "https://www.sukrugencoglu.com";
+const baseUrl = siteConfig.baseUrl;
 
 export const metadata: Metadata = {
   title: "Çalışmalar | Şükrü Gençoğlu",
@@ -22,8 +25,16 @@ export const metadata: Metadata = {
   },
 };
 
-import CalisimalarLayout from "@/components/sections/CalisimalarLayout";
-
 export default function CalisimalarPage() {
-  return <CalisimalarLayout />;
+  const breadcrumbs = [
+    { name: "Ana Sayfa", url: `${baseUrl}/tr` },
+    { name: "Çalışmalar", url: `${baseUrl}/tr/calismalar` },
+  ];
+
+  return (
+    <>
+      <BreadcrumbLd items={breadcrumbs} />
+      <CalisimalarLayout />
+    </>
+  );
 }
