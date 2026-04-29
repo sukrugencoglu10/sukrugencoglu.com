@@ -68,7 +68,7 @@ export default function CardShare({ url, title, lang }: CardShareProps) {
             color="#0A66C2" icon={<LinkedInIcon />} label="LinkedIn"
           />
           <ShareItem
-            href={`https://twitter.com/intent/tweet?url=${enc}&text=${encTitle}`}
+            href={`https://x.com/intent/tweet?url=${enc}&text=${encTitle}`}
             color="#000" icon={<XIcon />} label="X"
           />
           <ShareItem

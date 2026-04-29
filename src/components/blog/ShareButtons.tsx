@@ -16,7 +16,7 @@ export default function ShareButtons({ url, title, lang }: ShareButtonsProps) {
 
   const shareLinks = {
     linkedin: `https://www.linkedin.com/sharing/share-offsite/?url=${encodedUrl}`,
-    twitter: `https://twitter.com/intent/tweet?url=${encodedUrl}&text=${encodedTitle}`,
+    twitter: `https://x.com/intent/tweet?url=${encodedUrl}&text=${encodedTitle}`,
     whatsapp: `https://wa.me/?text=${encodedTitle}%20${encodedUrl}`,
   };
 
