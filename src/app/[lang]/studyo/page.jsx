@@ -6277,14 +6277,14 @@ function SeoKontrolMerkezi() {
           <h1 style={{ fontSize: 22, fontWeight: 600, margin: 0, display: 'flex', alignItems: 'center', gap: 8 }}>
             <span>🔍</span> SEO Kontrol Merkezi
           </h1>
-          <p style={{ fontSize: 13, color: '#888', marginTop: 4, lineHeight: 1.5 }}>
+          <p style={{ fontSize: 14, color: '#374151', marginTop: 6, lineHeight: 1.55, fontWeight: 500 }}>
             On-Page, PageSpeed ve Search Console kontrol listesi. Tıkla → incele → not al → status güncelle → <b>Kaydet</b>.
           </p>
-          <div style={{ display: 'flex', gap: 12, marginTop: 8, fontSize: 12, color: '#555' }}>
+          <div style={{ display: 'flex', gap: 14, marginTop: 10, fontSize: 13, color: '#111', fontWeight: 600 }}>
             <span>Toplam: <b>{items.length}</b></span>
-            <span style={{ color: '#16a34a' }}>✓ OK: <b>{okCount}</b></span>
-            <span style={{ color: '#d97706' }}>⚠ Gözden geçir: <b>{reviewCount}</b></span>
-            <span style={{ color: '#6b7280' }}>○ TODO: <b>{items.length - okCount - reviewCount}</b></span>
+            <span style={{ color: '#15803d' }}>✓ OK: <b>{okCount}</b></span>
+            <span style={{ color: '#b45309' }}>⚠ Gözden geçir: <b>{reviewCount}</b></span>
+            <span style={{ color: '#374151' }}>○ TODO: <b>{items.length - okCount - reviewCount}</b></span>
           </div>
         </div>
         <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
@@ -6328,17 +6328,17 @@ function SeoKontrolMerkezi() {
               style={{
                 padding: '8px 14px',
                 background: 'transparent',
-                color: active ? t.color : '#888',
+                color: active ? t.color : '#374151',
                 border: 'none',
                 borderBottom: `2px solid ${active ? t.color : 'transparent'}`,
                 cursor: 'pointer',
-                fontSize: 13,
-                fontWeight: active ? 700 : 500,
+                fontSize: 14,
+                fontWeight: active ? 700 : 600,
                 marginBottom: -1,
                 transition: 'all 0.15s',
               }}
             >
-              {t.label} <span style={{ color: '#bbb', fontWeight: 400, fontSize: 11 }}>({counts[t.id]})</span>
+              {t.label} <span style={{ color: '#6b7280', fontWeight: 600, fontSize: 12 }}>({counts[t.id]})</span>
             </button>
           )
         })}
@@ -6347,7 +6347,7 @@ function SeoKontrolMerkezi() {
       {/* Items */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
         {filtered.length === 0 && (
-          <div style={{ padding: '3rem 1rem', textAlign: 'center', color: '#aaa', fontSize: 13, border: '1px dashed #ddd', borderRadius: 12 }}>
+          <div style={{ padding: '3rem 1rem', textAlign: 'center', color: '#374151', fontSize: 14, fontWeight: 500, border: '1px dashed #cbd5e1', borderRadius: 12 }}>
             Bu grupta adım yok. Sağ üstten <b>+ Ekle</b> ile yeni bir adım oluşturabilirsin.
           </div>
         )}
@@ -6377,14 +6377,14 @@ function SeoKontrolMerkezi() {
                   onClick={() => updateItem(item.id, { status: cycleStatus(item.status) })}
                   title="Durumu değiştir (todo → ok → review → todo)"
                   style={{
-                    padding: '3px 8px',
+                    padding: '4px 10px',
                     background: statusMeta.bg,
                     color: statusMeta.fg,
                     border: 'none',
                     borderRadius: 6,
-                    fontSize: 10,
-                    fontWeight: 700,
-                    letterSpacing: '0.05em',
+                    fontSize: 11,
+                    fontWeight: 800,
+                    letterSpacing: '0.06em',
                     cursor: 'pointer',
                     display: 'flex',
                     alignItems: 'center',
@@ -6395,7 +6395,7 @@ function SeoKontrolMerkezi() {
                   <span style={{ width: 7, height: 7, borderRadius: '50%', background: statusMeta.dot }} />
                   {statusMeta.label}
                 </button>
-                <span style={{ fontSize: 9, fontWeight: 700, color: groupMeta.color, letterSpacing: '0.06em', textTransform: 'uppercase' }}>
+                <span style={{ fontSize: 11, fontWeight: 800, color: groupMeta.color, letterSpacing: '0.08em', textTransform: 'uppercase' }}>
                   {groupMeta.label}
                 </span>
                 <input
@@ -6408,9 +6408,9 @@ function SeoKontrolMerkezi() {
                     padding: '4px 6px',
                     border: 'none',
                     borderBottom: '1px solid transparent',
-                    fontSize: 14,
-                    fontWeight: 600,
-                    color: '#111',
+                    fontSize: 15,
+                    fontWeight: 700,
+                    color: '#0f172a',
                     fontFamily: 'inherit',
                     outline: 'none',
                   }}
@@ -6440,14 +6440,15 @@ function SeoKontrolMerkezi() {
                 onChange={e => updateItem(item.id, { link: e.target.value })}
                 placeholder="Harici link (opsiyonel) — örn. https://pagespeed.web.dev/..."
                 style={{
-                  padding: '6px 10px',
-                  border: '1px solid #eee',
+                  padding: '7px 10px',
+                  border: '1px solid #d1d5db',
                   borderRadius: 6,
-                  fontSize: 12,
-                  color: '#666',
+                  fontSize: 13,
+                  color: '#1f2937',
+                  fontWeight: 500,
                   fontFamily: 'inherit',
                   outline: 'none',
-                  background: '#fafafa',
+                  background: '#fff',
                 }}
               />
 
@@ -6458,22 +6459,24 @@ function SeoKontrolMerkezi() {
                 placeholder="Notların... (kontrol sonucu, bulgular, yapılacaklar)"
                 rows={2}
                 style={{
-                  padding: '8px 10px',
-                  border: '1px solid #eee',
+                  padding: '9px 11px',
+                  border: '1px solid #d1d5db',
                   borderRadius: 6,
-                  fontSize: 13,
-                  color: '#333',
+                  fontSize: 14,
+                  color: '#0f172a',
+                  fontWeight: 500,
                   fontFamily: 'inherit',
                   resize: 'vertical',
-                  minHeight: 50,
+                  minHeight: 54,
                   outline: 'none',
-                  lineHeight: 1.6,
+                  lineHeight: 1.65,
+                  background: '#fff',
                 }}
               />
 
               {/* Footer: last checked */}
               {lastChecked && (
-                <div style={{ fontSize: 10, color: '#aaa', textAlign: 'right' }}>
+                <div style={{ fontSize: 12, color: '#475569', textAlign: 'right', fontWeight: 600 }}>
                   Son kontrol: {lastChecked}
                 </div>
               )}
