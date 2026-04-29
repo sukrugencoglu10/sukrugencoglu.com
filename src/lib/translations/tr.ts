@@ -176,7 +176,7 @@ export const tr: Translations = {
     items: [
       {
         title: "Reklam verme amacımız nedir?",
-        subs: ["Google'da ilk sayfada çıkma", "Telefon aramaları", "WhatsApp tıklanmaları", "Form"],
+        subs: ["Satış ve müşteri sayısını arttırma"],
       },
       {
         title: "Reklam yayında kalmaz, yönetilir",
