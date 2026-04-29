@@ -1,11 +1,14 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import Link from "next/link";
+import Image from "next/image";
 import ReactMarkdown from "react-markdown";
 import remarkBreaks from "remark-breaks";
 import remarkGfm from "remark-gfm";
+import { ArticleLd, BreadcrumbLd } from "@/lib/seo/JsonLd";
+import { siteConfig } from "@/lib/seo/config";
 
-const baseUrl = "https://www.sukrugencoglu.com";
+const baseUrl = siteConfig.baseUrl;
 
 interface BlogPost {
   id: string;
@@ -48,7 +51,20 @@ export async function generateMetadata({
 
   const title = lang === "tr" ? post.titleTR : post.titleEN;
   const description = lang === "tr" ? post.summaryTR : post.summaryEN;
-  const backPath = lang === "tr" ? "calismalar" : "work";
+
+  // coverImage varsa onu OG image yap; yoksa Next.js opengraph-image.tsx otomatik üretecek
+  const customOgImages = post.coverImage
+    ? [
+        {
+          url: post.coverImage.startsWith("http")
+            ? post.coverImage
+            : `${baseUrl}${post.coverImage}`,
+          width: 1200,
+          height: 630,
+          alt: title,
+        },
+      ]
+    : undefined;
 
   return {
     title: `${title} | Şükrü Gençoğlu`,
@@ -65,6 +81,16 @@ export async function generateMetadata({
       title: `${title} | Şükrü Gençoğlu`,
       description,
       url: `${baseUrl}/${lang}/blog/${slug}`,
+      type: "article",
+      publishedTime: post.publishedAt,
+      tags: post.tags,
+      ...(customOgImages ? { images: customOgImages } : {}),
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: `${title} | Şükrü Gençoğlu`,
+      description,
+      ...(customOgImages ? { images: customOgImages.map((i) => i.url) } : {}),
     },
   };
 }
@@ -90,15 +116,40 @@ export default async function BlogPostPage({
 
   const accentColor = post.coverColor || "#1D9E75";
 
+  const articlePost = {
+    slug: post.slug,
+    title,
+    summary: lang === "tr" ? post.summaryTR : post.summaryEN,
+    publishedAt: post.publishedAt,
+    coverImage: post.coverImage,
+    category: post.category,
+    tags: post.tags,
+    readingMinutes: post.readingMinutes,
+  };
+
+  const breadcrumbs = [
+    { name: lang === "tr" ? "Ana Sayfa" : "Home", url: `${baseUrl}/${lang}` },
+    {
+      name: lang === "tr" ? "Blog Yazıları" : "Blog",
+      url: `${baseUrl}/${lang}/${backPath}`,
+    },
+    { name: title, url: `${baseUrl}/${lang}/blog/${post.slug}` },
+  ];
+
   return (
     <div style={{ minHeight: "100vh", background: "#fafafa" }}>
+      <ArticleLd post={articlePost} lang={lang} />
+      <BreadcrumbLd items={breadcrumbs} />
       {/* Cover image banner */}
       {post.coverImage && (
-        <div style={{ width: "100%", maxHeight: 420, overflow: "hidden" }}>
-          <img
+        <div style={{ position: "relative", width: "100%", height: 420, overflow: "hidden" }}>
+          <Image
             src={post.coverImage}
             alt={title}
-            style={{ width: "100%", height: "auto", maxHeight: 420, objectFit: "cover", display: "block" }}
+            fill
+            priority
+            sizes="100vw"
+            style={{ objectFit: "cover" }}
           />
         </div>
       )}

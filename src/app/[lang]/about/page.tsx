@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import AboutSection from "@/components/sections/AboutSection";
+import { PersonLd } from "@/lib/seo/JsonLd";
 
 const baseUrl = "https://www.sukrugencoglu.com";
 
@@ -26,6 +27,7 @@ export const metadata: Metadata = {
 export default function AboutPage() {
   return (
     <>
+      <PersonLd lang="en" />
       <AboutSection />
     </>
   );

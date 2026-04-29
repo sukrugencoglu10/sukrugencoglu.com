@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import Image from "next/image";
 import { useLanguage } from "@/context/LanguageContext";
 import { useRouter } from "next/navigation";
 import dynamic from "next/dynamic";
@@ -325,14 +326,15 @@ function BlogCards() {
             >
               {/* Cover: image or emoji strip */}
               {post.coverImage ? (
-                <img
-                  src={post.coverImage}
-                  alt=""
-                  style={{
-                    width: "100%", height: 140, objectFit: "cover", display: "block",
-                    borderBottom: `2px solid ${accent}22`,
-                  }}
-                />
+                <div style={{ position: "relative", width: "100%", height: 140, borderBottom: `2px solid ${accent}22` }}>
+                  <Image
+                    src={post.coverImage}
+                    alt=""
+                    fill
+                    sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                    style={{ objectFit: "cover" }}
+                  />
+                </div>
               ) : (
                 <div style={{
                   height: 80, background: accent + "18",
