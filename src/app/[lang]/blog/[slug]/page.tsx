@@ -7,6 +7,7 @@ import remarkBreaks from "remark-breaks";
 import remarkGfm from "remark-gfm";
 import { ArticleLd, BreadcrumbLd } from "@/lib/seo/JsonLd";
 import { siteConfig } from "@/lib/seo/config";
+import ShareButtons from "@/components/blog/ShareButtons";
 
 const baseUrl = siteConfig.baseUrl;
 
@@ -178,6 +179,13 @@ export default async function BlogPostPage({
               ))}
             </div>
           )}
+          <div style={{ marginTop: 14 }}>
+            <ShareButtons
+              url={`${baseUrl}/${lang}/blog/${post.slug}`}
+              title={title}
+              lang={lang}
+            />
+          </div>
         </div>
       </div>
 
