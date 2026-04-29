@@ -84,6 +84,14 @@ type ArticleInput = {
   readingMinutes?: number;
 };
 
+/** "2026-04-28" → "2026-04-28T00:00:00+03:00" (TR saat dilimi). Tam ISO datetime ise olduğu gibi döner. */
+function toIsoDateTime(value?: string): string | undefined {
+  if (!value) return undefined;
+  if (value.includes("T")) return value;
+  // YYYY-MM-DD → tam ISO + TR (+03:00)
+  return `${value}T00:00:00+03:00`;
+}
+
 export function ArticleLd({ post, lang = "tr" }: { post: ArticleInput; lang?: string }) {
   const url = `${siteConfig.baseUrl}/${lang}/blog/${post.slug}`;
   const image = post.coverImage
@@ -99,8 +107,8 @@ export function ArticleLd({ post, lang = "tr" }: { post: ArticleInput; lang?: st
     headline: post.title,
     description: post.summary,
     image,
-    datePublished: post.publishedAt,
-    dateModified: post.updatedAt || post.publishedAt,
+    datePublished: toIsoDateTime(post.publishedAt),
+    dateModified: toIsoDateTime(post.updatedAt || post.publishedAt),
     author: siteConfig.person
       ? {
           "@type": "Person",
