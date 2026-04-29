@@ -8,6 +8,7 @@ import dynamic from "next/dynamic";
 
 const AdvertisingHierarchyLiveMap = dynamic(() => import("@/components/ui/AdvertisingHierarchyLiveMap"), { ssr: false });
 const ReklamKpiLiveMap = dynamic(() => import("@/components/ui/ReklamKpiLiveMap"), { ssr: false });
+const ReklamStratejisiLiveMap = dynamic(() => import("@/components/ui/ReklamStratejisiLiveMap"), { ssr: false });
 
 /* ─── helpers ────────────────────────────────────────────────── */
 function renderWithLinks(text: string) {
@@ -415,6 +416,7 @@ export default function CalisimalarLayout() {
         </div>
         <AdvertisingHierarchyLiveMap />
         <ReklamKpiLiveMap />
+        <ReklamStratejisiLiveMap />
       </div>
 
       <style>{`

@@ -1,12 +1,10 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { CAT_LABELS, getCatColors } from "@/lib/maps/categories";
-import { NODE_W as RH_NODE_W, NODE_H as RH_NODE_H, edgePoint as rhEdgePoint } from "@/lib/maps/canvas";
+import { CAT_COLORS, CAT_LABELS, getCatColors } from "@/lib/maps/categories";
+import { NODE_W, NODE_H, edgePoint } from "@/lib/maps/canvas";
 
-const RH_CAT_LABELS = CAT_LABELS;
-
-export default function AdvertisingHierarchyLiveMap() {
+export default function ReklamStratejisiLiveMap() {
   const [terms, setTerms] = useState<any[]>([]);
   const [connections, setConnections] = useState<any[]>([]);
   const [canvasDim, setCanvasDim] = useState({ w: 800, h: 500 });
@@ -17,11 +15,9 @@ export default function AdvertisingHierarchyLiveMap() {
   const canvasAreaRef = useRef<HTMLDivElement>(null);
   const infoPanelRef = useRef<HTMLDivElement>(null);
 
-  // States for Panning
   const [isPanning, setIsPanning] = useState(false);
   const [panStart, setPanStart] = useState({ x: 0, y: 0, scrollLeft: 0, scrollTop: 0 });
 
-  // Scroll into view when a term is selected
   useEffect(() => {
     if (selectedId && infoPanelRef.current) {
       infoPanelRef.current.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
@@ -29,7 +25,7 @@ export default function AdvertisingHierarchyLiveMap() {
   }, [selectedId]);
 
   useEffect(() => {
-    fetch('/api/reklam-hiyerarsisi-harita')
+    fetch('/api/reklam-stratejisi-harita')
       .then(res => res.json())
       .then(data => {
         if (data && data.terms) {
@@ -40,13 +36,11 @@ export default function AdvertisingHierarchyLiveMap() {
         setLoading(false);
       })
       .catch(err => {
-        console.error('Harita yükleme hatası:', err);
+        console.error('Reklam stratejisi haritası yükleme hatası:', err);
         setLoading(false);
       });
   }, []);
 
-
-  // Zoom logic for wheel
   useEffect(() => {
     const handleWheel = (e: WheelEvent) => {
       if (canvasAreaRef.current && canvasAreaRef.current.contains(e.target as Node)) {
@@ -60,14 +54,11 @@ export default function AdvertisingHierarchyLiveMap() {
         }
       }
     };
-
     window.addEventListener('wheel', handleWheel, { passive: false });
     return () => window.removeEventListener('wheel', handleWheel);
   }, []);
 
-  // Panning Handlers
   const handleMouseDown = (e: React.MouseEvent) => {
-    // Pan everywhere except node divs (position:absolute with cursor:pointer) and buttons
     const target = e.target as HTMLElement;
     const isNode = target.closest('div[style*="cursor: pointer"]') !== null;
     const isButton = target.closest('button') !== null;
@@ -86,11 +77,9 @@ export default function AdvertisingHierarchyLiveMap() {
 
   const handleMouseMove = (e: React.MouseEvent) => {
     if (!isPanning || !canvasAreaRef.current) return;
-    
     e.preventDefault();
     const dx = e.clientX - panStart.x;
     const dy = e.clientY - panStart.y;
-    
     canvasAreaRef.current.scrollLeft = panStart.scrollLeft - dx;
     canvasAreaRef.current.scrollTop = panStart.scrollTop - dy;
   };
@@ -114,7 +103,7 @@ export default function AdvertisingHierarchyLiveMap() {
 
   if (loading) return (
     <div style={{ height: 400, display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#fafafa', borderRadius: 16 }}>
-      <div className="animate-pulse text-gray-400">Harita yükleniyor...</div>
+      <div className="animate-pulse text-gray-400">Reklam stratejisi haritası yükleniyor...</div>
     </div>
   );
 
@@ -125,7 +114,7 @@ export default function AdvertisingHierarchyLiveMap() {
   return (
     <>
     <style>{`
-      @keyframes rhSlideUp {
+      @keyframes rsSlideUp {
         from { transform: translateY(100%); opacity: 0; }
         to { transform: translateY(0); opacity: 1; }
       }
@@ -139,9 +128,9 @@ export default function AdvertisingHierarchyLiveMap() {
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
               <span className="relative inline-flex rounded-full h-3 w-3 bg-green-500"></span>
             </span>
-            Canlı Reklam Hiyerarşisi Haritası
+            Canlı Reklam Stratejisi Haritası
           </h3>
-          <p className="text-sm text-gray-500 mt-1">Stüdyo'da hazırlanan güncel reklam stratejisi ve web hiyerarşisi</p>
+          <p className="text-sm text-gray-500 mt-1">Reklam stratejisinin adımları, kararlar ve aralarındaki bağlantılar</p>
           <div className="flex flex-wrap gap-3 mt-3">
              <p className="text-xs text-gray-400 font-medium uppercase tracking-wider flex items-center gap-1">
                <span className="bg-gray-200 px-1 rounded text-gray-600">Sürükle</span> Haritayı Kaydır
@@ -155,7 +144,7 @@ export default function AdvertisingHierarchyLiveMap() {
           </div>
         </div>
         <div className="flex flex-wrap gap-2 sm:gap-4 items-center mt-3 sm:mt-0">
-          {Object.entries(RH_CAT_LABELS).map(([cat, label]) => (
+          {Object.entries(CAT_LABELS).map(([cat, label]) => (
             <div key={cat} className="flex items-center gap-1.5 text-[10px] sm:text-xs font-medium text-gray-600">
               <div style={{ width: 8, height: 8, borderRadius: 2, background: getCatColors(cat).stripe }} />
               {label}
@@ -168,10 +157,8 @@ export default function AdvertisingHierarchyLiveMap() {
       </div>
 
       <div className="flex flex-col relative">
-        {/* Main View Area */}
         <div className="relative bg-[#fafafa]">
-          {/* Scrollable Container */}
-          <div 
+          <div
             ref={canvasAreaRef}
             onMouseDown={handleMouseDown}
             onMouseMove={handleMouseMove}
@@ -180,7 +167,6 @@ export default function AdvertisingHierarchyLiveMap() {
             className={`w-full overflow-auto p-3 sm:p-6 md:p-12 transition-all ${isPanning ? 'cursor-grabbing select-none' : 'cursor-grab'}`}
             style={{ overflow: 'auto' }}
           >
-            {/* Zoomable Canvas */}
             <div style={{ width: canvasDim.w * zoom, height: canvasDim.h * zoom, flexShrink: 0, margin: '0 auto' }}>
             <div style={{
               position: "relative",
@@ -191,13 +177,12 @@ export default function AdvertisingHierarchyLiveMap() {
               transition: 'transform 0.15s ease-out',
               pointerEvents: isPanning ? 'none' : 'auto',
             }}>
-              {/* SVG Lines */}
               <svg width={canvasDim.w} height={canvasDim.h} style={{ position: 'absolute', top: 0, left: 0, pointerEvents: 'none' }}>
                 <defs>
-                  <marker id="rh-arr" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto">
+                  <marker id="rs-arr" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto">
                     <path d="M0,0 L0,6 L6,3 z" fill="#ddd" />
                   </marker>
-                  <marker id="rh-arr-hi" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto">
+                  <marker id="rs-arr-hi" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto">
                     <path d="M0,0 L0,6 L6,3 z" fill="#777" />
                   </marker>
                 </defs>
@@ -205,8 +190,8 @@ export default function AdvertisingHierarchyLiveMap() {
                   const f = termMap[conn.from];
                   const t = termMap[conn.to];
                   if (!f || !t) return null;
-                  const p1 = rhEdgePoint(f, t);
-                  const p2 = rhEdgePoint(t, f);
+                  const p1 = edgePoint(f, t);
+                  const p2 = edgePoint(t, f);
                   const isActive = activeIds.has(conn.from) || activeIds.has(conn.to);
                   return (
                     <line
@@ -214,14 +199,13 @@ export default function AdvertisingHierarchyLiveMap() {
                       x1={p1.x} y1={p1.y} x2={p2.x} y2={p2.y}
                       stroke={isActive ? '#777' : '#ddd'}
                       strokeWidth={isActive ? 2 : 1.2}
-                      markerEnd={isActive ? 'url(#rh-arr-hi)' : 'url(#rh-arr)'}
+                      markerEnd={isActive ? 'url(#rs-arr-hi)' : 'url(#rs-arr)'}
                       style={{ transition: 'all 0.3s' }}
                     />
                   );
                 })}
               </svg>
 
-              {/* Nodes */}
               {terms.map(term => {
                 const colors = getCatColors(term.cat);
                 const isSelected = selectedId === term.id;
@@ -234,15 +218,15 @@ export default function AdvertisingHierarchyLiveMap() {
                     onMouseEnter={() => setHovered(term.id)}
                     onMouseLeave={() => setHovered(null)}
                     onClick={(e) => {
-                      e.stopPropagation(); // Avoid triggering pan
+                      e.stopPropagation();
                       setSelectedId(prev => prev === term.id ? null : term.id);
                     }}
                     style={{
                       position: 'absolute',
-                      left: term.x - RH_NODE_W / 2,
-                      top: term.y - RH_NODE_H / 2,
-                      width: RH_NODE_W,
-                      height: RH_NODE_H,
+                      left: term.x - NODE_W / 2,
+                      top: term.y - NODE_H / 2,
+                      width: NODE_W,
+                      height: NODE_H,
                       background: isSelected ? colors.stripe + '18' : colors.bg,
                       border: `${isSelected ? 2 : 1}px solid ${isSelected ? colors.stripe : (isHov ? colors.stripe : colors.border)}`,
                       borderRadius: 10,
@@ -268,24 +252,23 @@ export default function AdvertisingHierarchyLiveMap() {
             </div>
           </div>
 
-          {/* Fixed Zoom Controls */}
           <div className="absolute bottom-6 right-6 flex flex-col gap-2 z-50">
              <div className="flex flex-col bg-white border border-gray-200 rounded-lg shadow-2xl overflow-hidden">
-                <button 
+                <button
                   onClick={(e) => { e.stopPropagation(); handleZoomIn(); }}
                   className="w-12 h-12 flex items-center justify-center text-gray-700 hover:bg-gray-50 border-b border-gray-100 transition-colors"
                   title="Yakınlaştır (+)"
                 >
                   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
                 </button>
-                <button 
+                <button
                   onClick={(e) => { e.stopPropagation(); handleZoomOut(); }}
                   className="w-12 h-12 flex items-center justify-center text-gray-700 hover:bg-gray-50 border-b border-gray-100 transition-colors"
                   title="Uzaklaştır (-)"
                 >
                   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line></svg>
                 </button>
-                <button 
+                <button
                   onClick={(e) => { e.stopPropagation(); handleZoomReset(); }}
                   className="w-12 h-12 flex items-center justify-center text-accent text-[11px] font-bold hover:bg-gray-50 transition-colors bg-gray-50/50"
                   title="Orijinal Boyut"
@@ -296,19 +279,18 @@ export default function AdvertisingHierarchyLiveMap() {
           </div>
         </div>
 
-        {/* Info Panel — below map */}
         {selectedTerm ? (
           <div
             ref={infoPanelRef}
             className="w-full bg-white border-t border-gray-100 p-6"
-            style={{ animation: 'rhSlideUp 0.2s ease-out' }}
+            style={{ animation: 'rsSlideUp 0.2s ease-out' }}
           >
             <div className="flex items-start justify-between gap-4">
               <div className="flex-1">
                 <div className="flex items-center gap-2 mb-2">
                   <div style={{ width: 10, height: 10, borderRadius: 3, background: getCatColors(selectedTerm.cat).stripe }} />
                   <span className="text-[10px] font-bold tracking-wider text-gray-400 uppercase">
-                    {RH_CAT_LABELS[selectedTerm.cat] || 'Kategori'}
+                    {CAT_LABELS[selectedTerm.cat] || 'Kategori'}
                   </span>
                 </div>
                 <h4 className="text-xl font-extrabold text-gray-900 leading-tight">{selectedTerm.abbr}</h4>

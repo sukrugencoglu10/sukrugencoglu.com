@@ -4788,7 +4788,10 @@ const RH_CAT_LABELS = {
   kirmizi: 'Kırmızı', pembe: 'Pembe', lacivert: 'Lacivert', gumus: 'Gümüş',
 }
 
-function ReklamHiyerarsisiHaritasi() {
+function ReklamHiyerarsisiHaritasi({
+  apiPath = '/api/reklam-hiyerarsisi-harita',
+  title = 'Reklam Hiyerarşisi Haritası',
+} = {}) {
   const containerRef = useRef(null)
   const [canvasDim, setCanvasDim] = useState({ w: 1400, h: 900 })
   const [hovered, setHovered] = useState(null)
@@ -4807,7 +4810,7 @@ function ReklamHiyerarsisiHaritasi() {
   const canvasRef = useRef(null)
 
   useEffect(() => {
-    fetch('/api/reklam-hiyerarsisi-harita')
+    fetch(apiPath)
       .then(res => res.json())
       .then(data => {
         if (data && !Array.isArray(data) && data.terms) {
@@ -4818,7 +4821,7 @@ function ReklamHiyerarsisiHaritasi() {
           setTerms(data)
         }
       })
-      .catch(err => console.error('Reklam Hiyerarsisi Haritası yükleme hatası:', err))
+      .catch(err => console.error(`Harita yükleme hatası (${apiPath}):`, err))
   }, [])
 
   useEffect(() => {
@@ -4852,7 +4855,7 @@ function ReklamHiyerarsisiHaritasi() {
   const handleSave = async () => {
     setSaving(true)
     try {
-      const res = await fetch('/api/reklam-hiyerarsisi-harita', {
+      const res = await fetch(apiPath, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ terms, connections, metadata: canvasDim }),
@@ -4938,7 +4941,7 @@ function ReklamHiyerarsisiHaritasi() {
     <div style={{ padding: '2rem 1.25rem', fontFamily: 'inherit' }}>
       <div style={{ marginBottom: '1.25rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <div>
-          <h1 style={{ fontSize: 22, fontWeight: 500, margin: 0 }}>Reklam Hiyerarşisi Haritası</h1>
+          <h1 style={{ fontSize: 22, fontWeight: 500, margin: 0 }}>{title}</h1>
           <p style={{ fontSize: 13, color: '#888', marginTop: 4 }}>
             Web ve reklam hiyerarşisi ilişkileri · Terime tıkla: açıklamayı gör
           </p>
@@ -6182,12 +6185,23 @@ function AnaHaritasi() {
   )
 }
 
+// Reklam Stratejisi haritası — generic ReklamHiyerarsisiHaritasi'yi farklı API ile kullanır
+function ReklamStratejisiHaritasi() {
+  return <ReklamHiyerarsisiHaritasi apiPath="/api/reklam-stratejisi-harita" title="Reklam Stratejisi Haritası" />
+}
+
 const TOOLS = [
   {
     id: 'reklam-hiyerarsisi-harita',
     label: 'Reklam Hiyerarşisi',
     icon: '⬡',
     component: ReklamHiyerarsisiHaritasi,
+  },
+  {
+    id: 'reklam-stratejisi-harita',
+    label: 'Reklam Stratejisi',
+    icon: '🎯',
+    component: ReklamStratejisiHaritasi,
   },
   {
     id: 'mantik-haritasi',
