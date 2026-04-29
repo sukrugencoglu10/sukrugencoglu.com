@@ -6185,6 +6185,306 @@ function ReklamStratejisiHaritasi() {
   return <ReklamHiyerarsisiHaritasi apiPath="/api/reklam-stratejisi-harita" title="Reklam Stratejisi Haritası" />
 }
 
+// ─── SEO Kontrol Merkezi ──────────────────────────────────────────────────────
+function SeoKontrolMerkezi() {
+  const [items, setItems] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [saving, setSaving] = useState(false)
+  const [dirty, setDirty] = useState(false)
+  const [filter, setFilter] = useState('all') // all | on-page | pagespeed | search-console
+
+  useEffect(() => {
+    fetch('/api/seo-kontrol-merkezi')
+      .then(r => r.json())
+      .then(d => { if (Array.isArray(d)) setItems(d); setLoading(false) })
+      .catch(() => setLoading(false))
+  }, [])
+
+  const save = async () => {
+    setSaving(true)
+    try {
+      const res = await fetch('/api/seo-kontrol-merkezi', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(items),
+      })
+      if (res.ok) setDirty(false)
+      else alert('Kaydetme başarısız: ' + (await res.text()))
+    } catch (e) { alert('Hata: ' + e.message) }
+    setSaving(false)
+  }
+
+  const updateItem = (id, patch) => {
+    const touchedFields = Object.keys(patch)
+    const shouldStamp = touchedFields.includes('notes') || touchedFields.includes('status')
+    setItems(prev => prev.map(it => it.id === id
+      ? { ...it, ...patch, ...(shouldStamp ? { lastCheckedAt: new Date().toISOString() } : {}) }
+      : it))
+    setDirty(true)
+  }
+
+  const deleteItem = (id) => {
+    if (!confirm('Bu adımı silmek istediğine emin misin?')) return
+    setItems(prev => prev.filter(it => it.id !== id))
+    setDirty(true)
+  }
+
+  const addItem = () => {
+    const group = filter === 'all' ? 'on-page' : filter
+    const newItem = {
+      id: 'custom-' + Date.now(),
+      group,
+      title: '',
+      link: '',
+      notes: '',
+      status: 'todo',
+    }
+    setItems(prev => [newItem, ...prev])
+    setDirty(true)
+  }
+
+  const GROUPS = {
+    'on-page': { label: 'On-Page SEO', color: '#0EA5E9' },
+    'pagespeed': { label: 'PageSpeed', color: '#F59E0B' },
+    'search-console': { label: 'Search Console', color: '#8B5CF6' },
+  }
+
+  const STATUS_META = {
+    todo: { label: 'TODO', bg: '#f3f4f6', fg: '#6b7280', dot: '#9ca3af' },
+    ok: { label: 'OK', bg: '#dcfce7', fg: '#166534', dot: '#22c55e' },
+    review: { label: 'GÖZDEN GEÇİR', bg: '#fef3c7', fg: '#92400e', dot: '#f59e0b' },
+  }
+
+  const cycleStatus = (s) => s === 'todo' ? 'ok' : s === 'ok' ? 'review' : 'todo'
+
+  const filtered = filter === 'all' ? items : items.filter(it => it.group === filter)
+  const counts = {
+    all: items.length,
+    'on-page': items.filter(i => i.group === 'on-page').length,
+    'pagespeed': items.filter(i => i.group === 'pagespeed').length,
+    'search-console': items.filter(i => i.group === 'search-console').length,
+  }
+  const okCount = items.filter(i => i.status === 'ok').length
+  const reviewCount = items.filter(i => i.status === 'review').length
+
+  if (loading) return <div style={{ padding: '2rem', color: '#888' }}>Yükleniyor...</div>
+
+  return (
+    <div style={{ padding: '2rem 1.25rem', fontFamily: 'inherit', maxWidth: 1100 }}>
+      {/* Header */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 20, gap: 16, flexWrap: 'wrap' }}>
+        <div>
+          <h1 style={{ fontSize: 22, fontWeight: 600, margin: 0, display: 'flex', alignItems: 'center', gap: 8 }}>
+            <span>🔍</span> SEO Kontrol Merkezi
+          </h1>
+          <p style={{ fontSize: 13, color: '#888', marginTop: 4, lineHeight: 1.5 }}>
+            On-Page, PageSpeed ve Search Console kontrol listesi. Tıkla → incele → not al → status güncelle → <b>Kaydet</b>.
+          </p>
+          <div style={{ display: 'flex', gap: 12, marginTop: 8, fontSize: 12, color: '#555' }}>
+            <span>Toplam: <b>{items.length}</b></span>
+            <span style={{ color: '#16a34a' }}>✓ OK: <b>{okCount}</b></span>
+            <span style={{ color: '#d97706' }}>⚠ Gözden geçir: <b>{reviewCount}</b></span>
+            <span style={{ color: '#6b7280' }}>○ TODO: <b>{items.length - okCount - reviewCount}</b></span>
+          </div>
+        </div>
+        <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+          <button onClick={addItem} style={{ padding: '8px 14px', background: '#fff', color: '#111', border: '1px solid #ddd', borderRadius: 8, cursor: 'pointer', fontSize: 13 }}>
+            + Ekle
+          </button>
+          <button
+            onClick={save}
+            disabled={saving || !dirty}
+            style={{
+              padding: '8px 18px',
+              background: dirty ? '#111' : '#ccc',
+              color: '#fff',
+              border: 'none',
+              borderRadius: 8,
+              cursor: dirty && !saving ? 'pointer' : 'not-allowed',
+              fontSize: 13,
+              fontWeight: 600,
+              transition: 'opacity 0.2s',
+              opacity: saving ? 0.6 : 1,
+            }}
+          >
+            {saving ? 'Kaydediliyor...' : dirty ? 'Kaydet' : 'Kaydedildi'}
+          </button>
+        </div>
+      </div>
+
+      {/* Filter tabs */}
+      <div style={{ display: 'flex', gap: 6, marginBottom: 18, borderBottom: '1px solid #eee', paddingBottom: 0, flexWrap: 'wrap' }}>
+        {[
+          { id: 'all', label: 'Tümü', color: '#111' },
+          { id: 'on-page', label: 'On-Page SEO', color: GROUPS['on-page'].color },
+          { id: 'pagespeed', label: 'PageSpeed', color: GROUPS['pagespeed'].color },
+          { id: 'search-console', label: 'Search Console', color: GROUPS['search-console'].color },
+        ].map(t => {
+          const active = filter === t.id
+          return (
+            <button
+              key={t.id}
+              onClick={() => setFilter(t.id)}
+              style={{
+                padding: '8px 14px',
+                background: 'transparent',
+                color: active ? t.color : '#888',
+                border: 'none',
+                borderBottom: `2px solid ${active ? t.color : 'transparent'}`,
+                cursor: 'pointer',
+                fontSize: 13,
+                fontWeight: active ? 700 : 500,
+                marginBottom: -1,
+                transition: 'all 0.15s',
+              }}
+            >
+              {t.label} <span style={{ color: '#bbb', fontWeight: 400, fontSize: 11 }}>({counts[t.id]})</span>
+            </button>
+          )
+        })}
+      </div>
+
+      {/* Items */}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+        {filtered.length === 0 && (
+          <div style={{ padding: '3rem 1rem', textAlign: 'center', color: '#aaa', fontSize: 13, border: '1px dashed #ddd', borderRadius: 12 }}>
+            Bu grupta adım yok. Sağ üstten <b>+ Ekle</b> ile yeni bir adım oluşturabilirsin.
+          </div>
+        )}
+        {filtered.map(item => {
+          const groupMeta = GROUPS[item.group] || { label: item.group, color: '#999' }
+          const statusMeta = STATUS_META[item.status] || STATUS_META.todo
+          const lastChecked = item.lastCheckedAt
+            ? new Date(item.lastCheckedAt).toLocaleString('tr-TR', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })
+            : null
+          return (
+            <div
+              key={item.id}
+              style={{
+                background: '#fff',
+                border: '1px solid #e8e8e8',
+                borderRadius: 12,
+                padding: '14px 16px',
+                borderLeft: `4px solid ${groupMeta.color}`,
+                display: 'flex',
+                flexDirection: 'column',
+                gap: 8,
+              }}
+            >
+              {/* Title row */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+                <button
+                  onClick={() => updateItem(item.id, { status: cycleStatus(item.status) })}
+                  title="Durumu değiştir (todo → ok → review → todo)"
+                  style={{
+                    padding: '3px 8px',
+                    background: statusMeta.bg,
+                    color: statusMeta.fg,
+                    border: 'none',
+                    borderRadius: 6,
+                    fontSize: 10,
+                    fontWeight: 700,
+                    letterSpacing: '0.05em',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 5,
+                    flexShrink: 0,
+                  }}
+                >
+                  <span style={{ width: 7, height: 7, borderRadius: '50%', background: statusMeta.dot }} />
+                  {statusMeta.label}
+                </button>
+                <span style={{ fontSize: 9, fontWeight: 700, color: groupMeta.color, letterSpacing: '0.06em', textTransform: 'uppercase' }}>
+                  {groupMeta.label}
+                </span>
+                <input
+                  value={item.title}
+                  onChange={e => updateItem(item.id, { title: e.target.value })}
+                  placeholder="Adım başlığı..."
+                  style={{
+                    flex: 1,
+                    minWidth: 200,
+                    padding: '4px 6px',
+                    border: 'none',
+                    borderBottom: '1px solid transparent',
+                    fontSize: 14,
+                    fontWeight: 600,
+                    color: '#111',
+                    fontFamily: 'inherit',
+                    outline: 'none',
+                  }}
+                  onFocus={e => e.currentTarget.style.borderBottomColor = '#ddd'}
+                  onBlur={e => e.currentTarget.style.borderBottomColor = 'transparent'}
+                />
+                {item.link && (
+                  <a href={item.link} target="_blank" rel="noopener noreferrer" title={item.link}
+                    style={{ fontSize: 14, textDecoration: 'none', padding: '4px 8px', borderRadius: 6, background: '#f5f5f5', color: '#444' }}>
+                    🔗
+                  </a>
+                )}
+                <button
+                  onClick={() => deleteItem(item.id)}
+                  title="Sil"
+                  style={{ background: 'none', border: 'none', color: '#bbb', cursor: 'pointer', fontSize: 16, padding: '2px 6px' }}
+                  onMouseEnter={e => e.currentTarget.style.color = '#ef4444'}
+                  onMouseLeave={e => e.currentTarget.style.color = '#bbb'}
+                >
+                  ×
+                </button>
+              </div>
+
+              {/* Link input */}
+              <input
+                value={item.link || ''}
+                onChange={e => updateItem(item.id, { link: e.target.value })}
+                placeholder="Harici link (opsiyonel) — örn. https://pagespeed.web.dev/..."
+                style={{
+                  padding: '6px 10px',
+                  border: '1px solid #eee',
+                  borderRadius: 6,
+                  fontSize: 12,
+                  color: '#666',
+                  fontFamily: 'inherit',
+                  outline: 'none',
+                  background: '#fafafa',
+                }}
+              />
+
+              {/* Notes */}
+              <textarea
+                value={item.notes || ''}
+                onChange={e => updateItem(item.id, { notes: e.target.value })}
+                placeholder="Notların... (kontrol sonucu, bulgular, yapılacaklar)"
+                rows={2}
+                style={{
+                  padding: '8px 10px',
+                  border: '1px solid #eee',
+                  borderRadius: 6,
+                  fontSize: 13,
+                  color: '#333',
+                  fontFamily: 'inherit',
+                  resize: 'vertical',
+                  minHeight: 50,
+                  outline: 'none',
+                  lineHeight: 1.6,
+                }}
+              />
+
+              {/* Footer: last checked */}
+              {lastChecked && (
+                <div style={{ fontSize: 10, color: '#aaa', textAlign: 'right' }}>
+                  Son kontrol: {lastChecked}
+                </div>
+              )}
+            </div>
+          )
+        })}
+      </div>
+    </div>
+  )
+}
+
 const TOOLS = [
   {
     id: 'reklam-hiyerarsisi-harita',
@@ -6245,6 +6545,12 @@ const TOOLS = [
     label: 'Kısa Notlar',
     icon: '📝',
     component: KisaNotlar,
+  },
+  {
+    id: 'seo-kontrol-merkezi',
+    label: 'SEO Kontrol Merkezi',
+    icon: '🔍',
+    component: SeoKontrolMerkezi,
   },
   {
     id: 'ana-harita',
