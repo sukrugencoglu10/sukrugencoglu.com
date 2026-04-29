@@ -414,9 +414,9 @@ export default function CalisimalarLayout() {
             ve gerçek zamanlı olarak güncellenen dijital büyüme stratejisini göstermektedir.
           </p>
         </div>
+        <ReklamStratejisiLiveMap />
         <AdvertisingHierarchyLiveMap />
         <ReklamKpiLiveMap />
-        <ReklamStratejisiLiveMap />
       </div>
 
       <style>{`
