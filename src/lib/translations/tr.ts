@@ -175,7 +175,7 @@ export const tr: Translations = {
     card_desc: "Her adımda ölçülebilir sonuçlar. Her kampanyada stratejik kararlar.",
     items: [
       {
-        title: "Neden Reklam Verilir?",
+        title: "Reklam Amacımız Nedir?",
         subs: ["Satış ve müşteri sayısını arttırma"],
       },
       {
