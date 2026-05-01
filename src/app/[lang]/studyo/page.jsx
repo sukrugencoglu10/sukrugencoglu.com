@@ -1960,6 +1960,18 @@ function YzHaritasi() {
           >
             <span style={{ fontSize: 16, fontWeight: 'bold' }}>+</span> Yeni Kutu Ekle
           </button>
+          {lastSaved && <span style={{ fontSize: 11, color: '#1D9E75' }}>Kaydedildi: {lastSaved}</span>}
+          <button
+            onClick={handleSave}
+            disabled={saving}
+            style={{
+              background: '#111', color: '#fff', border: 'none', borderRadius: 8,
+              padding: '6px 14px', fontSize: 12, cursor: saving ? 'not-allowed' : 'pointer',
+              opacity: saving ? 0.7 : 1, transition: 'all 0.2s'
+            }}
+          >
+            {saving ? 'Kaydediliyor...' : 'Değişiklikleri Kaydet'}
+          </button>
         </div>
       </div>
 
@@ -2247,45 +2259,71 @@ function YzHaritasi() {
                   {/* TEXTAREA_MOVED */}
 
                   <div style={{ borderTop: '0.5px solid #eee', paddingTop: 12 }}>
-                    <label style={{ fontSize: 11, color: '#888', display: 'block', marginBottom: 8, fontWeight: 600 }}>BAĞLANTI YÖNETİMİ</label>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                      <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-                        <div style={{ padding: '5px 10px', fontSize: 12, background: '#f0f0f0', border: '0.5px solid #ccc', borderRadius: 6, fontWeight: 700, whiteSpace: 'nowrap', color: '#333' }}>
-                          A: {selectedTerm.abbr}
-                        </div>
-                        <span style={{ fontSize: 16, color: '#999' }}>→</span>
-                        <select
-                          id="ai-target-select"
-                          style={{ flex: 1, padding: '6px 10px', fontSize: 12, border: '0.5px solid #ccc', borderRadius: 6, outline: 'none', background: '#fff' }}
-                        >
-                          <option value="">B kutusunu seç...</option>
-                          {terms.filter(t => t.id !== selectedTerm.id).map(t => (
-                            <option key={t.id} value={t.id}>{t.abbr} ({t.sub})</option>
-                          ))}
-                        </select>
-                        <button
-                          onClick={() => {
-                            const sel = document.getElementById('ai-target-select')
-                            if (sel.value) handleAddConnection(sel.value)
-                          }}
-                          style={{ padding: '6px 14px', fontSize: 12, background: '#f5f5f5', border: '0.5px solid #ccc', borderRadius: 6, cursor: 'pointer' }}
-                        >
-                          Ekle
-                        </button>
+                    <label style={{ fontSize: 12, color: '#666', display: 'block', marginBottom: 10, fontWeight: 700, letterSpacing: '0.04em' }}>BAĞLANTI YÖNETİMİ</label>
+
+                    {/* GİDEN: Bu → Hedef */}
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginBottom: 10 }}>
+                      <div style={{ fontSize: 12, color: '#888', paddingLeft: 2 }}>
+                        <span style={{ fontWeight: 700, color: '#444' }}>Bu</span> → hedef seç:
+                      </div>
+                      <select id="ai-target-select" style={{ width: '100%', padding: '7px 10px', fontSize: 13, border: '1px solid #ddd', borderRadius: 7, outline: 'none', background: '#fff', color: '#333' }}>
+                        <option value="">— Hedef kutusunu seç —</option>
+                        {terms.filter(t => t.id !== selectedTerm.id).map(t => (
+                          <option key={t.id} value={t.id}>{t.abbr} ({t.sub})</option>
+                        ))}
+                      </select>
+                      <button
+                        onClick={() => { const sel = document.getElementById('ai-target-select'); if (sel && sel.value) { handleAddConnection(sel.value); sel.value = '' } }}
+                        style={{ width: '100%', padding: '7px 14px', fontSize: 13, fontWeight: 600, background: '#111', color: '#fff', border: 'none', borderRadius: 7, cursor: 'pointer' }}
+                      >+ Giden Ok Ekle</button>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
+                        {connections.filter(c => c.from === selectedTerm.id).map(c => {
+                          const target = termMap[c.to]; if (!target) return null
+                          return (
+                            <div key={c.to} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '5px 10px', background: '#f5f5f5', border: '0.5px solid #e8e8e8', borderRadius: 7, fontSize: 13 }}>
+                              <span style={{ color: '#333' }}>→ {target.abbr}</span>
+                              <button onClick={() => handleRemoveConnection(c.to)} style={{ border: 'none', background: 'none', cursor: 'pointer', color: '#ff4d4f', fontSize: 12 }}>Kaldır</button>
+                            </div>
+                          )
+                        })}
                       </div>
                     </div>
 
-                    <div style={{ marginTop: 12, display: 'flex', flexDirection: 'column', gap: 6 }}>
-                      {connections.filter(c => c.from === selectedTerm.id).map(c => {
-                        const target = termMap[c.to]
-                        if (!target) return null
-                        return (
-                          <div key={c.to} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '4px 8px', background: '#f9f9f9', border: '0.5px solid #eee', borderRadius: 6, fontSize: 11 }}>
-                            <span>→ {target.abbr}</span>
-                            <button onClick={() => handleRemoveConnection(c.to)} style={{ border: 'none', background: 'none', cursor: 'pointer', color: '#ff4d4f' }}>Kaldır</button>
-                          </div>
-                        )
-                      })}
+                    {/* GELEN: Kaynak → Bu */}
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 6, paddingTop: 10, borderTop: '0.5px solid #f0f0f0' }}>
+                      <div style={{ fontSize: 12, color: '#888', paddingLeft: 2 }}>
+                        kaynak seç → <span style={{ fontWeight: 700, color: '#444' }}>Bu</span>:
+                      </div>
+                      <select id="ai-source-select" style={{ width: '100%', padding: '7px 10px', fontSize: 13, border: '1px solid #ddd', borderRadius: 7, outline: 'none', background: '#fff', color: '#333' }}>
+                        <option value="">— Kaynak kutusunu seç —</option>
+                        {terms.filter(t => t.id !== selectedTerm.id).map(t => (
+                          <option key={t.id} value={t.id}>{t.abbr} ({t.sub})</option>
+                        ))}
+                      </select>
+                      <button
+                        onClick={() => {
+                          const sel = document.getElementById('ai-source-select')
+                          if (sel && sel.value) {
+                            const srcId = sel.value
+                            if (!connections.find(c => c.from === srcId && c.to === selectedTerm.id)) {
+                              setConnections(prev => [...prev, { from: srcId, to: selectedTerm.id }])
+                            }
+                            sel.value = ''
+                          }
+                        }}
+                        style={{ width: '100%', padding: '7px 14px', fontSize: 13, fontWeight: 600, background: '#444', color: '#fff', border: 'none', borderRadius: 7, cursor: 'pointer' }}
+                      >+ Gelen Ok Ekle</button>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
+                        {connections.filter(c => c.to === selectedTerm.id).map(c => {
+                          const source = termMap[c.from]; if (!source) return null
+                          return (
+                            <div key={c.from} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '5px 10px', background: '#f5f5f5', border: '0.5px solid #e8e8e8', borderRadius: 7, fontSize: 13 }}>
+                              <span style={{ color: '#333' }}>{source.abbr} →</span>
+                              <button onClick={() => setConnections(prev => prev.filter(c2 => !(c2.from === c.from && c2.to === selectedTerm.id)))} style={{ border: 'none', background: 'none', cursor: 'pointer', color: '#ff4d4f', fontSize: 12 }}>Kaldır</button>
+                            </div>
+                          )
+                        })}
+                      </div>
                     </div>
                   </div>
 
@@ -2390,20 +2428,6 @@ function YzHaritasi() {
         </div>
       )}
 
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: 12, marginTop: 12 }}>
-        {lastSaved && <span style={{ fontSize: 11, color: '#1D9E75' }}>Kaydedildi: {lastSaved}</span>}
-        <button
-          onClick={handleSave}
-          disabled={saving}
-          style={{
-            background: '#111', color: '#fff', border: 'none', borderRadius: 8,
-            padding: '6px 14px', fontSize: 13, cursor: saving ? 'not-allowed' : 'pointer',
-            opacity: saving ? 0.7 : 1, transition: 'all 0.2s'
-          }}
-        >
-          {saving ? 'Kaydediliyor...' : 'Değişiklikleri Kaydet'}
-        </button>
-      </div>
       {dblNode && (
         <DetailModal
           title={dblNode.abbr}
