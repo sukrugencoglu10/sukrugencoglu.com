@@ -210,6 +210,7 @@ function GtmZihinHaritasi() {
   const [dragging, setDragging] = useState(null)
   const [editId, setEditId] = useState(null)
   const [dblNode, setDblNode] = useState(null)
+  const [openedId, setOpenedId] = useState(null)
   const [saving, setSaving] = useState(false)
   const [lastSaved, setLastSaved] = useState(null)
   const [canvasZoom, setCanvasZoom] = useState(1)
@@ -224,6 +225,7 @@ function GtmZihinHaritasi() {
     if (last.id === term.id && now - last.time < 300) {
       e.preventDefault()
       lastTapRef.current = { id: null, time: 0 }
+      setOpenedId(term.id)
       setDblNode(term)
     } else {
       lastTapRef.current = { id: term.id, time: now }
@@ -313,7 +315,7 @@ function GtmZihinHaritasi() {
   }, [dragging])
 
   const termMap = Object.fromEntries(terms.map(t => [t.id, t]))
-  const selectedTerm = selectedIds.length === 1 ? termMap[selectedIds[0]] : null
+  const selectedTerm = (selectedIds.length === 1 && selectedIds[0] === openedId) ? termMap[selectedIds[0]] : null
 
   const activeIds = new Set(selectedIds)
   if (hovered) activeIds.add(hovered)
@@ -336,6 +338,7 @@ function GtmZihinHaritasi() {
     }
     setTerms([...terms, newNode])
     setSelectedIds([newId])
+    setOpenedId(newId)
     setEditId(newId)
   }
 
@@ -534,7 +537,7 @@ function GtmZihinHaritasi() {
                       startPositions
                     })
                   }}
-                onDoubleClick={(e) => { e.stopPropagation(); setDblNode(term) }}
+                onDoubleClick={(e) => { e.stopPropagation(); setOpenedId(term.id); setDblNode(term) }}
                 onTouchEnd={(e) => handleDoubleTap(e, term)}
                 style={{
                   position: 'absolute',
@@ -778,7 +781,7 @@ function GtmZihinHaritasi() {
         ) : (
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, color: '#ccc', minHeight: 60 }}>
             <span style={{ fontSize: 20 }}>◎</span>
-            <span style={{ fontSize: 13 }}>Bir kutucuğa tıkla, açıklamasını oku</span>
+            <span style={{ fontSize: 13 }}>Bir kutucuğa çift tıkla, açıklamasını oku</span>
           </div>
         )}
       </div>
@@ -887,6 +890,7 @@ function MantiKHaritasi() {
   const [dragging, setDragging] = useState(null)
   const [editId, setEditId] = useState(null)
   const [dblNode, setDblNode] = useState(null)
+  const [openedId, setOpenedId] = useState(null)
   const [saving, setSaving] = useState(false)
   const [lastSaved, setLastSaved] = useState(null)
   const [canvasZoom, setCanvasZoom] = useState(1)
@@ -901,6 +905,7 @@ function MantiKHaritasi() {
     if (last.id === term.id && now - last.time < 300) {
       e.preventDefault()
       lastTapRef.current = { id: null, time: 0 }
+      setOpenedId(term.id)
       setDblNode(term)
     } else {
       lastTapRef.current = { id: term.id, time: now }
@@ -989,7 +994,7 @@ function MantiKHaritasi() {
   }, [dragging])
 
   const termMap = Object.fromEntries(terms.map(t => [t.id, t]))
-  const selectedTerm = selectedIds.length === 1 ? termMap[selectedIds[0]] : null
+  const selectedTerm = (selectedIds.length === 1 && selectedIds[0] === openedId) ? termMap[selectedIds[0]] : null
 
   const activeIds = new Set(selectedIds)
   if (hovered) activeIds.add(hovered)
@@ -1013,6 +1018,7 @@ function MantiKHaritasi() {
     }
     setTerms([...terms, newNode])
     setSelectedIds([newId])
+    setOpenedId(newId)
     setEditId(newId)
   }
 
@@ -1211,7 +1217,7 @@ function MantiKHaritasi() {
                       startPositions
                     })
                   }}
-                onDoubleClick={(e) => { e.stopPropagation(); setDblNode(term) }}
+                onDoubleClick={(e) => { e.stopPropagation(); setOpenedId(term.id); setDblNode(term) }}
                 onTouchEnd={(e) => handleDoubleTap(e, term)}
                 style={{
                   position: 'absolute',
@@ -1478,7 +1484,7 @@ function MantiKHaritasi() {
         ) : (
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, color: '#ccc', minHeight: 60 }}>
             <span style={{ fontSize: 20 }}>◎</span>
-            <span style={{ fontSize: 13 }}>Bir kutucuğa tıkla, açıklamasını oku</span>
+            <span style={{ fontSize: 13 }}>Bir kutucuğa çift tıkla, açıklamasını oku</span>
           </div>
         )}
       </div>
@@ -1637,6 +1643,7 @@ function YzHaritasi() {
   const [dragging, setDragging] = useState(null)
   const [editId, setEditId] = useState(null)
   const [dblNode, setDblNode] = useState(null)
+  const [openedId, setOpenedId] = useState(null)
   const [saving, setSaving] = useState(false)
   const [lastSaved, setLastSaved] = useState(null)
   const [canvasZoom, setCanvasZoom] = useState(1)
@@ -1651,6 +1658,7 @@ function YzHaritasi() {
     if (last.id === term.id && now - last.time < 300) {
       e.preventDefault()
       lastTapRef.current = { id: null, time: 0 }
+      setOpenedId(term.id)
       setDblNode(term)
     } else {
       lastTapRef.current = { id: term.id, time: now }
@@ -1740,7 +1748,7 @@ function YzHaritasi() {
   }, [dragging])
 
   const termMap = Object.fromEntries(terms.map(t => [t.id, t]))
-  const selectedTerm = selectedIds.length === 1 ? termMap[selectedIds[0]] : null
+  const selectedTerm = (selectedIds.length === 1 && selectedIds[0] === openedId) ? termMap[selectedIds[0]] : null
 
   const activeIds = new Set(selectedIds)
   if (hovered) activeIds.add(hovered)
@@ -1763,6 +1771,7 @@ function YzHaritasi() {
     }
     setTerms([...terms, newNode])
     setSelectedIds([newId])
+    setOpenedId(newId)
     setEditId(newId)
   }
 
@@ -1961,7 +1970,7 @@ function YzHaritasi() {
                       startPositions
                     })
                   }}
-                  onDoubleClick={(e) => { e.stopPropagation(); setDblNode(term) }}
+                  onDoubleClick={(e) => { e.stopPropagation(); setOpenedId(term.id); setDblNode(term) }}
                   onTouchEnd={(e) => handleDoubleTap(e, term)}
                   style={{
                     position: 'absolute',
@@ -2161,7 +2170,7 @@ function YzHaritasi() {
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: 160, gap: 8, color: '#ccc', textAlign: 'center' }}>
               <div style={{ fontSize: 28 }}>◎</div>
-              <div style={{ fontSize: 12 }}>Bir terime tıkla,<br />açıklamasını gör</div>
+              <div style={{ fontSize: 12 }}>Bir terime çift tıkla,<br />açıklamasını gör</div>
             </div>
           )}
         </div>
