@@ -581,7 +581,7 @@ export default function BlogWizard({ initialPost, onCancel, onSave }) {
         <div>
           <h2 style={{ fontSize: 18, margin: '0 0 6px', fontWeight: 700 }}>Kapak görseli ekle</h2>
           <p style={{ fontSize: 13, color: '#888', margin: '0 0 16px' }}>
-            Yazının başlığının üstünde görünecek. İstersen atla, emoji + renk kullanılır.
+            Yazının başlığının üstünde görünecek. İstersen geç.
           </p>
 
           {post.coverImage ? (
