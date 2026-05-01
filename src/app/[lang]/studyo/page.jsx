@@ -218,6 +218,7 @@ function GtmZihinHaritasi() {
   const setZoom = (z) => { canvasZoomRef.current = z; setCanvasZoom(z) }
   const selectionBoxRef = useRef(null)
   const canvasRef = useRef(null)
+  const spaceHeldRef = useRef(false)
   const lastTapRef = useRef({ id: null, time: 0 })
   const handleDoubleTap = (e, term) => {
     const now = Date.now()
@@ -261,6 +262,52 @@ function GtmZihinHaritasi() {
     }
     window.addEventListener('wheel', handleWheel, { passive: false })
     return () => window.removeEventListener('wheel', handleWheel)
+  }, [])
+
+  useEffect(() => {
+    const onKeyDown = (e) => {
+      if (e.code === 'Space' && !e.repeat) {
+        spaceHeldRef.current = true
+        if (containerRef.current) containerRef.current.style.cursor = 'grab'
+        if (containerRef.current?.matches(':hover')) e.preventDefault()
+      }
+    }
+    const onKeyUp = (e) => {
+      if (e.code === 'Space') {
+        spaceHeldRef.current = false
+        if (containerRef.current) containerRef.current.style.cursor = ''
+      }
+    }
+    window.addEventListener('keydown', onKeyDown)
+    window.addEventListener('keyup', onKeyUp)
+    return () => { window.removeEventListener('keydown', onKeyDown); window.removeEventListener('keyup', onKeyUp) }
+  }, [])
+
+  useEffect(() => {
+    const container = containerRef.current
+    if (!container) return
+    let panStart = null
+    const onMouseDown = (e) => {
+      if (!spaceHeldRef.current || e.button !== 0) return
+      e.preventDefault()
+      panStart = { x: e.clientX, y: e.clientY, sl: container.scrollLeft, st: container.scrollTop }
+      container.style.cursor = 'grabbing'
+      const onMove = (me) => {
+        if (!panStart) return
+        container.scrollLeft = panStart.sl - (me.clientX - panStart.x)
+        container.scrollTop = panStart.st - (me.clientY - panStart.y)
+      }
+      const onUp = () => {
+        panStart = null
+        container.style.cursor = spaceHeldRef.current ? 'grab' : ''
+        window.removeEventListener('mousemove', onMove)
+        window.removeEventListener('mouseup', onUp)
+      }
+      window.addEventListener('mousemove', onMove)
+      window.addEventListener('mouseup', onUp)
+    }
+    container.addEventListener('mousedown', onMouseDown)
+    return () => container.removeEventListener('mousedown', onMouseDown)
   }, [])
 
   useEffect(() => {
@@ -401,6 +448,7 @@ function GtmZihinHaritasi() {
         <div ref={canvasRef} style={{ position: "relative", width: canvasDim.w, height: canvasDim.h, margin: 0, transform: `scale(${canvasZoom})`, transformOrigin: 'top left', transition: 'transform 0.15s ease-out' }}
              onMouseDown={(e) => {
                if (e.button !== 0) return
+               if (spaceHeldRef.current) return
                if (e.target !== e.currentTarget && e.target.tagName !== 'svg') return
                const cssZoom = parseFloat(getComputedStyle(document.documentElement).zoom) || 1
                const rect = e.currentTarget.getBoundingClientRect()
@@ -510,6 +558,7 @@ function GtmZihinHaritasi() {
                 onMouseLeave={() => setHovered(null)}
                 onMouseDown={(e) => {
                     if (e.button !== 0) return
+                    if (spaceHeldRef.current) return
                     e.stopPropagation()
                     
                     let currentSelected = selectedIds;
@@ -898,6 +947,7 @@ function MantiKHaritasi() {
   const setZoom = (z) => { canvasZoomRef.current = z; setCanvasZoom(z) }
   const selectionBoxRef = useRef(null)
   const canvasRef = useRef(null)
+  const spaceHeldRef = useRef(false)
   const lastTapRef = useRef({ id: null, time: 0 })
   const handleDoubleTap = (e, term) => {
     const now = Date.now()
@@ -940,6 +990,52 @@ function MantiKHaritasi() {
     }
     window.addEventListener('wheel', handleWheel, { passive: false })
     return () => window.removeEventListener('wheel', handleWheel)
+  }, [])
+
+  useEffect(() => {
+    const onKeyDown = (e) => {
+      if (e.code === 'Space' && !e.repeat) {
+        spaceHeldRef.current = true
+        if (containerRef.current) containerRef.current.style.cursor = 'grab'
+        if (containerRef.current?.matches(':hover')) e.preventDefault()
+      }
+    }
+    const onKeyUp = (e) => {
+      if (e.code === 'Space') {
+        spaceHeldRef.current = false
+        if (containerRef.current) containerRef.current.style.cursor = ''
+      }
+    }
+    window.addEventListener('keydown', onKeyDown)
+    window.addEventListener('keyup', onKeyUp)
+    return () => { window.removeEventListener('keydown', onKeyDown); window.removeEventListener('keyup', onKeyUp) }
+  }, [])
+
+  useEffect(() => {
+    const container = containerRef.current
+    if (!container) return
+    let panStart = null
+    const onMouseDown = (e) => {
+      if (!spaceHeldRef.current || e.button !== 0) return
+      e.preventDefault()
+      panStart = { x: e.clientX, y: e.clientY, sl: container.scrollLeft, st: container.scrollTop }
+      container.style.cursor = 'grabbing'
+      const onMove = (me) => {
+        if (!panStart) return
+        container.scrollLeft = panStart.sl - (me.clientX - panStart.x)
+        container.scrollTop = panStart.st - (me.clientY - panStart.y)
+      }
+      const onUp = () => {
+        panStart = null
+        container.style.cursor = spaceHeldRef.current ? 'grab' : ''
+        window.removeEventListener('mousemove', onMove)
+        window.removeEventListener('mouseup', onUp)
+      }
+      window.addEventListener('mousemove', onMove)
+      window.addEventListener('mouseup', onUp)
+    }
+    container.addEventListener('mousedown', onMouseDown)
+    return () => container.removeEventListener('mousedown', onMouseDown)
   }, [])
 
   useEffect(() => {
@@ -1082,6 +1178,7 @@ function MantiKHaritasi() {
         <div ref={canvasRef} style={{ position: "relative", width: canvasDim.w, height: canvasDim.h, margin: 0, transform: `scale(${canvasZoom})`, transformOrigin: 'top left', transition: 'transform 0.15s ease-out' }}
              onMouseDown={(e) => {
                if (e.button !== 0) return
+               if (spaceHeldRef.current) return
                if (e.target !== e.currentTarget && e.target.tagName !== 'svg') return
                const cssZoom = parseFloat(getComputedStyle(document.documentElement).zoom) || 1
                const rect = e.currentTarget.getBoundingClientRect()
@@ -1190,6 +1287,7 @@ function MantiKHaritasi() {
                   }}
                 onMouseDown={(e) => {
                     if (e.button !== 0) return
+                    if (spaceHeldRef.current) return
                     e.stopPropagation()
                     
                     let currentSelected = selectedIds;
@@ -1651,6 +1749,7 @@ function YzHaritasi() {
   const setZoom = (z) => { canvasZoomRef.current = z; setCanvasZoom(z) }
   const selectionBoxRef = useRef(null)
   const canvasRef = useRef(null)
+  const spaceHeldRef = useRef(false)
   const lastTapRef = useRef({ id: null, time: 0 })
   const handleDoubleTap = (e, term) => {
     const now = Date.now()
@@ -1693,6 +1792,52 @@ function YzHaritasi() {
     }
     window.addEventListener('wheel', handleWheel, { passive: false })
     return () => window.removeEventListener('wheel', handleWheel)
+  }, [])
+
+  useEffect(() => {
+    const onKeyDown = (e) => {
+      if (e.code === 'Space' && !e.repeat) {
+        spaceHeldRef.current = true
+        if (containerRef.current) containerRef.current.style.cursor = 'grab'
+        if (containerRef.current?.matches(':hover')) e.preventDefault()
+      }
+    }
+    const onKeyUp = (e) => {
+      if (e.code === 'Space') {
+        spaceHeldRef.current = false
+        if (containerRef.current) containerRef.current.style.cursor = ''
+      }
+    }
+    window.addEventListener('keydown', onKeyDown)
+    window.addEventListener('keyup', onKeyUp)
+    return () => { window.removeEventListener('keydown', onKeyDown); window.removeEventListener('keyup', onKeyUp) }
+  }, [])
+
+  useEffect(() => {
+    const container = containerRef.current
+    if (!container) return
+    let panStart = null
+    const onMouseDown = (e) => {
+      if (!spaceHeldRef.current || e.button !== 0) return
+      e.preventDefault()
+      panStart = { x: e.clientX, y: e.clientY, sl: container.scrollLeft, st: container.scrollTop }
+      container.style.cursor = 'grabbing'
+      const onMove = (me) => {
+        if (!panStart) return
+        container.scrollLeft = panStart.sl - (me.clientX - panStart.x)
+        container.scrollTop = panStart.st - (me.clientY - panStart.y)
+      }
+      const onUp = () => {
+        panStart = null
+        container.style.cursor = spaceHeldRef.current ? 'grab' : ''
+        window.removeEventListener('mousemove', onMove)
+        window.removeEventListener('mouseup', onUp)
+      }
+      window.addEventListener('mousemove', onMove)
+      window.addEventListener('mouseup', onUp)
+    }
+    container.addEventListener('mousedown', onMouseDown)
+    return () => container.removeEventListener('mousedown', onMouseDown)
   }, [])
 
 
@@ -1837,6 +1982,7 @@ function YzHaritasi() {
           <div ref={canvasRef} style={{ position: "relative", width: canvasDim.w, height: canvasDim.h, margin: 0, transform: `scale(${canvasZoom})`, transformOrigin: 'top left', transition: 'transform 0.15s ease-out' }}
              onMouseDown={(e) => {
                if (e.button !== 0) return
+               if (spaceHeldRef.current) return
                if (e.target !== e.currentTarget && e.target.tagName !== 'svg') return
                const cssZoom = parseFloat(getComputedStyle(document.documentElement).zoom) || 1
                const rect = e.currentTarget.getBoundingClientRect()
@@ -1943,6 +2089,7 @@ function YzHaritasi() {
                   }}
                   onMouseDown={(e) => {
                     if (e.button !== 0) return
+                    if (spaceHeldRef.current) return
                     e.stopPropagation()
                     
                     let currentSelected = selectedIds;
