@@ -1893,7 +1893,7 @@ function YzHaritasi() {
   }, [dragging])
 
   const termMap = Object.fromEntries(terms.map(t => [t.id, t]))
-  const selectedTerm = (selectedIds.length === 1 && selectedIds[0] === openedId) ? termMap[selectedIds[0]] : null
+  const selectedTerm = selectedIds.length === 1 ? termMap[selectedIds[0]] : null
 
   const activeIds = new Set(selectedIds)
   if (hovered) activeIds.add(hovered)
