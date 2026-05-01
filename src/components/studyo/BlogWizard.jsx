@@ -623,31 +623,6 @@ export default function BlogWizard({ initialPost, onCancel, onSave }) {
             </div>
           )}
 
-          <div style={{ padding: 14, background: '#fafafa', borderRadius: 10, border: '1px solid #eee' }}>
-            <div style={{ fontSize: 12, color: '#888', marginBottom: 8, fontWeight: 600 }}>
-              Görsel yoksa gösterilecek emoji + renk
-            </div>
-            <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
-              <input
-                value={post.coverEmoji}
-                onChange={e => update({ coverEmoji: e.target.value })}
-                maxLength={4}
-                style={{ width: 60, padding: 8, fontSize: 24, textAlign: 'center', border: '1px solid #ddd', borderRadius: 6, outline: 'none' }}
-              />
-              <input
-                type="color"
-                value={post.coverColor}
-                onChange={e => update({ coverColor: e.target.value })}
-                style={{ width: 48, height: 40, padding: 2, border: '1px solid #ddd', borderRadius: 6, cursor: 'pointer' }}
-              />
-              <div style={{
-                flex: 1, height: 40, background: post.coverColor + '22', borderRadius: 6,
-                display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 22,
-              }}>
-                {post.coverEmoji}
-              </div>
-            </div>
-          </div>
         </div>
       )}
 
