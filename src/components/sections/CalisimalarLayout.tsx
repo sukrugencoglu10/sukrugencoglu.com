@@ -196,17 +196,116 @@ function NotlarDetail({ itemId }: { itemId: string }) {
   );
 }
 
-/* ─── Blog cards grid ─────────────────────────────────────────── */
+/* ─── Accordion expanding panels (Süzen-style) ─────────────────── */
 const ACCENT: Record<string, string> = {
   gtm: "#1D9E75", analytics: "#3B82F6", cro: "#F59E0B",
   otomasyon: "#8B5CF6", genel: "#6B7280", reklam: "#EF4444",
 };
 
-function BlogCards() {
+const FAQ_GRADIENTS = [
+  "linear-gradient(135deg, #1e3a5f 0%, #2d5a8c 100%)",
+  "linear-gradient(135deg, #4a3520 0%, #8b6332 100%)",
+  "linear-gradient(135deg, #1f4d3d 0%, #3a8060 100%)",
+  "linear-gradient(135deg, #4a1e3d 0%, #8b3a6a 100%)",
+  "linear-gradient(135deg, #3d2a4a 0%, #6a4a8b 100%)",
+  "linear-gradient(135deg, #4a2a1e 0%, #8b5a3a 100%)",
+  "linear-gradient(135deg, #1e404a 0%, #3a7a8b 100%)",
+];
+
+function AccordionPanels({
+  items,
+  activeId,
+  onSelect,
+  emptyText,
+}: {
+  items: { id: string; title: string; subtitle?: string; cover?: string; gradient: string; meta?: string }[];
+  activeId: string | null;
+  onSelect: (id: string) => void;
+  emptyText: string;
+}) {
+  if (!items.length) return (
+    <div style={{ padding: "3rem", textAlign: "center", color: "#bbb", fontSize: 13 }}>
+      {emptyText}
+    </div>
+  );
+  // If no active, default to first
+  const effectiveActive = activeId && items.some(i => i.id === activeId) ? activeId : items[0].id;
+  return (
+    <div className="cal-accordion">
+      {items.map(item => {
+        const isActive = item.id === effectiveActive;
+        return (
+          <div
+            key={item.id}
+            className={`cal-acc-panel${isActive ? " cal-acc-panel--active" : ""}`}
+            onClick={() => onSelect(item.id)}
+            style={{
+              background: item.cover ? `url(${item.cover}) center/cover` : item.gradient,
+              flexGrow: isActive ? 4 : 1,
+              flexShrink: 1,
+              flexBasis: 0,
+            }}
+          >
+            {/* Dark overlay */}
+            <div className="cal-acc-overlay" />
+
+            {/* Inactive: just title at bottom */}
+            <div className="cal-acc-collapsed-label">
+              {item.title}
+            </div>
+
+            {/* Active: title + subtitle + Devamı button */}
+            <div className="cal-acc-expanded">
+              {item.meta && <div className="cal-acc-meta">{item.meta}</div>}
+              <h3 className="cal-acc-title">{item.title}</h3>
+              {item.subtitle && <div className="cal-acc-subtitle">{item.subtitle}</div>}
+              <button
+                className="cal-acc-cta"
+                onClick={(e) => { e.stopPropagation(); onSelect(item.id); }}
+              >
+                Devamı
+              </button>
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+function SssAccordion({ activeId, onSelect }: { activeId: string | null; onSelect: (id: string) => void }) {
+  const [items, setItems] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  useEffect(() => {
+    fetch("/api/sss").then(r => r.json())
+      .then(d => { if (Array.isArray(d)) setItems(d); })
+      .catch(() => {})
+      .finally(() => setLoading(false));
+  }, []);
+  if (loading) return <Loading />;
+  return (
+    <AccordionPanels
+      items={items.map((i, idx) => ({
+        id: String(i.id),
+        title: i.title,
+        subtitle: i.description ? String(i.description).slice(0, 90) + (String(i.description).length > 90 ? "…" : "") : undefined,
+        gradient: FAQ_GRADIENTS[idx % FAQ_GRADIENTS.length],
+        meta: "SSS",
+      }))}
+      activeId={activeId}
+      onSelect={onSelect}
+      emptyText="Henüz SSS içeriği yok."
+    />
+  );
+}
+
+function BlogAccordion() {
   const { lang } = useLanguage();
   const router = useRouter();
   const [posts, setPosts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [activeId, setActiveId] = useState<string | null>(null);
+  const [readyId, setReadyId] = useState<string | null>(null); // to trigger navigation on second click
   useEffect(() => {
     fetch("/api/blog-yazilari").then(r => r.json())
       .then(d => { if (Array.isArray(d)) setPosts(d.filter((p: any) => p.published)); })
@@ -215,95 +314,45 @@ function BlogCards() {
   }, []);
 
   if (loading) return <Loading />;
-  if (!posts.length) return (
+
+  const items = posts.map(post => {
+    const title = lang === "tr" ? post.titleTR : post.titleEN;
+    const summary = lang === "tr" ? post.summaryTR : post.summaryEN;
+    const accent = ACCENT[post.category] || "#1D9E75";
+    return {
+      id: String(post.id),
+      title,
+      subtitle: summary,
+      cover: post.coverImage || undefined,
+      gradient: `linear-gradient(135deg, ${accent} 0%, ${accent}cc 100%)`,
+      meta: `${post.category?.toUpperCase() || ""} · ${post.readingMinutes} dk`,
+      slug: post.slug,
+    };
+  });
+
+  if (!items.length) return (
     <div style={{ padding: "3rem", textAlign: "center", color: "#bbb", fontSize: 13 }}>
       Henüz yayınlanmış blog yazısı yok.
     </div>
   );
 
+  const handleSelect = (id: string) => {
+    if (activeId === id) {
+      const post = posts.find(p => String(p.id) === id);
+      if (post) router.push(`/${lang}/blog/${post.slug}`);
+    } else {
+      setActiveId(id);
+      setReadyId(id);
+    }
+  };
+
   return (
-    <div style={{ animation: "fadeInDetail 0.2s ease-out" }}>
-      <div className="cal-blog-grid">
-        {posts.map(post => {
-          const title = lang === "tr" ? post.titleTR : post.titleEN;
-          const summary = lang === "tr" ? post.summaryTR : post.summaryEN;
-          const accent = ACCENT[post.category] || "#1D9E75";
-          const date = (() => {
-            try { return new Date(post.publishedAt).toLocaleDateString(lang === "tr" ? "tr-TR" : "en-US", { year: "numeric", month: "short", day: "numeric" }); }
-            catch { return post.publishedAt; }
-          })();
-          return (
-            <div
-              key={post.id}
-              onClick={() => router.push(`/${lang}/blog/${post.slug}`)}
-              style={{
-                background: "#fff",
-                border: "0.5px solid #e8e8e8",
-                borderRadius: 14,
-                overflow: "hidden",
-                cursor: "pointer",
-                transition: "transform 0.15s, box-shadow 0.15s",
-                display: "flex",
-                flexDirection: "column",
-              }}
-              onMouseEnter={e => {
-                (e.currentTarget as HTMLDivElement).style.transform = "translateY(-3px)";
-                (e.currentTarget as HTMLDivElement).style.boxShadow = "0 8px 24px rgba(0,0,0,0.08)";
-              }}
-              onMouseLeave={e => {
-                (e.currentTarget as HTMLDivElement).style.transform = "translateY(0)";
-                (e.currentTarget as HTMLDivElement).style.boxShadow = "none";
-              }}
-            >
-              {/* Cover: image or emoji strip */}
-              {post.coverImage ? (
-                <img
-                  src={post.coverImage}
-                  alt=""
-                  style={{
-                    width: "100%", height: 140, objectFit: "cover", display: "block",
-                    borderBottom: `2px solid ${accent}22`,
-                  }}
-                />
-              ) : (
-                <div style={{
-                  height: 80, background: accent + "18",
-                  display: "flex", alignItems: "center", justifyContent: "center",
-                  borderBottom: `2px solid ${accent}22`,
-                  fontSize: 36,
-                }}>
-                  {post.coverEmoji || "📝"}
-                </div>
-              )}
-              {/* Body */}
-              <div style={{ padding: "1rem 1.25rem", flex: 1, display: "flex", flexDirection: "column", gap: 6 }}>
-                <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                  <span style={{
-                    fontSize: 10, fontWeight: 700, letterSpacing: "0.07em",
-                    textTransform: "uppercase" as const, color: accent,
-                  }}>{post.category}</span>
-                  <span style={{ fontSize: 10, color: "#bbb" }}>·</span>
-                  <span style={{ fontSize: 10, color: "#bbb" }}>{post.readingMinutes} dk</span>
-                </div>
-                <h3 style={{ margin: 0, fontSize: 15, fontWeight: 700, color: "#111", lineHeight: 1.35 }}>{title}</h3>
-                <p style={{ margin: 0, fontSize: 12, color: "#888", lineHeight: 1.65, flex: 1 }}>{summary}</p>
-                {post.tags?.length > 0 && (
-                  <div style={{ display: "flex", gap: 5, flexWrap: "wrap", marginTop: 4 }}>
-                    {post.tags.slice(0, 3).map((tag: string) => (
-                      <span key={tag} style={{
-                        fontSize: 10, padding: "2px 8px", borderRadius: 10,
-                        background: "#f0f0f0", color: "#777",
-                      }}>{tag}</span>
-                    ))}
-                  </div>
-                )}
-                <div style={{ fontSize: 10, color: "#ccc", marginTop: 4 }}>{date}</div>
-              </div>
-            </div>
-          );
-        })}
-      </div>
-    </div>
+    <AccordionPanels
+      items={items}
+      activeId={activeId}
+      onSelect={handleSelect}
+      emptyText="Henüz blog yazısı yok."
+    />
   );
 }
 
@@ -373,44 +422,19 @@ export default function CalisimalarLayout() {
           <ReklamKpiLiveMap />
         </div>
       ) : activeSection === "dusunceler" ? (
-        /* Blog yazıları — tam genişlik kart grid */
-        <BlogCards />
+        /* Blog yazıları — accordion paneller */
+        <div className="cal-accordion-wrap">
+          <BlogAccordion />
+        </div>
       ) : (
-        /* Diğer sekmeler — iç liste + detay */
-        <div className={`cal-split${activeItemId ? " cal-split--detail" : ""}`}>
-
-          {/* Inner list panel */}
-          <div className="cal-list-panel">
-            <div style={{ padding: "14px 16px 8px", borderBottom: "0.5px solid #ebebeb" }}>
-              <div style={{ fontSize: 10, fontWeight: 700, color: "#bbb", letterSpacing: "0.08em" }}>
-                {SECTIONS.find(s => s.id === activeSection)?.label.toUpperCase()}
-              </div>
+        /* SSS — accordion paneller + detay */
+        <div className="cal-accordion-wrap">
+          <SssAccordion activeId={activeItemId} onSelect={handleItemSelect} />
+          {activeItemId && (
+            <div className="cal-acc-detail">
+              <SssDetail itemId={activeItemId} />
             </div>
-            {activeSection === "sss"       && <SssInner       activeItemId={activeItemId} onSelect={handleItemSelect} />}
-          </div>
-
-          {/* Detail panel */}
-          <main className="cal-detail-panel">
-            {/* Mobile geri butonu */}
-            {activeItemId && (
-              <button
-                onClick={() => setActiveItemId(null)}
-                className="cal-back-btn">
-                ← Listeye Dön
-              </button>
-            )}
-            {!activeItemId ? (
-              <div style={{ display: "flex", flexDirection: "column", alignItems: "center",
-                justifyContent: "center", height: "100%", minHeight: 300, color: "#ccc", gap: 12 }}>
-                <span style={{ fontSize: 36 }}>{SECTIONS.find(s => s.id === activeSection)?.icon}</span>
-                <span style={{ fontSize: 13 }}>Listeden bir öğe seç</span>
-              </div>
-            ) : (
-              <div style={{ animation: "fadeInDetail 0.2s ease-out" }}>
-                {activeSection === "sss"       && <SssDetail       itemId={activeItemId} />}
-              </div>
-            )}
-          </main>
+          )}
         </div>
       )}
 
@@ -503,12 +527,132 @@ export default function CalisimalarLayout() {
           font-family: inherit;
         }
 
-        /* ── Blog cards grid ── */
-        .cal-blog-grid {
-          display: grid;
-          grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-          gap: 1.25rem;
+        /* ── Accordion expanding panels (Süzen-style) ── */
+        .cal-accordion-wrap {
           padding: 1.5rem 1rem;
+        }
+        .cal-accordion {
+          display: flex;
+          gap: 10px;
+          height: 420px;
+          width: 100%;
+          max-width: 1200px;
+          margin: 0 auto;
+        }
+        .cal-acc-panel {
+          position: relative;
+          flex: 1;
+          min-width: 0;
+          border-radius: 14px;
+          overflow: hidden;
+          cursor: pointer;
+          transition: flex 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+          background-size: cover;
+          background-position: center;
+          box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+        }
+        .cal-acc-panel--active {
+          flex: 4;
+        }
+        .cal-acc-overlay {
+          position: absolute;
+          inset: 0;
+          background: linear-gradient(to top, rgba(0,0,0,0.75) 0%, rgba(0,0,0,0.25) 50%, rgba(0,0,0,0.15) 100%);
+          transition: opacity 0.3s;
+        }
+        .cal-acc-panel--active .cal-acc-overlay {
+          background: linear-gradient(to top, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.45) 60%, rgba(0,0,0,0.2) 100%);
+        }
+        .cal-acc-collapsed-label {
+          position: absolute;
+          left: 0;
+          right: 0;
+          bottom: 18px;
+          padding: 0 10px;
+          color: #fff;
+          font-size: 13px;
+          font-weight: 700;
+          text-align: center;
+          line-height: 1.3;
+          z-index: 2;
+          opacity: 1;
+          transition: opacity 0.2s;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          white-space: nowrap;
+          text-shadow: 0 2px 6px rgba(0,0,0,0.6);
+        }
+        .cal-acc-panel--active .cal-acc-collapsed-label {
+          opacity: 0;
+          pointer-events: none;
+        }
+        .cal-acc-expanded {
+          position: absolute;
+          left: 0;
+          right: 0;
+          bottom: 0;
+          padding: 22px 26px 26px;
+          color: #fff;
+          z-index: 2;
+          opacity: 0;
+          transform: translateY(12px);
+          transition: opacity 0.4s 0.15s, transform 0.4s 0.15s;
+          pointer-events: none;
+        }
+        .cal-acc-panel--active .cal-acc-expanded {
+          opacity: 1;
+          transform: translateY(0);
+          pointer-events: auto;
+        }
+        .cal-acc-meta {
+          font-size: 10px;
+          font-weight: 700;
+          letter-spacing: 0.12em;
+          opacity: 0.85;
+          margin-bottom: 8px;
+        }
+        .cal-acc-title {
+          margin: 0 0 8px;
+          font-size: 24px;
+          font-weight: 800;
+          line-height: 1.2;
+          text-shadow: 0 2px 8px rgba(0,0,0,0.5);
+        }
+        .cal-acc-subtitle {
+          font-size: 13px;
+          line-height: 1.55;
+          opacity: 0.9;
+          margin-bottom: 14px;
+          max-width: 480px;
+          display: -webkit-box;
+          -webkit-line-clamp: 2;
+          -webkit-box-orient: vertical;
+          overflow: hidden;
+        }
+        .cal-acc-cta {
+          display: inline-block;
+          padding: 9px 22px;
+          background: rgba(255,255,255,0.95);
+          color: #111;
+          border: none;
+          border-radius: 8px;
+          font-family: inherit;
+          font-size: 12px;
+          font-weight: 700;
+          cursor: pointer;
+          transition: background 0.15s, transform 0.15s;
+        }
+        .cal-acc-cta:hover {
+          background: #fff;
+          transform: translateY(-1px);
+        }
+        .cal-acc-detail {
+          max-width: 1200px;
+          margin: 1.5rem auto 0;
+          background: #fff;
+          border-radius: 14px;
+          border: 0.5px solid #e8e8e8;
+          animation: fadeInDetail 0.25s ease-out;
         }
 
         /* ── Animations ── */
@@ -537,11 +681,22 @@ export default function CalisimalarLayout() {
           .cal-split--detail .cal-detail-panel { display: block; }
           .cal-back-btn { display: inline-flex; align-items: center; gap: 4px; }
 
-          .cal-blog-grid {
-            grid-template-columns: 1fr;
-            padding: 1rem 0.75rem;
-            gap: 1rem;
+          .cal-accordion-wrap { padding: 1rem 0.75rem; }
+          .cal-accordion {
+            flex-direction: column;
+            height: auto;
+            gap: 8px;
           }
+          .cal-acc-panel {
+            min-height: 90px;
+            flex: 0 0 auto;
+          }
+          .cal-acc-panel--active {
+            min-height: 280px;
+            flex: 0 0 auto;
+          }
+          .cal-acc-title { font-size: 20px; }
+          .cal-acc-expanded { padding: 18px 20px 22px; }
         }
 
         @media (max-width: 400px) {
