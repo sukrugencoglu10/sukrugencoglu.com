@@ -7,6 +7,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { createPortal } from 'react-dom'
 import BlogWizard from '@/components/studyo/BlogWizard'
+import DetailModal from '@/components/ui/DetailModal'
 // ─── Login ekranı ─────────────────────────────────────────────────────────────
 function LoginScreen({ onSuccess }) {
   const [username, setUsername] = useState('')
@@ -208,6 +209,7 @@ function GtmZihinHaritasi() {
   const [connections, setConnections] = useState(GTM_CONNECTIONS)
   const [dragging, setDragging] = useState(null)
   const [editId, setEditId] = useState(null)
+  const [dblNode, setDblNode] = useState(null)
   const [saving, setSaving] = useState(false)
   const [lastSaved, setLastSaved] = useState(null)
   const [canvasZoom, setCanvasZoom] = useState(1)
@@ -215,6 +217,18 @@ function GtmZihinHaritasi() {
   const setZoom = (z) => { canvasZoomRef.current = z; setCanvasZoom(z) }
   const selectionBoxRef = useRef(null)
   const canvasRef = useRef(null)
+  const lastTapRef = useRef({ id: null, time: 0 })
+  const handleDoubleTap = (e, term) => {
+    const now = Date.now()
+    const last = lastTapRef.current
+    if (last.id === term.id && now - last.time < 300) {
+      e.preventDefault()
+      lastTapRef.current = { id: null, time: 0 }
+      setDblNode(term)
+    } else {
+      lastTapRef.current = { id: term.id, time: now }
+    }
+  }
 
   useEffect(() => {
     fetch('/api/gtm-ekosistemi')
@@ -520,6 +534,8 @@ function GtmZihinHaritasi() {
                       startPositions
                     })
                   }}
+                onDoubleClick={(e) => { e.stopPropagation(); setDblNode(term) }}
+                onTouchEnd={(e) => handleDoubleTap(e, term)}
                 style={{
                   position: 'absolute',
                   left: term.x - GTM_NW / 2,
@@ -782,6 +798,16 @@ function GtmZihinHaritasi() {
           {saving ? 'Kaydediliyor...' : 'Değişiklikleri Kaydet'}
         </button>
       </div>
+      {dblNode && (
+        <DetailModal
+          title={dblNode.abbr}
+          subtitle={dblNode.sub}
+          description={dblNode.desc}
+          accentColor={GTM_CAT_COLORS[dblNode.cat]?.stripe || '#1D9E75'}
+          badge={GTM_CAT_LABELS[dblNode.cat] || dblNode.cat}
+          onClose={() => setDblNode(null)}
+        />
+      )}
     </div>
   )
 }
@@ -860,6 +886,7 @@ function MantiKHaritasi() {
   const [connections, setConnections] = useState(CONNECTIONS)
   const [dragging, setDragging] = useState(null)
   const [editId, setEditId] = useState(null)
+  const [dblNode, setDblNode] = useState(null)
   const [saving, setSaving] = useState(false)
   const [lastSaved, setLastSaved] = useState(null)
   const [canvasZoom, setCanvasZoom] = useState(1)
@@ -867,6 +894,18 @@ function MantiKHaritasi() {
   const setZoom = (z) => { canvasZoomRef.current = z; setCanvasZoom(z) }
   const selectionBoxRef = useRef(null)
   const canvasRef = useRef(null)
+  const lastTapRef = useRef({ id: null, time: 0 })
+  const handleDoubleTap = (e, term) => {
+    const now = Date.now()
+    const last = lastTapRef.current
+    if (last.id === term.id && now - last.time < 300) {
+      e.preventDefault()
+      lastTapRef.current = { id: null, time: 0 }
+      setDblNode(term)
+    } else {
+      lastTapRef.current = { id: term.id, time: now }
+    }
+  }
 
   useEffect(() => {
     fetch('/api/reklam-terimleri')
@@ -1172,6 +1211,8 @@ function MantiKHaritasi() {
                       startPositions
                     })
                   }}
+                onDoubleClick={(e) => { e.stopPropagation(); setDblNode(term) }}
+                onTouchEnd={(e) => handleDoubleTap(e, term)}
                 style={{
                   position: 'absolute',
                   left: term.x - NODE_W / 2,
@@ -1457,6 +1498,16 @@ function MantiKHaritasi() {
           {saving ? 'Kaydediliyor...' : 'Değişiklikleri Kaydet'}
         </button>
       </div>
+      {dblNode && (
+        <DetailModal
+          title={dblNode.abbr}
+          subtitle={dblNode.tr}
+          description={dblNode.desc || dblNode.en}
+          accentColor={getCatColors(dblNode.cat).stripe}
+          badge={CAT_LABELS[dblNode.cat] || dblNode.cat}
+          onClose={() => setDblNode(null)}
+        />
+      )}
     </div>
   )
 }
@@ -1585,6 +1636,7 @@ function YzHaritasi() {
   const [connections, setConnections] = useState(AI_CONNECTIONS)
   const [dragging, setDragging] = useState(null)
   const [editId, setEditId] = useState(null)
+  const [dblNode, setDblNode] = useState(null)
   const [saving, setSaving] = useState(false)
   const [lastSaved, setLastSaved] = useState(null)
   const [canvasZoom, setCanvasZoom] = useState(1)
@@ -1592,6 +1644,18 @@ function YzHaritasi() {
   const setZoom = (z) => { canvasZoomRef.current = z; setCanvasZoom(z) }
   const selectionBoxRef = useRef(null)
   const canvasRef = useRef(null)
+  const lastTapRef = useRef({ id: null, time: 0 })
+  const handleDoubleTap = (e, term) => {
+    const now = Date.now()
+    const last = lastTapRef.current
+    if (last.id === term.id && now - last.time < 300) {
+      e.preventDefault()
+      lastTapRef.current = { id: null, time: 0 }
+      setDblNode(term)
+    } else {
+      lastTapRef.current = { id: term.id, time: now }
+    }
+  }
 
   useEffect(() => {
     fetch('/api/ai-terimleri')
@@ -1897,6 +1961,8 @@ function YzHaritasi() {
                       startPositions
                     })
                   }}
+                  onDoubleClick={(e) => { e.stopPropagation(); setDblNode(term) }}
+                  onTouchEnd={(e) => handleDoubleTap(e, term)}
                   style={{
                     position: 'absolute',
                     left: term.x - AI_NODE_W / 2,
@@ -2182,6 +2248,16 @@ function YzHaritasi() {
           {saving ? 'Kaydediliyor...' : 'Değişiklikleri Kaydet'}
         </button>
       </div>
+      {dblNode && (
+        <DetailModal
+          title={dblNode.abbr}
+          subtitle={dblNode.sub}
+          description={dblNode.desc}
+          accentColor={AI_CAT_COLORS[dblNode.cat]?.stripe || '#1D9E75'}
+          badge={AI_CAT_LABELS[dblNode.cat] || dblNode.cat}
+          onClose={() => setDblNode(null)}
+        />
+      )}
     </div>
   )
 }
@@ -3037,6 +3113,7 @@ function KodBloklariHaritasi() {
   const [connections, setConnections] = useState([])
   const [dragging, setDragging] = useState(null)
   const [editId, setEditId] = useState(null)
+  const [dblNode, setDblNode] = useState(null)
   const [saving, setSaving] = useState(false)
   const [lastSaved, setLastSaved] = useState(null)
   const [canvasZoom, setCanvasZoom] = useState(1)
@@ -3044,6 +3121,18 @@ function KodBloklariHaritasi() {
   const setZoom = (z) => { canvasZoomRef.current = z; setCanvasZoom(z) }
   const selectionBoxRef = useRef(null)
   const canvasRef = useRef(null)
+  const lastTapRef = useRef({ id: null, time: 0 })
+  const handleDoubleTap = (e, term) => {
+    const now = Date.now()
+    const last = lastTapRef.current
+    if (last.id === term.id && now - last.time < 300) {
+      e.preventDefault()
+      lastTapRef.current = { id: null, time: 0 }
+      setDblNode(term)
+    } else {
+      lastTapRef.current = { id: term.id, time: now }
+    }
+  }
 
   useEffect(() => {
     fetch('/api/kod-bloklari')
@@ -3276,6 +3365,8 @@ function KodBloklariHaritasi() {
                     const pos = {}; terms.forEach(t => { if (currentSelected.includes(t.id)) pos[t.id] = { x: t.x, y: t.y } })
                     setDragging({ startMouseX: e.clientX, startMouseY: e.clientY, startPositions: pos, id: term.id })
                   }}
+                  onDoubleClick={(e) => { e.stopPropagation(); setDblNode(term) }}
+                  onTouchEnd={(e) => handleDoubleTap(e, term)}
                   style={{
                     position: 'absolute', left: term.x - KB_NODE_W / 2, top: term.y - KB_NODE_H / 2, width: KB_NODE_W, height: KB_NODE_H,
                     background: isSelected ? colors.stripe + '18' : colors.bg, border: `${isSelected ? 2 : 1}px solid ${isSelected ? colors.stripe : (isHovered ? colors.stripe : colors.border)}`,
@@ -3344,6 +3435,16 @@ function KodBloklariHaritasi() {
         {lastSaved && <span style={{ fontSize: 11, color: '#1D9E75' }}>Kaydedildi: {lastSaved}</span>}
         <button onClick={handleSave} disabled={saving} style={{ background: '#111', color: '#fff', border: 'none', borderRadius: 8, padding: '6px 14px', fontSize: 13, cursor: saving ? 'not-allowed' : 'pointer', opacity: saving ? 0.7 : 1, transition: 'all 0.2s' }}>{saving ? 'Kaydediliyor...' : 'Değişiklikleri Kaydet'}</button>
       </div>
+      {dblNode && (
+        <DetailModal
+          title={dblNode.abbr}
+          subtitle={dblNode.sub}
+          description={dblNode.desc}
+          accentColor={KB_CAT_COLORS[dblNode.cat]?.stripe || '#1D9E75'}
+          badge={KB_CAT_LABELS[dblNode.cat] || dblNode.cat}
+          onClose={() => setDblNode(null)}
+        />
+      )}
     </div>
   )
 }
@@ -4801,6 +4902,7 @@ function ReklamHiyerarsisiHaritasi({
   const [connections, setConnections] = useState(RH_CONNECTIONS)
   const [dragging, setDragging] = useState(null)
   const [editId, setEditId] = useState(null)
+  const [dblNode, setDblNode] = useState(null)
   const [saving, setSaving] = useState(false)
   const [lastSaved, setLastSaved] = useState(null)
   const [canvasZoom, setCanvasZoom] = useState(1)
@@ -4808,6 +4910,18 @@ function ReklamHiyerarsisiHaritasi({
   const setZoom = (z) => { canvasZoomRef.current = z; setCanvasZoom(z) }
   const selectionBoxRef = useRef(null)
   const canvasRef = useRef(null)
+  const lastTapRef = useRef({ id: null, time: 0 })
+  const handleDoubleTap = (e, term) => {
+    const now = Date.now()
+    const last = lastTapRef.current
+    if (last.id === term.id && now - last.time < 300) {
+      e.preventDefault()
+      lastTapRef.current = { id: null, time: 0 }
+      setDblNode(term)
+    } else {
+      lastTapRef.current = { id: term.id, time: now }
+    }
+  }
 
   useEffect(() => {
     fetch(apiPath)
@@ -5121,6 +5235,8 @@ function ReklamHiyerarsisiHaritasi({
                       startPositions
                     })
                   }}
+                  onDoubleClick={(e) => { e.stopPropagation(); setDblNode(term) }}
+                  onTouchEnd={(e) => handleDoubleTap(e, term)}
                   style={{
                     position: 'absolute',
                     left: term.x - RH_NODE_W / 2,
@@ -5432,6 +5548,16 @@ function ReklamHiyerarsisiHaritasi({
             <div style={{ fontSize: 13, color: '#333', lineHeight: 1.7, whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>{selectedTerm.desc}</div>
           )}
         </div>
+      )}
+      {dblNode && (
+        <DetailModal
+          title={dblNode.abbr}
+          subtitle={dblNode.sub}
+          description={dblNode.desc}
+          accentColor={RH_CAT_COLORS[dblNode.cat]?.stripe || '#1D9E75'}
+          badge={RH_CAT_LABELS[dblNode.cat] || dblNode.cat}
+          onClose={() => setDblNode(null)}
+        />
       )}
 
     </div>
@@ -5909,6 +6035,7 @@ function AnaHaritasi() {
   const [connections, setConnections] = useState([])
   const [dragging, setDragging] = useState(null)
   const [editId, setEditId] = useState(null)
+  const [dblNode, setDblNode] = useState(null)
   const [saving, setSaving] = useState(false)
   const [lastSaved, setLastSaved] = useState(null)
   const [canvasZoom, setCanvasZoom] = useState(1)
@@ -5916,6 +6043,18 @@ function AnaHaritasi() {
   const setZoom = (z) => { canvasZoomRef.current = z; setCanvasZoom(z) }
   const selectionBoxRef = useRef(null)
   const canvasRef = useRef(null)
+  const lastTapRef = useRef({ id: null, time: 0 })
+  const handleDoubleTap = (e, term) => {
+    const now = Date.now()
+    const last = lastTapRef.current
+    if (last.id === term.id && now - last.time < 300) {
+      e.preventDefault()
+      lastTapRef.current = { id: null, time: 0 }
+      setDblNode(term)
+    } else {
+      lastTapRef.current = { id: term.id, time: now }
+    }
+  }
 
   useEffect(() => {
     fetch('/api/ana-harita')
@@ -6092,6 +6231,8 @@ function AnaHaritasi() {
                     window.addEventListener('mousemove', onMove)
                     window.addEventListener('mouseup', onUp)
                   }}
+                  onDoubleClick={(e) => { e.stopPropagation(); setDblNode(term) }}
+                  onTouchEnd={(e) => handleDoubleTap(e, term)}
                   style={{ position: 'absolute', left: term.x - KB_NODE_W / 2, top: term.y - KB_NODE_H / 2, width: KB_NODE_W, height: KB_NODE_H, background: isSelected ? colors.stripe + '18' : colors.bg, border: `${isSelected ? 2 : 1}px solid ${isSelected ? colors.stripe : isHovered ? colors.stripe : colors.border}`, borderRadius: 8, padding: '6px 10px 6px 12px', opacity: isDimmed && !isDragging ? 0.22 : 1, transition: isDragging ? 'none' : 'all 0.13s', zIndex: isDragging ? 4 : isSelected ? 3 : isHovered ? 2 : 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', cursor: isDragging ? 'grabbing' : 'grab', userSelect: 'none', boxSizing: 'border-box', overflow: 'hidden' }}
                 >
                   <div style={{ fontSize: 13, fontWeight: 700, color: colors.stripe, lineHeight: 1.2, marginBottom: 3, whiteSpace: 'pre-line' }}>{term.abbr}</div>
@@ -6125,18 +6266,67 @@ function AnaHaritasi() {
                   <div><label style={{ fontSize: 11, color: '#888', display: 'block', marginBottom: 4 }}>Alt Başlık</label><input value={selectedTerm.sub} onChange={e => setTerms(prev => prev.map(t => t.id === selectedTerm.id ? { ...t, sub: e.target.value } : t))} style={{ width: '100%', padding: '6px 10px', fontSize: 13, border: '0.5px solid #ccc', borderRadius: 6, outline: 'none' }} /></div>
                   <div><label style={{ fontSize: 11, color: '#888', display: 'block', marginBottom: 4 }}>Renk</label><div style={{ display: 'flex', flexWrap: 'wrap', gap: 5 }}>{Object.entries(KB_CAT_COLORS).map(([cat, colors]) => (<div key={cat} onClick={() => setTerms(prev => prev.map(t => t.id === selectedTerm.id ? { ...t, cat } : t))} style={{ width: 26, height: 26, borderRadius: 6, cursor: 'pointer', background: colors.bg, border: selectedTerm.cat === cat ? `2.5px solid ${colors.stripe}` : `1.5px solid ${colors.border}`, display: 'flex', alignItems: 'flex-end', padding: '0 3px 3px', boxSizing: 'border-box' }}><div style={{ width: '100%', height: 3, borderRadius: 2, background: colors.stripe }} /></div>))}</div></div>
                   <div style={{ borderTop: '0.5px solid #eee', paddingTop: 12 }}>
-                    <label style={{ fontSize: 11, color: '#888', display: 'block', marginBottom: 8, fontWeight: 600 }}>BAĞLANTI YÖNETİMİ</label>
-                    <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-                      <div style={{ padding: '5px 10px', fontSize: 12, background: '#f0f0f0', border: '0.5px solid #ccc', borderRadius: 6, fontWeight: 700, whiteSpace: 'nowrap', color: '#333' }}>A: {selectedTerm.abbr}</div>
-                      <span style={{ fontSize: 16, color: '#999' }}>→</span>
-                      <select id="ana-target-select" style={{ flex: 1, padding: '6px 10px', fontSize: 12, border: '0.5px solid #ccc', borderRadius: 6, outline: 'none', background: '#fff' }}>
-                        <option value="">B düğümünü seç...</option>
+                    <label style={{ fontSize: 12, color: '#666', display: 'block', marginBottom: 10, fontWeight: 700, letterSpacing: '0.04em' }}>BAĞLANTI YÖNETİMİ</label>
+
+                    {/* GİDEN: Bu → Hedef */}
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginBottom: 10 }}>
+                      <div style={{ fontSize: 12, color: '#888', paddingLeft: 2 }}>
+                        <span style={{ fontWeight: 700, color: '#444' }}>Bu</span> → hedef seç:
+                      </div>
+                      <select id="ana-target-select" style={{ width: '100%', padding: '7px 10px', fontSize: 13, border: '1px solid #ddd', borderRadius: 7, outline: 'none', background: '#fff', color: '#333' }}>
+                        <option value="">— Hedef düğümü seç —</option>
                         {terms.filter(t => t.id !== selectedTerm.id).map(t => (<option key={t.id} value={t.id}>{t.abbr} ({t.sub})</option>))}
                       </select>
-                      <button onClick={() => { const sel = document.getElementById('ana-target-select'); if (sel.value) handleAddConnection(sel.value) }} style={{ padding: '6px 14px', fontSize: 12, background: '#f5f5f5', border: '0.5px solid #ccc', borderRadius: 6, cursor: 'pointer' }}>Ekle</button>
+                      <button
+                        onClick={() => { const sel = document.getElementById('ana-target-select'); if (sel && sel.value) { handleAddConnection(sel.value); sel.value = '' } }}
+                        style={{ width: '100%', padding: '7px 14px', fontSize: 13, fontWeight: 600, background: '#111', color: '#fff', border: 'none', borderRadius: 7, cursor: 'pointer' }}
+                      >+ Giden Ok Ekle</button>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
+                        {connections.filter(c => c.from === selectedTerm.id).map(c => {
+                          const target = termMap[c.to]; if (!target) return null
+                          return (
+                            <div key={c.to} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '5px 10px', background: '#f5f5f5', border: '0.5px solid #e8e8e8', borderRadius: 7, fontSize: 13 }}>
+                              <span style={{ color: '#333' }}>→ {target.abbr}</span>
+                              <button onClick={() => handleRemoveConnection(c.to)} style={{ border: 'none', background: 'none', cursor: 'pointer', color: '#ff4d4f', fontSize: 12 }}>Kaldır</button>
+                            </div>
+                          )
+                        })}
+                      </div>
                     </div>
-                    <div style={{ marginTop: 12, display: 'flex', flexDirection: 'column', gap: 6 }}>
-                      {connections.filter(c => c.from === selectedTerm.id).map(c => { const target = termMap[c.to]; if (!target) return null; return (<div key={c.to} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '4px 8px', background: '#f9f9f9', border: '0.5px solid #eee', borderRadius: 6, fontSize: 11 }}><span>→ {target.abbr}</span><button onClick={() => handleRemoveConnection(c.to)} style={{ border: 'none', background: 'none', cursor: 'pointer', color: '#ff4d4f' }}>Kaldır</button></div>) })}
+
+                    {/* GELEN: Kaynak → Bu */}
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 6, paddingTop: 10, borderTop: '0.5px solid #f0f0f0' }}>
+                      <div style={{ fontSize: 12, color: '#888', paddingLeft: 2 }}>
+                        kaynak seç → <span style={{ fontWeight: 700, color: '#444' }}>Bu</span>:
+                      </div>
+                      <select id="ana-source-select" style={{ width: '100%', padding: '7px 10px', fontSize: 13, border: '1px solid #ddd', borderRadius: 7, outline: 'none', background: '#fff', color: '#333' }}>
+                        <option value="">— Kaynak düğümü seç —</option>
+                        {terms.filter(t => t.id !== selectedTerm.id).map(t => (<option key={t.id} value={t.id}>{t.abbr} ({t.sub})</option>))}
+                      </select>
+                      <button
+                        onClick={() => {
+                          const sel = document.getElementById('ana-source-select')
+                          if (sel && sel.value) {
+                            const srcId = sel.value
+                            if (!connections.find(c => c.from === srcId && c.to === selectedTerm.id)) {
+                              setConnections(prev => [...prev, { from: srcId, to: selectedTerm.id }])
+                            }
+                            sel.value = ''
+                          }
+                        }}
+                        style={{ width: '100%', padding: '7px 14px', fontSize: 13, fontWeight: 600, background: '#444', color: '#fff', border: 'none', borderRadius: 7, cursor: 'pointer' }}
+                      >+ Gelen Ok Ekle</button>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
+                        {connections.filter(c => c.to === selectedTerm.id).map(c => {
+                          const source = termMap[c.from]; if (!source) return null
+                          return (
+                            <div key={c.from} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '5px 10px', background: '#f5f5f5', border: '0.5px solid #e8e8e8', borderRadius: 7, fontSize: 13 }}>
+                              <span style={{ color: '#333' }}>{source.abbr} →</span>
+                              <button onClick={() => setConnections(prev => prev.filter(c2 => !(c2.from === c.from && c2.to === selectedTerm.id)))} style={{ border: 'none', background: 'none', cursor: 'pointer', color: '#ff4d4f', fontSize: 12 }}>Kaldır</button>
+                            </div>
+                          )
+                        })}
+                      </div>
                     </div>
                   </div>
                   <div style={{ marginTop: 'auto', paddingTop: 12, borderTop: '0.5px solid #eee', display: 'flex', justifyContent: 'center' }}>
@@ -6176,6 +6366,16 @@ function AnaHaritasi() {
         {lastSaved && <span style={{ fontSize: 11, color: '#1D9E75' }}>Kaydedildi: {lastSaved}</span>}
         <button onClick={handleSave} disabled={saving} style={{ background: '#111', color: '#fff', border: 'none', borderRadius: 8, padding: '6px 14px', fontSize: 13, cursor: saving ? 'not-allowed' : 'pointer', opacity: saving ? 0.7 : 1, transition: 'all 0.2s' }}>{saving ? 'Kaydediliyor...' : 'Değişiklikleri Kaydet'}</button>
       </div>
+      {dblNode && (
+        <DetailModal
+          title={dblNode.abbr}
+          subtitle={dblNode.sub}
+          description={dblNode.desc}
+          accentColor={KB_CAT_COLORS[dblNode.cat]?.stripe || '#1D9E75'}
+          badge={KB_CAT_LABELS[dblNode.cat] || dblNode.cat}
+          onClose={() => setDblNode(null)}
+        />
+      )}
     </div>
   )
 }

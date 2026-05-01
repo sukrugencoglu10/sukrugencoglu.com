@@ -1,10 +1,11 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import Image from "next/image";
 import { useLanguage } from "@/context/LanguageContext";
 import { useRouter } from "next/navigation";
 import dynamic from "next/dynamic";
+import DetailModal from "@/components/ui/DetailModal";
 
 const AdvertisingHierarchyLiveMap = dynamic(() => import("@/components/ui/AdvertisingHierarchyLiveMap"), { ssr: false });
 const ReklamKpiLiveMap = dynamic(() => import("@/components/ui/ReklamKpiLiveMap"), { ssr: false });
@@ -277,6 +278,41 @@ function BlogCards() {
   const router = useRouter();
   const [posts, setPosts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [dblClickPost, setDblClickPost] = useState<any>(null);
+  const clickTimerRef = useRef<{ id: string; timer: ReturnType<typeof setTimeout> } | null>(null);
+  const lastTapRef = useRef<{ id: string | null; time: number }>({ id: null, time: 0 });
+
+  const handleDoubleTap = (e: React.TouchEvent, post: any) => {
+    const now = Date.now();
+    const last = lastTapRef.current;
+    if (last.id === post.id && now - last.time < 300) {
+      e.preventDefault();
+      lastTapRef.current = { id: null, time: 0 };
+      if (clickTimerRef.current) { clearTimeout(clickTimerRef.current.timer); clickTimerRef.current = null; }
+      setDblClickPost(post);
+    } else {
+      lastTapRef.current = { id: post.id, time: now };
+    }
+  };
+
+  const handleCardClick = (post: any) => {
+    const existing = clickTimerRef.current;
+    if (existing !== null && existing.id === post.id) {
+      clearTimeout(existing.timer);
+      clickTimerRef.current = null;
+      setDblClickPost(post);
+    } else {
+      if (existing) clearTimeout(existing.timer);
+      clickTimerRef.current = {
+        id: post.id,
+        timer: setTimeout(() => {
+          clickTimerRef.current = null;
+          router.push(`/${lang}/blog/${post.slug}`);
+        }, 250),
+      };
+    }
+  };
+
   useEffect(() => {
     fetch("/api/blog-yazilari").then(r => r.json())
       .then(d => { if (Array.isArray(d)) setPosts(d.filter((p: any) => p.published)); })
@@ -293,6 +329,22 @@ function BlogCards() {
 
   return (
     <div style={{ animation: "fadeInDetail 0.2s ease-out" }}>
+      {dblClickPost && (
+        <DetailModal
+          title={lang === "tr" ? dblClickPost.titleTR : dblClickPost.titleEN}
+          subtitle={(() => {
+            try {
+              const d = new Date(dblClickPost.publishedAt).toLocaleDateString(lang === "tr" ? "tr-TR" : "en-US", { year: "numeric", month: "short", day: "numeric" });
+              return `${d} · ${dblClickPost.readingMinutes} dk`;
+            } catch { return dblClickPost.publishedAt; }
+          })()}
+          description={lang === "tr" ? dblClickPost.summaryTR : dblClickPost.summaryEN}
+          accentColor={ACCENT[dblClickPost.category] || "#1D9E75"}
+          badge={dblClickPost.category}
+          tags={dblClickPost.tags}
+          onClose={() => setDblClickPost(null)}
+        />
+      )}
       <div className="cal-blog-grid">
         {posts.map(post => {
           const title = lang === "tr" ? post.titleTR : post.titleEN;
@@ -305,7 +357,8 @@ function BlogCards() {
           return (
             <div
               key={post.id}
-              onClick={() => router.push(`/${lang}/blog/${post.slug}`)}
+              onClick={() => handleCardClick(post)}
+              onTouchEnd={(e) => handleDoubleTap(e, post)}
               style={{
                 background: "#fff",
                 border: "0.5px solid #e8e8e8",

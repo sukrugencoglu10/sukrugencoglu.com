@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import { CAT_COLORS, CAT_LABELS, getCatColors } from "@/lib/maps/categories";
+import DetailModal from "@/components/ui/DetailModal";
 import { NODE_W, NODE_H, edgePoint } from "@/lib/maps/canvas";
 
 export default function ReklamStratejisiLiveMap() {
@@ -11,9 +12,22 @@ export default function ReklamStratejisiLiveMap() {
   const [loading, setLoading] = useState(true);
   const [hovered, setHovered] = useState<string | null>(null);
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [dblNode, setDblNode] = useState<any>(null);
   const [zoom, setZoom] = useState(1);
   const canvasAreaRef = useRef<HTMLDivElement>(null);
   const infoPanelRef = useRef<HTMLDivElement>(null);
+  const lastTapRef = useRef<{ id: string | null; time: number }>({ id: null, time: 0 });
+  const handleDoubleTap = (e: React.TouchEvent, term: any) => {
+    const now = Date.now();
+    const last = lastTapRef.current;
+    if (last.id === term.id && now - last.time < 300) {
+      e.preventDefault();
+      lastTapRef.current = { id: null, time: 0 };
+      setDblNode(term);
+    } else {
+      lastTapRef.current = { id: term.id, time: now };
+    }
+  };
 
   const [isPanning, setIsPanning] = useState(false);
   const [panStart, setPanStart] = useState({ x: 0, y: 0, scrollLeft: 0, scrollTop: 0 });
@@ -221,6 +235,8 @@ export default function ReklamStratejisiLiveMap() {
                       e.stopPropagation();
                       setSelectedId(prev => prev === term.id ? null : term.id);
                     }}
+                    onDoubleClick={(e) => { e.stopPropagation(); setDblNode(term); }}
+                    onTouchEnd={(e) => handleDoubleTap(e, term)}
                     style={{
                       position: 'absolute',
                       left: term.x - NODE_W / 2,
@@ -279,6 +295,16 @@ export default function ReklamStratejisiLiveMap() {
           </div>
         </div>
 
+        {dblNode && (
+          <DetailModal
+            title={dblNode.abbr}
+            subtitle={dblNode.sub}
+            description={dblNode.desc}
+            accentColor={getCatColors(dblNode.cat).stripe}
+            badge={CAT_LABELS[dblNode.cat] || dblNode.cat}
+            onClose={() => setDblNode(null)}
+          />
+        )}
         {selectedTerm ? (
           <div
             ref={infoPanelRef}

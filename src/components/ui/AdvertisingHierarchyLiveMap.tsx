@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import { CAT_LABELS, getCatColors } from "@/lib/maps/categories";
+import DetailModal from "@/components/ui/DetailModal";
 import { NODE_W as RH_NODE_W, NODE_H as RH_NODE_H, edgePoint as rhEdgePoint } from "@/lib/maps/canvas";
 
 const RH_CAT_LABELS = CAT_LABELS;
@@ -13,9 +14,22 @@ export default function AdvertisingHierarchyLiveMap() {
   const [loading, setLoading] = useState(true);
   const [hovered, setHovered] = useState<string | null>(null);
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [dblNode, setDblNode] = useState<any>(null);
   const [zoom, setZoom] = useState(1);
   const canvasAreaRef = useRef<HTMLDivElement>(null);
   const infoPanelRef = useRef<HTMLDivElement>(null);
+  const lastTapRef = useRef<{ id: string | null; time: number }>({ id: null, time: 0 });
+  const handleDoubleTap = (e: React.TouchEvent, term: any) => {
+    const now = Date.now();
+    const last = lastTapRef.current;
+    if (last.id === term.id && now - last.time < 300) {
+      e.preventDefault();
+      lastTapRef.current = { id: null, time: 0 };
+      setDblNode(term);
+    } else {
+      lastTapRef.current = { id: term.id, time: now };
+    }
+  };
 
   // States for Panning
   const [isPanning, setIsPanning] = useState(false);
@@ -237,6 +251,8 @@ export default function AdvertisingHierarchyLiveMap() {
                       e.stopPropagation(); // Avoid triggering pan
                       setSelectedId(prev => prev === term.id ? null : term.id);
                     }}
+                    onDoubleClick={(e) => { e.stopPropagation(); setDblNode(term); }}
+                    onTouchEnd={(e) => handleDoubleTap(e, term)}
                     style={{
                       position: 'absolute',
                       left: term.x - RH_NODE_W / 2,
@@ -296,6 +312,16 @@ export default function AdvertisingHierarchyLiveMap() {
           </div>
         </div>
 
+        {dblNode && (
+          <DetailModal
+            title={dblNode.abbr}
+            subtitle={dblNode.sub}
+            description={dblNode.desc}
+            accentColor={getCatColors(dblNode.cat).stripe}
+            badge={RH_CAT_LABELS[dblNode.cat] || dblNode.cat}
+            onClose={() => setDblNode(null)}
+          />
+        )}
         {/* Info Panel — below map */}
         {selectedTerm ? (
           <div
