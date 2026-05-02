@@ -1770,7 +1770,7 @@ function YzHaritasi() {
       .then(data => {
         if (data && !Array.isArray(data) && data.terms) {
           setTerms(data.terms)
-          setConnections(data.connections || [])
+          setConnections(Array.isArray(data.connections) ? data.connections : AI_CONNECTIONS)
           if (data.metadata?.w) setCanvasDim({ w: data.metadata.w, h: data.metadata.h || 600 })
         } else if (data && Array.isArray(data) && data.length > 0) {
           setTerms(data)
@@ -2040,10 +2040,10 @@ function YzHaritasi() {
             <svg width={canvasDim.w} height={canvasDim.h} style={{ position: 'absolute', top: 0, left: 0, pointerEvents: 'none', overflow: 'visible', zIndex: 5 }}>
               <defs>
                 <marker id="ai-arr" markerWidth="7" markerHeight="7" refX="7" refY="3.5" orient="auto">
-                  <path d="M0,0 L0,7 L7,3.5 z" fill="#ccc" />
+                  <path d="M0,0 L0,7 L7,3.5 z" fill="#bbb" />
                 </marker>
                 <marker id="ai-arr-hi" markerWidth="7" markerHeight="7" refX="7" refY="3.5" orient="auto">
-                  <path d="M0,0 L0,7 L7,3.5 z" fill="#777" />
+                  <path d="M0,0 L0,7 L7,3.5 z" fill="#555" />
                 </marker>
               </defs>
             {connections.map((conn, i) => {
@@ -2057,7 +2057,7 @@ function YzHaritasi() {
                   <line
                     key={i}
                     x1={p1.x} y1={p1.y} x2={p2.x} y2={p2.y}
-                    stroke={isActive ? '#777' : '#ddd'}
+                    stroke={isActive ? '#555' : '#bbb'}
                     strokeWidth={isActive ? 2 : 1.5}
                     markerEnd={isActive ? 'url(#ai-arr-hi)' : 'url(#ai-arr)'}
                   />
