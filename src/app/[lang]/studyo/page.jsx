@@ -430,8 +430,11 @@ function GtmZihinHaritasi() {
           >
             <span style={{ fontSize: 16, fontWeight: 'bold' }}>+</span> Yeni Kutu Ekle
           </button>
+          
         </div>
       </div>
+
+
 
       {/* Legenda */}
       <div style={{ display: 'flex', gap: 16, marginBottom: '1rem', flexWrap: 'wrap' }}>
