@@ -52,15 +52,17 @@ export default function PaketCard({
   paket,
   lang = "tr",
   variant = "list",
+  basePath = "paketler",
 }: {
   paket: Paket;
   lang?: string;
   variant?: "list" | "strip";
+  basePath?: string;
 }) {
   const accent = CAT_COLORS[paket.category || "genel"] || CAT_COLORS.genel;
   const setup = formatPrice(paket.pricing?.setup);
   const monthly = formatPrice(paket.pricing?.monthly);
-  const href = `/${lang}/paketler/${paket.slug}`;
+  const href = `/${lang}/${basePath}/${paket.slug}`;
 
   return (
     <Link

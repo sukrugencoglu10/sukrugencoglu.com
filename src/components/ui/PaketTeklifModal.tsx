@@ -8,6 +8,8 @@ type Props = {
   selectedAddons: string[];
   open: boolean;
   onClose: () => void;
+  endpoint?: string;
+  title?: string;
 };
 
 export default function PaketTeklifModal({
@@ -15,6 +17,8 @@ export default function PaketTeklifModal({
   selectedAddons,
   open,
   onClose,
+  endpoint = "/api/paket-teklif",
+  title = "Teklif İste",
 }: Props) {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -52,7 +56,7 @@ export default function PaketTeklifModal({
     }
     setLoading(true);
     try {
-      const res = await fetch("/api/paket-teklif", {
+      const res = await fetch(endpoint, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -87,7 +91,7 @@ export default function PaketTeklifModal({
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center justify-between p-5 border-b border-border">
-          <h3 className="text-lg font-bold text-ink">Teklif İste</h3>
+          <h3 className="text-lg font-bold text-ink">{title}</h3>
           <button
             onClick={onClose}
             className="w-8 h-8 rounded-full hover:bg-surface-secondary text-ink-secondary text-xl flex items-center justify-center"
