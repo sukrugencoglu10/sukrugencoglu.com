@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import ServicesSection from "@/components/sections/ServicesSection";
 import { BreadcrumbLd, ServiceListLd } from "@/lib/seo/JsonLd";
 import { siteConfig } from "@/lib/seo/config";
@@ -45,6 +46,29 @@ export default function HizmetlerPage() {
       <BreadcrumbLd items={breadcrumbs} />
       <ServiceListLd items={servicesTR} lang="tr" />
       <ServicesSection />
+      <section className="bg-surface-secondary/30 border-t border-border py-12 sm:py-16">
+        <div className="container-site">
+          <div className="max-w-3xl mx-auto bg-white rounded-2xl border border-border p-6 sm:p-8 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-5">
+            <div>
+              <div className="text-[11px] font-bold tracking-widest uppercase text-orange mb-1">
+                Hazır Paketler
+              </div>
+              <h3 className="text-lg sm:text-xl font-extrabold text-ink leading-snug mb-1">
+                Sabit kapsam, şeffaf fiyat
+              </h3>
+              <p className="text-sm text-ink-secondary">
+                Veri analizi, raporlama ve takip altyapısı için ürünleştirilmiş paketler.
+              </p>
+            </div>
+            <Link
+              href="/tr/paketler"
+              className="inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl bg-ink text-white text-sm font-semibold hover:bg-orange transition shrink-0"
+            >
+              Paketlere göz at →
+            </Link>
+          </div>
+        </div>
+      </section>
     </>
   );
 }

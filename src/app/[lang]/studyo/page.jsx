@@ -7,6 +7,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { createPortal } from 'react-dom'
 import BlogWizard from '@/components/studyo/BlogWizard'
+import PaketWizard from '@/components/studyo/PaketWizard'
 import DetailModal from '@/components/ui/DetailModal'
 // ─── Login ekranı ─────────────────────────────────────────────────────────────
 function LoginScreen({ onSuccess }) {
@@ -6202,6 +6203,164 @@ function BlogYazilari() {
   )
 }
 
+// ─── Paketler ─────────────────────────────────────────────────────────────────
+function Paketler() {
+  const [items, setItems] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [saving, setSaving] = useState(false)
+  const [activePaket, setActivePaket] = useState(null) // null → liste, obje → sihirbaz
+
+  useEffect(() => {
+    fetch('/api/paketler')
+      .then(r => r.json())
+      .then(data => { if (Array.isArray(data)) setItems(data) })
+      .catch(() => {})
+      .finally(() => setLoading(false))
+  }, [])
+
+  const persist = async (next) => {
+    setSaving(true)
+    try {
+      const res = await fetch('/api/paketler', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(next),
+      })
+      const result = await res.json()
+      if (!res.ok || !result.ok) {
+        alert('Kaydedilemedi: ' + (result.error || 'Bilinmeyen hata'))
+        return false
+      }
+      return true
+    } catch (err) {
+      alert('Hata: ' + err.message)
+      return false
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  const handleNew = () => setActivePaket({})
+  const handleEdit = (p) => setActivePaket(p)
+  const handleDelete = async (id) => {
+    if (!confirm('Bu paketi silmek istediğinize emin misiniz?')) return
+    const updated = items.filter(p => p.id !== id)
+    if (await persist(updated)) setItems(updated)
+  }
+  const handleWizardSave = async (final) => {
+    const exists = items.some(p => p.id === final.id)
+    const updated = exists
+      ? items.map(p => p.id === final.id ? final : p)
+      : [final, ...items]
+    if (await persist(updated)) {
+      setItems(updated)
+      setActivePaket(null)
+    }
+  }
+
+  const CAT_COLORS = { veri: '#2563eb', reklam: '#EF4444', web: '#1D9E75', otomasyon: '#8B5CF6', genel: '#6B7280' }
+
+  if (loading) return <div style={{ padding: '2rem', color: '#888', fontSize: 14 }}>Yükleniyor...</div>
+
+  if (activePaket !== null) {
+    return (
+      <div style={{ padding: '2rem 1.25rem', fontFamily: 'inherit' }}>
+        <div style={{ marginBottom: 14, display: 'flex', alignItems: 'center', gap: 10 }}>
+          <button
+            onClick={() => { if (confirm('Değişiklikler kaybolabilir. Listeye dönülsün mü?')) setActivePaket(null) }}
+            style={{ padding: '6px 12px', background: '#fff', border: '1px solid #ddd', borderRadius: 6, cursor: 'pointer', fontSize: 12, color: '#555' }}>
+            ← Paket Listesi
+          </button>
+          {saving && <span style={{ fontSize: 11, color: '#888' }}>Kaydediliyor...</span>}
+        </div>
+        <PaketWizard
+          initialPaket={activePaket.id ? activePaket : undefined}
+          onCancel={() => setActivePaket(null)}
+          onSave={handleWizardSave}
+        />
+      </div>
+    )
+  }
+
+  return (
+    <div style={{ padding: '2rem 1.25rem', fontFamily: 'inherit' }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1.5rem', flexWrap: 'wrap', gap: 10 }}>
+        <div>
+          <h1 style={{ fontSize: 22, fontWeight: 500, margin: 0 }}>Paketler</h1>
+          <p style={{ fontSize: 12, color: '#888', marginTop: 4 }}>
+            {items.length} paket · {items.filter(p => p.published).length} yayında · {items.filter(p => p.featured).length} ana sayfada
+          </p>
+        </div>
+        <button
+          onClick={handleNew}
+          style={{ background: '#111', color: '#fff', border: 'none', borderRadius: 8, padding: '8px 18px', fontSize: 13, fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6 }}>
+          <span style={{ fontSize: 16, fontWeight: 'bold' }}>+</span> Yeni Paket
+        </button>
+      </div>
+
+      {items.length === 0 ? (
+        <div style={{ padding: '4rem 2rem', textAlign: 'center', color: '#bbb', fontSize: 14, background: '#fafafa', borderRadius: 12, border: '1px dashed #e0e0e0' }}>
+          Henüz paket yok. Yeni bir paket oluştur — başlık, fiyat ve add-on'ları belirle, yayınla.
+        </div>
+      ) : (
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: 14 }}>
+          {items.map(p => {
+            const accent = CAT_COLORS[p.category] || '#6B7280'
+            return (
+              <div
+                key={p.id}
+                onClick={() => handleEdit(p)}
+                style={{
+                  background: '#fff', border: '1px solid #eee', borderRadius: 10, overflow: 'hidden',
+                  cursor: 'pointer', transition: 'all 0.15s', position: 'relative',
+                }}
+                onMouseEnter={e => { e.currentTarget.style.borderColor = accent; e.currentTarget.style.boxShadow = '0 4px 14px rgba(0,0,0,0.06)' }}
+                onMouseLeave={e => { e.currentTarget.style.borderColor = '#eee'; e.currentTarget.style.boxShadow = 'none' }}
+              >
+                {p.cover ? (
+                  <img src={p.cover} alt="" style={{ width: '100%', height: 110, objectFit: 'cover', display: 'block' }} />
+                ) : (
+                  <div style={{ height: 80, background: accent + '22', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 32 }}>
+                    📦
+                  </div>
+                )}
+                <div style={{ padding: '12px 14px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 6 }}>
+                    <span style={{ fontSize: 9, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: accent }}>
+                      {p.category}
+                    </span>
+                    {p.featured && (
+                      <span style={{ fontSize: 9, padding: '1px 6px', borderRadius: 10, background: 'rgba(255,95,0,0.1)', color: '#ff5f00', fontWeight: 700 }}>
+                        ★ ANA
+                      </span>
+                    )}
+                    <span style={{ fontSize: 10, padding: '1px 7px', borderRadius: 10, background: p.published ? 'rgba(29,158,117,0.1)' : '#f5f5f5', color: p.published ? '#1D9E75' : '#999', fontWeight: 600, marginLeft: 'auto' }}>
+                      {p.published ? 'Yayında' : 'Taslak'}
+                    </span>
+                  </div>
+                  <div style={{ fontSize: 14, fontWeight: 700, color: '#111', lineHeight: 1.3, marginBottom: 6 }}>
+                    {p.title || '(başlıksız)'}
+                  </div>
+                  <div style={{ fontSize: 11, color: '#aaa', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <span>
+                      {p.pricing?.setup?.amount > 0 ? `${Number(p.pricing.setup.amount).toLocaleString('tr-TR')} ${p.pricing.setup.currency || 'TRY'}` : 'Fiyatsız'}
+                    </span>
+                    <button
+                      onClick={e => { e.stopPropagation(); handleDelete(p.id) }}
+                      style={{ background: 'none', border: 'none', color: '#ff4d4f', cursor: 'pointer', fontSize: 11, padding: '2px 6px' }}>
+                      Sil
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )
+          })}
+        </div>
+      )}
+    </div>
+  )
+}
+
 // ─── Araç listesi ─────────────────────────────────────────────────────────────
 // ─── ANA Blok Zihin Haritası ──────────────────────────────────────────────────
 function AnaHaritasi() {
@@ -6946,6 +7105,12 @@ const TOOLS = [
     label: 'Blog Yazıları',
     icon: '✍️',
     component: BlogYazilari,
+  },
+  {
+    id: 'paketler',
+    label: 'Paketler',
+    icon: '📦',
+    component: Paketler,
   },
 ]
 
