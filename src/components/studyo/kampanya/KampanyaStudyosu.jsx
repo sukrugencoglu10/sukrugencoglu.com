@@ -25,7 +25,7 @@ import AdviceBadge from './AdviceBadge'
 const ADIMLAR = [
   { no: 1, label: 'Hedef' },
   { no: 2, label: 'Tür' },
-  { no: 3, label: 'Kampanya Ayarları' },
+  { no: 3, label: 'Detaylar' },
 ]
 
 export default function KampanyaStudyosu() {

@@ -125,7 +125,7 @@ export const TEKLIF_STRATEJILERI = [
 // Aşama 3 alt-basamakları (3 sub-step)
 export const ASAMA3_ALT_ADIMLAR = [
   { no: 1, label: 'Teklif verme' },
-  { no: 2, label: '—' },
+  { no: 2, label: 'Kampanya Ayarları' },
   { no: 3, label: '—' },
 ]
 
