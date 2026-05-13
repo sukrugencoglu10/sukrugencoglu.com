@@ -140,3 +140,32 @@ SADECE geçerli JSON dön, başka metin yok:
 "oneri" alanı kısa ve eyleme yönelik olsun (örn. "Kapatın", "Türkiye + 20 mil yarıçap", "Sadece Türkçe", "Hayır", "Gözlem modunda 3-5 ilgi alanı segmenti", "Optimize et + sürekli yayın").
 "gerekce" alanı sektöre özel kısa bir sebep verin.`
 }
+
+// Aşama 3.4.1: Sektörle alakalı anahtar kelime önerileri
+// Google Ads anahtar kelimeleri MAX 80 karakter olabilir → AI'a hatırlatılır
+export function anahtarKelimePrompt(sektor, secilenHedefId, secilenTurId) {
+  const hedef = HEDEFLER.find(h => h.id === secilenHedefId)
+  const tur = TURLER.find(t => t.id === secilenTurId)
+
+  return `Sen deneyimli bir Google Ads SEM uzmanısın. Şu yapılandırmaya göre 15 anahtar kelime öner:
+- Sektör: ${sektor}
+- Hedef: ${hedef?.label}
+- Kampanya türü: ${tur?.label}
+
+KRİTİK KURAL: Google Ads her bir anahtar kelimeyi MAX 80 KARAKTER kabul eder. Hiçbir önerin 80 karakteri geçmesin. Çoğu kelime 15-50 karakter arasında olmalı.
+
+15 öneriyi 3 kategoriye dağıt:
+- "islemsel": Satın alma niyeti yüksek (örn. "fiyat", "satın al", "online sipariş")
+- "bilgilendirici": Araştırma niyetli (örn. "nasıl yapılır", "rehber", "karşılaştırma")
+- "marka-yan": Yan ilgi alanları, sektörle ilişkili genel terimler
+
+Her kategoriden 5 kelime ver. Türkçe yaz. Tek kelime de olabilir, 2-5 kelimelik fraz da.
+
+SADECE geçerli JSON dön, başka metin yok:
+{
+  "kelimeler": [
+    { "kelime": "...", "kategori": "islemsel" | "bilgilendirici" | "marka-yan", "neden": "1 cümlelik kısa not" },
+    ... (toplam 15 adet)
+  ]
+}`
+}

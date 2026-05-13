@@ -11,12 +11,15 @@ import {
   TEKLIF_STRATEJILERI,
   ASAMA3_ALT_ADIMLAR,
   KAMPANYA_AYARI_BASLIKLARI,
+  REKLAM_ALT_ADIMLAR,
+  ANAHTAR_KELIME_MAX_KARAKTER,
 } from '@/lib/kampanya/constants'
 import {
   hedefAnalizPrompt,
   turAnalizPrompt,
   teklifAnalizPrompt,
   ayarlarAnalizPrompt,
+  anahtarKelimePrompt,
 } from '@/lib/kampanya/prompts'
 import { callClaudeJson } from '@/lib/kampanya/api'
 import Stepper from './Stepper'
@@ -59,6 +62,13 @@ export default function KampanyaStudyosu() {
   const [ayarAnalizleri, setAyarAnalizleri] = useState({})
   const [ayarLoading, setAyarLoading] = useState(false)
   const [ayarHata, setAyarHata] = useState(null)
+
+  // Aşama 3.4 — Reklam Oluştur (iç içe alt-adımlı)
+  const [reklamAltAdim, setReklamAltAdim] = useState(1)
+  const [anahtarKelimeler, setAnahtarKelimeler] = useState([])
+  const [secilenKelimeler, setSecilenKelimeler] = useState(new Set())
+  const [kelimeLoading, setKelimeLoading] = useState(false)
+  const [kelimeHata, setKelimeHata] = useState(null)
 
   const analizEtHedefler = async () => {
     if (!sektor.trim()) return
@@ -147,6 +157,31 @@ export default function KampanyaStudyosu() {
 
   const ayarlarVeIlerle = () => {
     setAsama3AltAdim(3)
+  }
+
+  const analizEtKelimeler = async (hedefId, turId) => {
+    setKelimeLoading(true)
+    setKelimeHata(null)
+    setAnahtarKelimeler([])
+    setSecilenKelimeler(new Set())
+    try {
+      const sonuc = await callClaudeJson(
+        anahtarKelimePrompt(sektor.trim(), hedefId, turId)
+      )
+      setAnahtarKelimeler(sonuc.kelimeler || [])
+    } catch (e) {
+      setKelimeHata(e.message || 'Analiz başarısız')
+    }
+    setKelimeLoading(false)
+  }
+
+  const toggleKelime = (kelime) => {
+    setSecilenKelimeler((prev) => {
+      const next = new Set(prev)
+      if (next.has(kelime)) next.delete(kelime)
+      else next.add(kelime)
+      return next
+    })
   }
 
   const geriDon = (adim) => setAktifAdim(adim)
@@ -501,29 +536,224 @@ export default function KampanyaStudyosu() {
             </div>
           )}
 
-          {/* Sub-step 4 placeholder */}
+          {/* Sub-step 4: Reklam Oluştur (iç içe alt-adımlı) */}
           {asama3AltAdim === 4 && (
-            <div
-              style={{
-                background: '#fff',
-                border: '0.5px dashed #d0d0d0',
-                borderRadius: 14,
-                padding: '3rem 1.5rem',
-                textAlign: 'center',
-              }}
-            >
-              <div style={{ fontSize: 16, fontWeight: 500, color: '#111', marginBottom: 8 }}>
-                Adım 4 yakında
+            <div>
+              <div style={{ marginBottom: 12 }}>
+                <h2 style={{ fontSize: 16, fontWeight: 500, margin: 0 }}>Reklam Oluştur</h2>
+                <p style={{ fontSize: 12, color: '#888', marginTop: 4 }}>
+                  Reklam grubunu yapılandır · Adım {reklamAltAdim}/{REKLAM_ALT_ADIMLAR.length}
+                </p>
               </div>
-              <p style={{ fontSize: 13, color: '#888', margin: 0 }}>
-                Bu ekran için içerik henüz tanımlanmadı — ekranı paylaştığında ekleyeceğim.
-              </p>
-              <button
-                onClick={() => setAsama3AltAdim(3)}
-                style={{ ...secondaryBtn, marginTop: 16 }}
-              >
-                ← AI Max&apos;a dön
-              </button>
+
+              {/* İç stepper */}
+              <div style={{
+                display: 'flex',
+                gap: 4,
+                marginBottom: '1rem',
+                padding: '6px 10px',
+                background: '#fff',
+                border: '0.5px solid #eee',
+                borderRadius: 10,
+                overflowX: 'auto',
+              }}>
+                {REKLAM_ALT_ADIMLAR.map((alt, i) => {
+                  const aktif = alt.no === reklamAltAdim
+                  const tamam = alt.no < reklamAltAdim
+                  return (
+                    <div key={alt.no} style={{ display: 'flex', alignItems: 'center', flexShrink: 0 }}>
+                      <button
+                        onClick={tamam ? () => setReklamAltAdim(alt.no) : undefined}
+                        disabled={!aktif && !tamam}
+                        style={{
+                          padding: '3px 9px',
+                          borderRadius: 12,
+                          border: '0.5px solid',
+                          borderColor: aktif ? '#111' : tamam ? '#1D9E75' : '#e0e0e0',
+                          background: aktif ? '#111' : tamam ? '#E1F5EE' : 'transparent',
+                          color: aktif ? '#fff' : tamam ? '#0F6E56' : '#aaa',
+                          fontSize: 11,
+                          fontFamily: 'inherit',
+                          cursor: tamam ? 'pointer' : 'default',
+                          whiteSpace: 'nowrap',
+                        }}
+                      >
+                        {tamam ? '✓ ' : `${alt.no}.`} {alt.label}
+                      </button>
+                      {i < REKLAM_ALT_ADIMLAR.length - 1 && (
+                        <span style={{ color: '#ccc', fontSize: 10, padding: '0 3px' }}>›</span>
+                      )}
+                    </div>
+                  )
+                })}
+              </div>
+
+              {/* 3.4.1 Anahtar Kelimeler */}
+              {reklamAltAdim === 1 && (
+                <div>
+                  <div style={{ marginBottom: 12, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
+                    <div>
+                      <h3 style={{ fontSize: 14, fontWeight: 500, margin: 0, color: '#111' }}>
+                        Sektörle alakalı anahtar kelimeler
+                      </h3>
+                      <p style={{ fontSize: 12, color: '#888', marginTop: 2 }}>
+                        Her kelimenin karakter sayısı gösterilir · Google Ads limiti: <strong>{ANAHTAR_KELIME_MAX_KARAKTER}</strong> karakter
+                      </p>
+                    </div>
+                    <button
+                      onClick={() => analizEtKelimeler(secilenHedef, secilenTur)}
+                      disabled={kelimeLoading}
+                      style={{
+                        padding: '7px 14px',
+                        background: kelimeLoading ? '#ddd' : '#111',
+                        color: '#fff',
+                        border: 'none',
+                        borderRadius: 8,
+                        fontSize: 12,
+                        cursor: kelimeLoading ? 'not-allowed' : 'pointer',
+                        fontFamily: 'inherit',
+                      }}
+                    >
+                      {kelimeLoading
+                        ? 'Üretiliyor...'
+                        : anahtarKelimeler.length > 0
+                        ? 'Yeniden üret'
+                        : 'Anahtar kelime üret'}
+                    </button>
+                  </div>
+
+                  {kelimeHata && <div style={hataKutusu}>{kelimeHata}</div>}
+
+                  {anahtarKelimeler.length === 0 && !kelimeLoading && (
+                    <div style={ipucuKutusu}>
+                      ↑ &quot;Anahtar kelime üret&quot; butonuna tıkla. AI sektörüne ({sektor || '—'}) göre 15 öneri çıkaracak — her birinin karakter sayısı 80 limitine göre renklendirilecek.
+                    </div>
+                  )}
+
+                  {anahtarKelimeler.length > 0 && (
+                    <div>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginBottom: '1rem' }}>
+                        {['islemsel', 'bilgilendirici', 'marka-yan'].map((kat) => {
+                          const grup = anahtarKelimeler.filter((k) => k.kategori === kat)
+                          if (grup.length === 0) return null
+                          const baslik = {
+                            'islemsel': 'İşlemsel (satın alma niyetli)',
+                            'bilgilendirici': 'Bilgilendirici (araştırma niyetli)',
+                            'marka-yan': 'Marka / yan ilgi alanları',
+                          }[kat]
+                          return (
+                            <div key={kat} style={{ marginBottom: 8 }}>
+                              <div style={{ fontSize: 11, color: '#888', fontWeight: 600, letterSpacing: '0.04em', marginBottom: 6, textTransform: 'uppercase' }}>
+                                {baslik}
+                              </div>
+                              <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                                {grup.map((k, i) => {
+                                  const len = k.kelime.length
+                                  const limitAsildi = len > ANAHTAR_KELIME_MAX_KARAKTER
+                                  const yakin = len > ANAHTAR_KELIME_MAX_KARAKTER * 0.75
+                                  const sayacRengi = limitAsildi
+                                    ? { bg: '#FEE2E2', border: '#F87171', color: '#991B1B' }
+                                    : yakin
+                                    ? { bg: '#FEF3C7', border: '#F59E0B', color: '#92400E' }
+                                    : { bg: '#E1F5EE', border: '#1D9E75', color: '#0F6E56' }
+                                  const isSelected = secilenKelimeler.has(k.kelime)
+                                  return (
+                                    <button
+                                      key={`${kat}-${i}`}
+                                      onClick={() => toggleKelime(k.kelime)}
+                                      style={{
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        gap: 10,
+                                        padding: '8px 12px',
+                                        background: isSelected ? '#111' : '#fff',
+                                        color: isSelected ? '#fff' : '#111',
+                                        border: '0.5px solid',
+                                        borderColor: isSelected ? '#111' : '#e8e8e8',
+                                        borderRadius: 8,
+                                        cursor: 'pointer',
+                                        fontFamily: 'inherit',
+                                        fontSize: 13,
+                                        textAlign: 'left',
+                                        width: '100%',
+                                      }}
+                                    >
+                                      <span style={{ flex: 1, fontWeight: 500 }}>{k.kelime}</span>
+                                      <span
+                                        style={{
+                                          fontSize: 10,
+                                          fontWeight: 600,
+                                          padding: '2px 7px',
+                                          borderRadius: 10,
+                                          background: isSelected ? '#fff' : sayacRengi.bg,
+                                          border: `0.5px solid ${sayacRengi.border}`,
+                                          color: isSelected ? sayacRengi.color : sayacRengi.color,
+                                          whiteSpace: 'nowrap',
+                                          fontFamily: 'monospace',
+                                        }}
+                                        title={limitAsildi ? 'Limit aşıldı!' : `${len}/${ANAHTAR_KELIME_MAX_KARAKTER} karakter`}
+                                      >
+                                        {len}/{ANAHTAR_KELIME_MAX_KARAKTER}
+                                      </span>
+                                      {k.neden && (
+                                        <span style={{
+                                          fontSize: 11,
+                                          color: isSelected ? '#bbb' : '#888',
+                                          fontStyle: 'italic',
+                                          maxWidth: 240,
+                                          overflow: 'hidden',
+                                          textOverflow: 'ellipsis',
+                                          whiteSpace: 'nowrap',
+                                        }} title={k.neden}>
+                                          {k.neden}
+                                        </span>
+                                      )}
+                                    </button>
+                                  )
+                                })}
+                              </div>
+                            </div>
+                          )
+                        })}
+                      </div>
+
+                      <div style={{ fontSize: 12, color: '#666', padding: '8px 12px', background: '#f7f7f5', borderRadius: 8, marginBottom: 12 }}>
+                        Seçili: <strong>{secilenKelimeler.size}</strong> kelime · İstediğine tıklayıp seç/kaldır
+                      </div>
+                    </div>
+                  )}
+
+                  <div style={altBar}>
+                    <button onClick={() => setAsama3AltAdim(3)} style={secondaryBtn}>← AI Max</button>
+                    <button onClick={() => setReklamAltAdim(2)} style={primaryBtn(false)}>
+                      Sonraki →
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {/* 3.4.2 placeholder */}
+              {reklamAltAdim === 2 && (
+                <div
+                  style={{
+                    background: '#fff',
+                    border: '0.5px dashed #d0d0d0',
+                    borderRadius: 14,
+                    padding: '3rem 1.5rem',
+                    textAlign: 'center',
+                  }}
+                >
+                  <div style={{ fontSize: 16, fontWeight: 500, color: '#111', marginBottom: 8 }}>
+                    Reklam Oluştur — Adım 2 yakında
+                  </div>
+                  <p style={{ fontSize: 13, color: '#888', margin: 0 }}>
+                    Bu ekran için içerik bir sonraki turda eklenecek.
+                  </p>
+                  <button onClick={() => setReklamAltAdim(1)} style={{ ...secondaryBtn, marginTop: 16 }}>
+                    ← Anahtar Kelimeler&apos;e dön
+                  </button>
+                </div>
+              )}
             </div>
           )}
         </section>

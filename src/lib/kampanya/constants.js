@@ -127,8 +127,17 @@ export const ASAMA3_ALT_ADIMLAR = [
   { no: 1, label: 'Teklif verme' },
   { no: 2, label: 'Kampanya Ayarları' },
   { no: 3, label: 'AI Max' },
-  { no: 4, label: '—' },
+  { no: 4, label: 'Reklam Oluştur' },
 ]
+
+// 3.4 — Reklam Oluştur alt-adımları
+export const REKLAM_ALT_ADIMLAR = [
+  { no: 1, label: 'Anahtar Kelimeler' },
+  { no: 2, label: '—' },
+]
+
+// Google Ads anahtar kelime karakter limiti
+export const ANAHTAR_KELIME_MAX_KARAKTER = 80
 
 // Aşama 3.2 — Kampanya Ayarları başlıkları (Google Ads ekranındaki bölümler)
 export const KAMPANYA_AYARI_BASLIKLARI = [
