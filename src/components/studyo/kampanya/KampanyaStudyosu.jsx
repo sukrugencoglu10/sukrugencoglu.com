@@ -13,6 +13,7 @@ import {
   KAMPANYA_AYARI_BASLIKLARI,
   REKLAM_ALT_ADIMLAR,
   ANAHTAR_KELIME_MAX_KARAKTER,
+  BASLIK_MAX_KARAKTER,
 } from '@/lib/kampanya/constants'
 import {
   hedefAnalizPrompt,
@@ -20,6 +21,7 @@ import {
   teklifAnalizPrompt,
   ayarlarAnalizPrompt,
   anahtarKelimePrompt,
+  baslikPrompt,
 } from '@/lib/kampanya/prompts'
 import { callClaudeJson } from '@/lib/kampanya/api'
 import Stepper from './Stepper'
@@ -69,6 +71,12 @@ export default function KampanyaStudyosu() {
   const [secilenKelimeler, setSecilenKelimeler] = useState(new Set())
   const [kelimeLoading, setKelimeLoading] = useState(false)
   const [kelimeHata, setKelimeHata] = useState(null)
+
+  // 3.4.2 — Başlıklar
+  const [basliklar, setBasliklar] = useState([])
+  const [secilenBasliklar, setSecilenBasliklar] = useState(new Set())
+  const [baslikLoading, setBaslikLoading] = useState(false)
+  const [baslikHata, setBaslikHata] = useState(null)
 
   const analizEtHedefler = async () => {
     if (!sektor.trim()) return
@@ -180,6 +188,31 @@ export default function KampanyaStudyosu() {
       const next = new Set(prev)
       if (next.has(kelime)) next.delete(kelime)
       else next.add(kelime)
+      return next
+    })
+  }
+
+  const analizEtBasliklar = async (hedefId, turId) => {
+    setBaslikLoading(true)
+    setBaslikHata(null)
+    setBasliklar([])
+    setSecilenBasliklar(new Set())
+    try {
+      const sonuc = await callClaudeJson(
+        baslikPrompt(sektor.trim(), hedefId, turId)
+      )
+      setBasliklar(sonuc.basliklar || [])
+    } catch (e) {
+      setBaslikHata(e.message || 'Analiz başarısız')
+    }
+    setBaslikLoading(false)
+  }
+
+  const toggleBaslik = (baslik) => {
+    setSecilenBasliklar((prev) => {
+      const next = new Set(prev)
+      if (next.has(baslik)) next.delete(baslik)
+      else next.add(baslik)
       return next
     })
   }
@@ -732,26 +765,147 @@ export default function KampanyaStudyosu() {
                 </div>
               )}
 
-              {/* 3.4.2 placeholder */}
+              {/* 3.4.2 Başlıklar */}
               {reklamAltAdim === 2 && (
-                <div
-                  style={{
-                    background: '#fff',
-                    border: '0.5px dashed #d0d0d0',
-                    borderRadius: 14,
-                    padding: '3rem 1.5rem',
-                    textAlign: 'center',
-                  }}
-                >
-                  <div style={{ fontSize: 16, fontWeight: 500, color: '#111', marginBottom: 8 }}>
-                    Reklam Oluştur — Adım 2 yakında
+                <div>
+                  <div style={{ marginBottom: 12, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
+                    <div>
+                      <h3 style={{ fontSize: 14, fontWeight: 500, margin: 0, color: '#111' }}>
+                        Reklam başlıkları
+                      </h3>
+                      <p style={{ fontSize: 12, color: '#888', marginTop: 2 }}>
+                        15 başlık önerisi · Google Ads başlık limiti: <strong>{BASLIK_MAX_KARAKTER}</strong> karakter
+                      </p>
+                    </div>
+                    <button
+                      onClick={() => analizEtBasliklar(secilenHedef, secilenTur)}
+                      disabled={baslikLoading}
+                      style={{
+                        padding: '7px 14px',
+                        background: baslikLoading ? '#ddd' : '#111',
+                        color: '#fff',
+                        border: 'none',
+                        borderRadius: 8,
+                        fontSize: 12,
+                        cursor: baslikLoading ? 'not-allowed' : 'pointer',
+                        fontFamily: 'inherit',
+                      }}
+                    >
+                      {baslikLoading
+                        ? 'Üretiliyor...'
+                        : basliklar.length > 0
+                        ? 'Yeniden üret'
+                        : 'Başlık üret'}
+                    </button>
                   </div>
-                  <p style={{ fontSize: 13, color: '#888', margin: 0 }}>
-                    Bu ekran için içerik bir sonraki turda eklenecek.
-                  </p>
-                  <button onClick={() => setReklamAltAdim(1)} style={{ ...secondaryBtn, marginTop: 16 }}>
-                    ← Anahtar Kelimeler&apos;e dön
-                  </button>
+
+                  {baslikHata && <div style={hataKutusu}>{baslikHata}</div>}
+
+                  {basliklar.length === 0 && !baslikLoading && (
+                    <div style={ipucuKutusu}>
+                      ↑ &quot;Başlık üret&quot; butonuna tıkla. AI sektörüne ({sektor || '—'}) göre 15 başlık çıkaracak — her birinin karakter sayısı 30 limitine göre renklendirilecek.
+                    </div>
+                  )}
+
+                  {basliklar.length > 0 && (
+                    <div>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginBottom: '1rem' }}>
+                        {['fayda', 'cta', 'guven'].map((st) => {
+                          const grup = basliklar.filter((b) => b.stil === st)
+                          if (grup.length === 0) return null
+                          const baslik = {
+                            'fayda': 'Fayda odaklı',
+                            'cta': 'Eyleme çağıran (CTA)',
+                            'guven': 'Güven & sosyal kanıt',
+                          }[st]
+                          return (
+                            <div key={st} style={{ marginBottom: 8 }}>
+                              <div style={{ fontSize: 11, color: '#888', fontWeight: 600, letterSpacing: '0.04em', marginBottom: 6, textTransform: 'uppercase' }}>
+                                {baslik}
+                              </div>
+                              <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                                {grup.map((b, i) => {
+                                  const len = b.baslik.length
+                                  const limitAsildi = len > BASLIK_MAX_KARAKTER
+                                  const yakin = len > BASLIK_MAX_KARAKTER * 0.75
+                                  const sayacRengi = limitAsildi
+                                    ? { bg: '#FEE2E2', border: '#F87171', color: '#991B1B' }
+                                    : yakin
+                                    ? { bg: '#FEF3C7', border: '#F59E0B', color: '#92400E' }
+                                    : { bg: '#E1F5EE', border: '#1D9E75', color: '#0F6E56' }
+                                  const isSelected = secilenBasliklar.has(b.baslik)
+                                  return (
+                                    <button
+                                      key={`${st}-${i}`}
+                                      onClick={() => toggleBaslik(b.baslik)}
+                                      style={{
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        gap: 10,
+                                        padding: '8px 12px',
+                                        background: isSelected ? '#111' : '#fff',
+                                        color: isSelected ? '#fff' : '#111',
+                                        border: '0.5px solid',
+                                        borderColor: isSelected ? '#111' : '#e8e8e8',
+                                        borderRadius: 8,
+                                        cursor: 'pointer',
+                                        fontFamily: 'inherit',
+                                        fontSize: 13,
+                                        textAlign: 'left',
+                                        width: '100%',
+                                      }}
+                                    >
+                                      <span style={{ flex: 1, fontWeight: 500 }}>{b.baslik}</span>
+                                      <span
+                                        style={{
+                                          fontSize: 10,
+                                          fontWeight: 600,
+                                          padding: '2px 7px',
+                                          borderRadius: 10,
+                                          background: isSelected ? '#fff' : sayacRengi.bg,
+                                          border: `0.5px solid ${sayacRengi.border}`,
+                                          color: sayacRengi.color,
+                                          whiteSpace: 'nowrap',
+                                          fontFamily: 'monospace',
+                                        }}
+                                        title={limitAsildi ? 'Limit aşıldı!' : `${len}/${BASLIK_MAX_KARAKTER} karakter`}
+                                      >
+                                        {len}/{BASLIK_MAX_KARAKTER}
+                                      </span>
+                                      {b.neden && (
+                                        <span style={{
+                                          fontSize: 11,
+                                          color: isSelected ? '#bbb' : '#888',
+                                          fontStyle: 'italic',
+                                          maxWidth: 200,
+                                          overflow: 'hidden',
+                                          textOverflow: 'ellipsis',
+                                          whiteSpace: 'nowrap',
+                                        }} title={b.neden}>
+                                          {b.neden}
+                                        </span>
+                                      )}
+                                    </button>
+                                  )
+                                })}
+                              </div>
+                            </div>
+                          )
+                        })}
+                      </div>
+
+                      <div style={{ fontSize: 12, color: '#666', padding: '8px 12px', background: '#f7f7f5', borderRadius: 8, marginBottom: 12 }}>
+                        Seçili: <strong>{secilenBasliklar.size}</strong> başlık · Google Ads&apos;te en az 3, en fazla 15 başlık eklenir
+                      </div>
+                    </div>
+                  )}
+
+                  <div style={altBar}>
+                    <button onClick={() => setReklamAltAdim(1)} style={secondaryBtn}>← Anahtar Kelimeler</button>
+                    <button onClick={() => {}} disabled style={primaryBtn(true)} title="Sonraki ekran henüz tanımlanmadı">
+                      Sonraki →
+                    </button>
+                  </div>
                 </div>
               )}
             </div>

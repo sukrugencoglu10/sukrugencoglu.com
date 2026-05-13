@@ -169,3 +169,31 @@ SADECE geçerli JSON dön, başka metin yok:
   ]
 }`
 }
+
+// Aşama 3.4.2: Reklam başlığı önerileri (Responsive Search Ads — max 30 karakter)
+export function baslikPrompt(sektor, secilenHedefId, secilenTurId) {
+  const hedef = HEDEFLER.find(h => h.id === secilenHedefId)
+  const tur = TURLER.find(t => t.id === secilenTurId)
+
+  return `Sen deneyimli bir Google Ads metin yazarısın. Şu yapılandırmaya göre 15 reklam başlığı (headline) öner:
+- Sektör: ${sektor}
+- Hedef: ${hedef?.label}
+- Kampanya türü: ${tur?.label}
+
+KRİTİK KURAL: Google Ads her bir başlığı MAX 30 KARAKTER kabul eder. Hiçbir başlığın 30 karakteri geçmesin. Çoğu başlık 18-28 karakter arasında olmalı.
+
+15 başlığı 3 stil kategorisine dağıt:
+- "fayda": Müşterinin elde edeceği faydaya odaklı (örn. "Hızlı Teslimat", "Uygun Fiyat")
+- "cta": Eyleme çağıran (örn. "Hemen Sipariş Verin", "Şimdi Keşfet")
+- "guven": Güven ve sosyal kanıt (örn. "10 Yıllık Deneyim", "5★ Müşteri Puanı")
+
+Her stilden 5 başlık ver. Türkçe yaz. Başlıkları cümle değil, dikkat çekici kısa fraz olsun.
+
+SADECE geçerli JSON dön, başka metin yok:
+{
+  "basliklar": [
+    { "baslik": "...", "stil": "fayda" | "cta" | "guven", "neden": "1 cümlelik kısa not" },
+    ... (toplam 15 adet)
+  ]
+}`
+}
