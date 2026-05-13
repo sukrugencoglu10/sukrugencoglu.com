@@ -7211,7 +7211,7 @@ const TOOLS = [
   {
     id: 'kampanya',
     label: 'Kampanya',
-    icon: '🎯',
+    icon: '📣',
     component: KampanyaStudyosu,
   },
   {
