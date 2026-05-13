@@ -1,5 +1,5 @@
 // Claude prompt template'leri — sektör + opsiyonlar → JSON öneri
-import { HEDEFLER, TURLER, TEKLIF_STRATEJILERI } from './constants'
+import { HEDEFLER, TURLER, TEKLIF_STRATEJILERI, KAMPANYA_AYARI_BASLIKLARI } from './constants'
 
 // Aşama 1: Sektöre göre her hedef için uygunluk değerlendirmesi
 export function hedefAnalizPrompt(sektor) {
@@ -103,4 +103,40 @@ SADECE geçerli JSON dön, başka metin yok:
   "gosterim-payi": { "uygunluk": "...", "gerekce": "..." },
   "yeni-musteri": { "oneri": "evet" | "hayir", "gerekce": "1-2 cümle" }
 }`
+}
+
+// Aşama 3.2: Kampanya Ayarları başlıkları için AI önerileri
+export function ayarlarAnalizPrompt(sektor, secilenHedefId, secilenTurId, secilenTeklifId) {
+  const hedef = HEDEFLER.find(h => h.id === secilenHedefId)
+  const tur = TURLER.find(t => t.id === secilenTurId)
+  const teklif = TEKLIF_STRATEJILERI.find(s => s.id === secilenTeklifId)
+
+  return `Sen deneyimli bir Google Ads uzmanısın. Bir kullanıcı şu yapılandırmayı seçti:
+- Sektör: ${sektor}
+- Hedef: ${hedef?.label}
+- Kampanya türü: ${tur?.label}
+- Teklif stratejisi: ${teklif?.label || '—'}
+
+Şimdi "Kampanya Ayarları" ekranındaki her başlık için kısa, somut ve karar verdirici bir öneri yaz. Her başlık için 1-2 kısa cümle yeter.
+
+Başlıklar ve neyi içerdikleri:
+- aglar: "Google Arama Ağı İş Ortakları" (üçüncü taraf siteler) ve "Görüntülü Reklam Ağı genişletmesi" — kalsın mı kapansın mı?
+- konumlar: Coğrafi hedefleme önerisi (tüm ülke / şehir / yarıçap)
+- diller: Hangi dil(ler) seçilmeli
+- ab-siyasi: AB siyasi reklam beyanı (neredeyse her zaman "Hayır")
+- kitle-segmentleri: "Hedefleme" mi "Gözlem" mi · hangi segment kategorileri ekleyelim (örn. "ev hizmetleri", "yakın ilgi: ...")
+- diger: Reklam rotasyonu, başlangıç/bitiş tarihleri, zaman planlaması için kısa not
+
+SADECE geçerli JSON dön, başka metin yok:
+{
+  "aglar": { "oneri": "...", "gerekce": "..." },
+  "konumlar": { "oneri": "...", "gerekce": "..." },
+  "diller": { "oneri": "...", "gerekce": "..." },
+  "ab-siyasi": { "oneri": "...", "gerekce": "..." },
+  "kitle-segmentleri": { "oneri": "...", "gerekce": "..." },
+  "diger": { "oneri": "...", "gerekce": "..." }
+}
+
+"oneri" alanı kısa ve eyleme yönelik olsun (örn. "Kapatın", "Türkiye + 20 mil yarıçap", "Sadece Türkçe", "Hayır", "Gözlem modunda 3-5 ilgi alanı segmenti", "Optimize et + sürekli yayın").
+"gerekce" alanı sektöre özel kısa bir sebep verin.`
 }

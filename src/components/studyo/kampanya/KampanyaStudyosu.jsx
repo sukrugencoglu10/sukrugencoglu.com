@@ -10,11 +10,13 @@ import {
   TURLER,
   TEKLIF_STRATEJILERI,
   ASAMA3_ALT_ADIMLAR,
+  KAMPANYA_AYARI_BASLIKLARI,
 } from '@/lib/kampanya/constants'
 import {
   hedefAnalizPrompt,
   turAnalizPrompt,
   teklifAnalizPrompt,
+  ayarlarAnalizPrompt,
 } from '@/lib/kampanya/prompts'
 import { callClaudeJson } from '@/lib/kampanya/api'
 import Stepper from './Stepper'
@@ -52,6 +54,11 @@ export default function KampanyaStudyosu() {
   const [yeniMusteri, setYeniMusteri] = useState(false)
   const [teklifLoading, setTeklifLoading] = useState(false)
   const [teklifHata, setTeklifHata] = useState(null)
+
+  // Aşama 3.2 — Kampanya Ayarları başlık önerileri
+  const [ayarAnalizleri, setAyarAnalizleri] = useState({})
+  const [ayarLoading, setAyarLoading] = useState(false)
+  const [ayarHata, setAyarHata] = useState(null)
 
   const analizEtHedefler = async () => {
     if (!sektor.trim()) return
@@ -117,9 +124,29 @@ export default function KampanyaStudyosu() {
     analizEtTeklifler(secilenHedef, secilenTur)
   }
 
+  const analizEtAyarlar = async (hedefId, turId, teklifId) => {
+    setAyarLoading(true)
+    setAyarHata(null)
+    setAyarAnalizleri({})
+    try {
+      const sonuc = await callClaudeJson(
+        ayarlarAnalizPrompt(sektor.trim(), hedefId, turId, teklifId)
+      )
+      setAyarAnalizleri(sonuc)
+    } catch (e) {
+      setAyarHata(e.message || 'Analiz başarısız')
+    }
+    setAyarLoading(false)
+  }
+
   const teklifSecVeIlerle = () => {
     if (!secilenTeklif) return
     setAsama3AltAdim(2)
+    analizEtAyarlar(secilenHedef, secilenTur, secilenTeklif)
+  }
+
+  const ayarlarVeIlerle = () => {
+    setAsama3AltAdim(3)
   }
 
   const geriDon = (adim) => setAktifAdim(adim)
@@ -374,8 +401,92 @@ export default function KampanyaStudyosu() {
             </div>
           )}
 
-          {/* Sub-step 2 & 3 placeholders */}
-          {asama3AltAdim >= 2 && (
+          {/* Sub-step 2: Kampanya Ayarları (başlıklar + AI önerileri) */}
+          {asama3AltAdim === 2 && (
+            <div>
+              <div style={{ marginBottom: 12 }}>
+                <h2 style={{ fontSize: 16, fontWeight: 500, margin: 0 }}>Kampanya ayarları</h2>
+                <p style={{ fontSize: 12, color: '#888', marginTop: 4 }}>
+                  Doğru kullanıcılara ulaşmak için başlangıç olarak kampanyanızın temel ayarlarını tanımlayın
+                </p>
+              </div>
+
+              {ayarHata && <div style={hataKutusu}>{ayarHata}</div>}
+
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginBottom: '1.25rem' }}>
+                {KAMPANYA_AYARI_BASLIKLARI.map((b) => {
+                  const an = ayarAnalizleri[b.id]
+                  return (
+                    <div
+                      key={b.id}
+                      style={{
+                        background: '#fff',
+                        border: '0.5px solid #e8e8e8',
+                        borderRadius: 12,
+                        padding: '14px 16px',
+                      }}
+                    >
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, marginBottom: 4 }}>
+                        <div style={{ fontSize: 14, fontWeight: 500, color: '#111' }}>{b.label}</div>
+                        {ayarLoading && (
+                          <span style={{ fontSize: 11, color: '#aaa', fontStyle: 'italic' }}>
+                            analiz ediliyor...
+                          </span>
+                        )}
+                        {!ayarLoading && an?.oneri && (
+                          <span
+                            style={{
+                              fontSize: 11,
+                              fontWeight: 500,
+                              padding: '3px 10px',
+                              borderRadius: 12,
+                              background: '#E1F5EE',
+                              border: '0.5px solid #1D9E75',
+                              color: '#0F6E56',
+                              whiteSpace: 'nowrap',
+                              maxWidth: '60%',
+                              overflow: 'hidden',
+                              textOverflow: 'ellipsis',
+                            }}
+                            title={an.oneri}
+                          >
+                            {an.oneri}
+                          </span>
+                        )}
+                      </div>
+                      <div style={{ fontSize: 12, color: '#888', lineHeight: 1.5, marginBottom: an?.gerekce ? 8 : 0 }}>
+                        {b.aciklama}
+                      </div>
+                      {an?.gerekce && (
+                        <div
+                          style={{
+                            fontSize: 12,
+                            color: '#444',
+                            lineHeight: 1.5,
+                            fontStyle: 'italic',
+                            paddingTop: 8,
+                            borderTop: '0.5px dashed #e0e0e0',
+                          }}
+                        >
+                          {an.gerekce}
+                        </div>
+                      )}
+                    </div>
+                  )
+                })}
+              </div>
+
+              <div style={altBar}>
+                <button onClick={() => setAsama3AltAdim(1)} style={secondaryBtn}>← Teklif verme</button>
+                <button onClick={ayarlarVeIlerle} style={primaryBtn(false)}>
+                  Sonraki →
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* Sub-step 3 placeholder */}
+          {asama3AltAdim === 3 && (
             <div
               style={{
                 background: '#fff',
@@ -386,16 +497,16 @@ export default function KampanyaStudyosu() {
               }}
             >
               <div style={{ fontSize: 16, fontWeight: 500, color: '#111', marginBottom: 8 }}>
-                Adım {asama3AltAdim} yakında
+                Adım 3 yakında
               </div>
               <p style={{ fontSize: 13, color: '#888', margin: 0 }}>
                 Bu ekran için içerik henüz tanımlanmadı — bir sonraki turda eklenecek.
               </p>
               <button
-                onClick={() => setAsama3AltAdim(1)}
+                onClick={() => setAsama3AltAdim(2)}
                 style={{ ...secondaryBtn, marginTop: 16 }}
               >
-                ← Teklif verme&apos;ye dön
+                ← Kampanya Ayarları&apos;na dön
               </button>
             </div>
           )}

@@ -129,6 +129,40 @@ export const ASAMA3_ALT_ADIMLAR = [
   { no: 3, label: '—' },
 ]
 
+// Aşama 3.2 — Kampanya Ayarları başlıkları (Google Ads ekranındaki bölümler)
+export const KAMPANYA_AYARI_BASLIKLARI = [
+  {
+    id: 'aglar',
+    label: 'Ağlar',
+    aciklama: 'Google Arama Ağı İş Ortakları + Görüntülü Reklam Ağı seçenekleri',
+  },
+  {
+    id: 'konumlar',
+    label: 'Konumlar',
+    aciklama: 'Coğrafi hedefleme: tüm dünya, ülke, şehir veya yarıçap',
+  },
+  {
+    id: 'diller',
+    label: 'Diller',
+    aciklama: 'Müşterilerin tarayıcı diline göre eşleşme',
+  },
+  {
+    id: 'ab-siyasi',
+    label: 'AB siyasi reklamları',
+    aciklama: 'AB tüzüğü uyarınca siyasi reklam beyanı',
+  },
+  {
+    id: 'kitle-segmentleri',
+    label: 'Kitle segmentleri',
+    aciklama: 'Hedefleme vs. Gözlem · ilgi alanları, demografik segmentler',
+  },
+  {
+    id: 'diger',
+    label: 'Diğer ayarlar',
+    aciklama: 'Reklam rotasyonu, başlangıç/bitiş tarihleri, zaman planlaması, URL seçenekleri',
+  },
+]
+
 // Sektör input için hızlı öneri chip'leri
 export const SEKTOR_ONERILERI = [
   'E-ticaret',
