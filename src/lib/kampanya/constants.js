@@ -122,11 +122,12 @@ export const TEKLIF_STRATEJILERI = [
   },
 ]
 
-// Aşama 3 alt-basamakları (3 sub-step)
+// Aşama 3 alt-basamakları
 export const ASAMA3_ALT_ADIMLAR = [
   { no: 1, label: 'Teklif verme' },
   { no: 2, label: 'Kampanya Ayarları' },
-  { no: 3, label: '—' },
+  { no: 3, label: 'AI Max' },
+  { no: 4, label: '—' },
 ]
 
 // Aşama 3.2 — Kampanya Ayarları başlıkları (Google Ads ekranındaki bölümler)

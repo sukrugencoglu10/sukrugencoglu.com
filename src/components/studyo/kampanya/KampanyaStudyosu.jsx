@@ -485,8 +485,24 @@ export default function KampanyaStudyosu() {
             </div>
           )}
 
-          {/* Sub-step 3 placeholder */}
+          {/* Sub-step 3: AI Max (minimal — sadece başlık) */}
           {asama3AltAdim === 3 && (
+            <div>
+              <div style={{ marginBottom: 12 }}>
+                <h2 style={{ fontSize: 16, fontWeight: 500, margin: 0 }}>AI Max</h2>
+                <p style={{ fontSize: 12, color: '#888', marginTop: 4 }}>
+                  Yapay zeka destekli reklam optimizasyonu — içerik bir sonraki turda eklenecek.
+                </p>
+              </div>
+              <div style={altBar}>
+                <button onClick={() => setAsama3AltAdim(2)} style={secondaryBtn}>← Kampanya Ayarları</button>
+                <button onClick={() => setAsama3AltAdim(4)} style={primaryBtn(false)}>Sonraki →</button>
+              </div>
+            </div>
+          )}
+
+          {/* Sub-step 4 placeholder */}
+          {asama3AltAdim === 4 && (
             <div
               style={{
                 background: '#fff',
@@ -497,16 +513,16 @@ export default function KampanyaStudyosu() {
               }}
             >
               <div style={{ fontSize: 16, fontWeight: 500, color: '#111', marginBottom: 8 }}>
-                Adım 3 yakında
+                Adım 4 yakında
               </div>
               <p style={{ fontSize: 13, color: '#888', margin: 0 }}>
-                Bu ekran için içerik henüz tanımlanmadı — bir sonraki turda eklenecek.
+                Bu ekran için içerik henüz tanımlanmadı — ekranı paylaştığında ekleyeceğim.
               </p>
               <button
-                onClick={() => setAsama3AltAdim(2)}
+                onClick={() => setAsama3AltAdim(3)}
                 style={{ ...secondaryBtn, marginTop: 16 }}
               >
-                ← Kampanya Ayarları&apos;na dön
+                ← AI Max&apos;a dön
               </button>
             </div>
           )}
