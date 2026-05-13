@@ -21,7 +21,7 @@ export async function POST(request) {
       },
       body: JSON.stringify({
         model: 'claude-sonnet-4-20250514',
-        max_tokens: 1000,
+        max_tokens: 2000,
         messages: [{ role: 'user', content: prompt }],
       }),
     })
@@ -35,6 +35,7 @@ export async function POST(request) {
     const text = data.content?.[0]?.text || ''
     return NextResponse.json({ text })
   } catch (error) {
-    return NextResponse.json({ error: 'Sunucu hatası' }, { status: 500 })
+    console.error('[api/claude] hata:', error)
+    return NextResponse.json({ error: 'Sunucu hatası: ' + (error?.message || 'bilinmeyen') }, { status: 500 })
   }
 }
