@@ -32,6 +32,7 @@ import Stepper from './Stepper'
 import SektorInput from './SektorInput'
 import OptionCard from './OptionCard'
 import AdviceBadge from './AdviceBadge'
+import CopyBox from './CopyBox'
 
 const ADIMLAR = [
   { no: 1, label: 'Hedef' },
@@ -855,6 +856,12 @@ export default function KampanyaStudyosu() {
                       <div style={{ fontSize: 12, color: '#666', padding: '8px 12px', background: '#f7f7f5', borderRadius: 8, marginBottom: 12 }}>
                         Seçili: <strong>{secilenKelimeler.size}</strong> kelime · İstediğine tıklayıp seç/kaldır
                       </div>
+
+                      <CopyBox
+                        items={anahtarKelimeler.map((k) => k.kelime)}
+                        secili={secilenKelimeler}
+                        label="anahtar kelime"
+                      />
                     </div>
                   )}
 
@@ -999,6 +1006,12 @@ export default function KampanyaStudyosu() {
                       <div style={{ fontSize: 12, color: '#666', padding: '8px 12px', background: '#f7f7f5', borderRadius: 8, marginBottom: 12 }}>
                         Seçili: <strong>{secilenBasliklar.size}</strong> başlık · Google Ads&apos;te en az 3, en fazla 15 başlık eklenir
                       </div>
+
+                      <CopyBox
+                        items={basliklar.map((b) => b.baslik)}
+                        secili={secilenBasliklar}
+                        label="başlık"
+                      />
                     </div>
                   )}
 
@@ -1146,18 +1159,26 @@ export default function KampanyaStudyosu() {
                   )}
 
                   {aciklamalar.length > 0 && (
-                    <div style={{
-                      fontSize: 12,
-                      color: secilenAciklamalar.size < 2 ? '#92400E' : '#666',
-                      padding: '8px 12px',
-                      background: secilenAciklamalar.size < 2 ? '#FEF3C7' : '#f7f7f5',
-                      border: secilenAciklamalar.size < 2 ? '0.5px solid #F59E0B' : 'none',
-                      borderRadius: 8,
-                      marginBottom: 12,
-                    }}>
-                      Seçili: <strong>{secilenAciklamalar.size}</strong>/4 açıklama
-                      {secilenAciklamalar.size < 2 && ' · En az 2 açıklama seçmelisiniz'}
-                    </div>
+                    <>
+                      <div style={{
+                        fontSize: 12,
+                        color: secilenAciklamalar.size < 2 ? '#92400E' : '#666',
+                        padding: '8px 12px',
+                        background: secilenAciklamalar.size < 2 ? '#FEF3C7' : '#f7f7f5',
+                        border: secilenAciklamalar.size < 2 ? '0.5px solid #F59E0B' : 'none',
+                        borderRadius: 8,
+                        marginBottom: 12,
+                      }}>
+                        Seçili: <strong>{secilenAciklamalar.size}</strong>/4 açıklama
+                        {secilenAciklamalar.size < 2 && ' · En az 2 açıklama seçmelisiniz'}
+                      </div>
+
+                      <CopyBox
+                        items={aciklamalar.map((a) => a.aciklama)}
+                        secili={secilenAciklamalar}
+                        label="açıklama"
+                      />
+                    </>
                   )}
 
                   <div style={altBar}>
