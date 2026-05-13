@@ -24,6 +24,8 @@ import {
   anahtarKelimePrompt,
   baslikPrompt,
   aciklamaPrompt,
+  butcePrompt,
+  inceleOzetPrompt,
 } from '@/lib/kampanya/prompts'
 import { callClaudeJson } from '@/lib/kampanya/api'
 import Stepper from './Stepper'
@@ -85,6 +87,21 @@ export default function KampanyaStudyosu() {
   const [secilenAciklamalar, setSecilenAciklamalar] = useState(new Set())
   const [aciklamaLoading, setAciklamaLoading] = useState(false)
   const [aciklamaHata, setAciklamaHata] = useState(null)
+
+  // 3.5 — Bütçe
+  const [butceTierler, setButceTierler] = useState([])
+  const [butceOnerilen, setButceOnerilen] = useState(null)
+  const [butceGerekce, setButceGerekce] = useState('')
+  const [secilenTier, setSecilenTier] = useState(null)
+  const [manuelButce, setManuelButce] = useState('')
+  const [butceLoading, setButceLoading] = useState(false)
+  const [butceHata, setButceHata] = useState(null)
+
+  // 3.6 — İncele
+  const [inceleSonuc, setInceleSonuc] = useState(null)
+  const [inceleLoading, setInceleLoading] = useState(false)
+  const [inceleHata, setInceleHata] = useState(null)
+  const [tamamlandi, setTamamlandi] = useState(false)
 
   const analizEtHedefler = async () => {
     if (!sektor.trim()) return
@@ -248,6 +265,58 @@ export default function KampanyaStudyosu() {
       else next.add(aciklama)
       return next
     })
+  }
+
+  const analizEtButce = async () => {
+    setButceLoading(true)
+    setButceHata(null)
+    setButceTierler([])
+    try {
+      const sonuc = await callClaudeJson(
+        butcePrompt(sektor.trim(), secilenHedef, secilenTur, secilenTeklif)
+      )
+      setButceTierler(sonuc.tierler || [])
+      setButceOnerilen(sonuc.onerilen || null)
+      setButceGerekce(sonuc.gerekce || '')
+      // Önerilen tier'i otomatik seç
+      if (sonuc.onerilen) {
+        setSecilenTier(sonuc.onerilen)
+        const t = sonuc.tierler?.find((x) => x.tier === sonuc.onerilen)
+        if (t?.gunluk) setManuelButce(String(t.gunluk))
+      }
+    } catch (e) {
+      setButceHata(e.message || 'Analiz başarısız')
+    }
+    setButceLoading(false)
+  }
+
+  const secTier = (tier, gunluk) => {
+    setSecilenTier(tier)
+    setManuelButce(String(gunluk))
+  }
+
+  const analizEtIncele = async () => {
+    setInceleLoading(true)
+    setInceleHata(null)
+    setInceleSonuc(null)
+    try {
+      const ozet = {
+        sektor: sektor.trim(),
+        hedef: HEDEFLER.find((h) => h.id === secilenHedef)?.label || '—',
+        tur: TURLER.find((t) => t.id === secilenTur)?.label || '—',
+        teklif: TEKLIF_STRATEJILERI.find((s) => s.id === secilenTeklif)?.label || '—',
+        yeniMusteri,
+        kelimeSayisi: secilenKelimeler.size,
+        baslikSayisi: secilenBasliklar.size,
+        aciklamaSayisi: secilenAciklamalar.size,
+        butce: manuelButce || '—',
+      }
+      const sonuc = await callClaudeJson(inceleOzetPrompt(ozet))
+      setInceleSonuc(sonuc)
+    } catch (e) {
+      setInceleHata(e.message || 'Analiz başarısız')
+    }
+    setInceleLoading(false)
   }
 
   const geriDon = (adim) => setAktifAdim(adim)
@@ -1093,12 +1162,314 @@ export default function KampanyaStudyosu() {
 
                   <div style={altBar}>
                     <button onClick={() => setReklamAltAdim(2)} style={secondaryBtn}>← Başlıklar</button>
-                    <button onClick={() => {}} disabled style={primaryBtn(true)} title="Sonraki ekran henüz tanımlanmadı">
-                      Sonraki →
+                    <button
+                      onClick={() => {
+                        setAsama3AltAdim(5)
+                        if (butceTierler.length === 0) analizEtButce()
+                      }}
+                      style={primaryBtn(false)}
+                    >
+                      Sonraki → Bütçe
                     </button>
                   </div>
                 </div>
               )}
+            </div>
+          )}
+
+          {/* Sub-step 5: Bütçe */}
+          {asama3AltAdim === 5 && (
+            <div>
+              <div style={{ marginBottom: 12, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
+                <div>
+                  <h2 style={{ fontSize: 16, fontWeight: 500, margin: 0 }}>Günlük Bütçe</h2>
+                  <p style={{ fontSize: 12, color: '#888', marginTop: 4 }}>
+                    Sektör + hedef + teklif stratejisine göre AI 3 farklı bütçe seviyesi öneriyor (Türk Lirası)
+                  </p>
+                </div>
+                {butceTierler.length > 0 && (
+                  <button
+                    onClick={analizEtButce}
+                    disabled={butceLoading}
+                    style={{
+                      padding: '7px 14px',
+                      background: butceLoading ? '#ddd' : '#fff',
+                      color: '#666',
+                      border: '0.5px solid #d0d0d0',
+                      borderRadius: 8,
+                      fontSize: 12,
+                      cursor: butceLoading ? 'not-allowed' : 'pointer',
+                      fontFamily: 'inherit',
+                    }}
+                  >
+                    {butceLoading ? 'Yenileniyor...' : 'Yeniden öner'}
+                  </button>
+                )}
+              </div>
+
+              {butceHata && <div style={hataKutusu}>{butceHata}</div>}
+
+              {butceLoading && butceTierler.length === 0 && (
+                <div style={ipucuKutusu}>Bütçe önerileri hesaplanıyor...</div>
+              )}
+
+              {butceTierler.length > 0 && (
+                <>
+                  <div style={kartGrid}>
+                    {butceTierler.map((t) => {
+                      const isOnerilen = t.tier === butceOnerilen
+                      const isSelected = secilenTier === t.tier
+                      const tierLabel = {
+                        'dusuk': 'Düşük',
+                        'orta': 'Orta',
+                        'yuksek': 'Yüksek',
+                      }[t.tier] || t.tier
+                      return (
+                        <button
+                          key={t.tier}
+                          onClick={() => secTier(t.tier, t.gunluk)}
+                          style={{
+                            textAlign: 'left',
+                            background: isSelected ? '#fff' : '#fff',
+                            border: '1.5px solid',
+                            borderColor: isSelected ? '#111' : isOnerilen ? '#1D9E75' : '#e8e8e8',
+                            borderRadius: 12,
+                            padding: '14px 16px',
+                            cursor: 'pointer',
+                            fontFamily: 'inherit',
+                            display: 'flex',
+                            flexDirection: 'column',
+                            gap: 8,
+                            transition: 'all 0.15s',
+                          }}
+                        >
+                          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                            <span style={{ fontSize: 13, color: '#888', textTransform: 'uppercase', letterSpacing: '0.04em', fontWeight: 600 }}>
+                              {tierLabel}
+                            </span>
+                            {isOnerilen && (
+                              <span style={{
+                                fontSize: 10,
+                                fontWeight: 600,
+                                padding: '2px 8px',
+                                borderRadius: 10,
+                                background: '#E1F5EE',
+                                border: '0.5px solid #1D9E75',
+                                color: '#0F6E56',
+                              }}>
+                                AI ÖNERİSİ
+                              </span>
+                            )}
+                          </div>
+                          <div style={{ fontSize: 24, fontWeight: 600, color: '#111' }}>
+                            ₺{t.gunluk?.toLocaleString('tr-TR')}
+                            <span style={{ fontSize: 12, color: '#888', fontWeight: 400, marginLeft: 4 }}>/gün</span>
+                          </div>
+                          <div style={{ fontSize: 12, color: '#666', lineHeight: 1.5 }}>
+                            {t.aciklama}
+                          </div>
+                        </button>
+                      )
+                    })}
+                  </div>
+
+                  {butceGerekce && (
+                    <div style={{
+                      padding: '10px 14px',
+                      background: '#E1F5EE',
+                      border: '0.5px solid #1D9E75',
+                      borderRadius: 8,
+                      fontSize: 12,
+                      color: '#0F6E56',
+                      lineHeight: 1.55,
+                      marginBottom: 12,
+                    }}>
+                      <strong>AI tavsiyesi:</strong> {butceGerekce}
+                    </div>
+                  )}
+
+                  <div style={{
+                    background: '#fff',
+                    border: '0.5px solid #e8e8e8',
+                    borderRadius: 12,
+                    padding: '14px 16px',
+                    marginBottom: '1rem',
+                  }}>
+                    <label style={{ fontSize: 12, color: '#888', display: 'block', marginBottom: 6 }}>
+                      Manuel günlük bütçe (TL) — istediğin değeri girebilirsin
+                    </label>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                      <span style={{ fontSize: 16, color: '#888' }}>₺</span>
+                      <input
+                        type="number"
+                        min={0}
+                        value={manuelButce}
+                        onChange={(e) => setManuelButce(e.target.value)}
+                        placeholder="örn. 250"
+                        style={{
+                          flex: 1,
+                          fontSize: 16,
+                          padding: '9px 12px',
+                          borderRadius: 8,
+                          border: '0.5px solid #ddd',
+                          fontFamily: 'inherit',
+                          outline: 'none',
+                          fontWeight: 500,
+                        }}
+                      />
+                      <span style={{ fontSize: 12, color: '#888' }}>/gün</span>
+                    </div>
+                  </div>
+                </>
+              )}
+
+              <div style={altBar}>
+                <button onClick={() => setAsama3AltAdim(4)} style={secondaryBtn}>← Reklam Oluştur</button>
+                <button
+                  onClick={() => {
+                    setAsama3AltAdim(6)
+                    analizEtIncele()
+                  }}
+                  disabled={!manuelButce}
+                  style={primaryBtn(!manuelButce)}
+                >
+                  Sonraki → İncele
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* Sub-step 6: İncele */}
+          {asama3AltAdim === 6 && (
+            <div>
+              <div style={{ marginBottom: 12 }}>
+                <h2 style={{ fontSize: 16, fontWeight: 500, margin: 0 }}>İncele</h2>
+                <p style={{ fontSize: 12, color: '#888', marginTop: 4 }}>
+                  Tüm seçimlerini gözden geçir, AI&apos;nın son değerlendirmesini al, kampanyayı yayına hazır hale getir
+                </p>
+              </div>
+
+              {/* Özet kart */}
+              <div style={{
+                background: '#fff',
+                border: '0.5px solid #e8e8e8',
+                borderRadius: 12,
+                padding: '16px 18px',
+                marginBottom: 12,
+              }}>
+                <div style={{ fontSize: 12, fontWeight: 600, color: '#888', letterSpacing: '0.04em', marginBottom: 12, textTransform: 'uppercase' }}>
+                  Kampanya Özeti
+                </div>
+                <div style={{ display: 'grid', gridTemplateColumns: 'auto 1fr', gap: '8px 16px', fontSize: 13 }}>
+                  <span style={{ color: '#888' }}>Sektör</span>
+                  <strong style={{ color: '#111' }}>{sektor}</strong>
+                  <span style={{ color: '#888' }}>Hedef</span>
+                  <strong style={{ color: '#111' }}>{HEDEFLER.find((h) => h.id === secilenHedef)?.label}</strong>
+                  <span style={{ color: '#888' }}>Kampanya türü</span>
+                  <strong style={{ color: '#111' }}>{TURLER.find((t) => t.id === secilenTur)?.label}</strong>
+                  <span style={{ color: '#888' }}>Teklif stratejisi</span>
+                  <strong style={{ color: '#111' }}>{TEKLIF_STRATEJILERI.find((s) => s.id === secilenTeklif)?.label}</strong>
+                  <span style={{ color: '#888' }}>Yeni müşteri filtresi</span>
+                  <strong style={{ color: '#111' }}>{yeniMusteri ? 'Açık' : 'Kapalı'}</strong>
+                  <span style={{ color: '#888' }}>Anahtar kelime</span>
+                  <strong style={{ color: '#111' }}>{secilenKelimeler.size} adet</strong>
+                  <span style={{ color: '#888' }}>Başlık</span>
+                  <strong style={{ color: '#111' }}>{secilenBasliklar.size} adet</strong>
+                  <span style={{ color: '#888' }}>Açıklama</span>
+                  <strong style={{ color: '#111' }}>{secilenAciklamalar.size} adet</strong>
+                  <span style={{ color: '#888' }}>Günlük bütçe</span>
+                  <strong style={{ color: '#111' }}>₺{Number(manuelButce || 0).toLocaleString('tr-TR')}</strong>
+                </div>
+              </div>
+
+              {inceleHata && <div style={hataKutusu}>{inceleHata}</div>}
+
+              {inceleLoading && (
+                <div style={ipucuKutusu}>AI değerlendirmesi hazırlanıyor...</div>
+              )}
+
+              {inceleSonuc && (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginBottom: 12 }}>
+                  {inceleSonuc.guclu_yanlar?.length > 0 && (
+                    <div style={{
+                      background: '#fff',
+                      border: '0.5px solid #1D9E75',
+                      borderRadius: 10,
+                      padding: '12px 14px',
+                    }}>
+                      <div style={{ fontSize: 11, fontWeight: 600, color: '#0F6E56', letterSpacing: '0.04em', marginBottom: 8, textTransform: 'uppercase' }}>
+                        ✓ Güçlü Yanlar
+                      </div>
+                      <ul style={{ margin: 0, paddingLeft: 18, fontSize: 13, color: '#444', lineHeight: 1.6 }}>
+                        {inceleSonuc.guclu_yanlar.map((g, i) => <li key={i}>{g}</li>)}
+                      </ul>
+                    </div>
+                  )}
+                  {inceleSonuc.dikkat_edilecekler?.length > 0 && (
+                    <div style={{
+                      background: '#fff',
+                      border: '0.5px solid #F59E0B',
+                      borderRadius: 10,
+                      padding: '12px 14px',
+                    }}>
+                      <div style={{ fontSize: 11, fontWeight: 600, color: '#92400E', letterSpacing: '0.04em', marginBottom: 8, textTransform: 'uppercase' }}>
+                        ⚠ Dikkat Edilecekler
+                      </div>
+                      <ul style={{ margin: 0, paddingLeft: 18, fontSize: 13, color: '#444', lineHeight: 1.6 }}>
+                        {inceleSonuc.dikkat_edilecekler.map((d, i) => <li key={i}>{d}</li>)}
+                      </ul>
+                    </div>
+                  )}
+                  {inceleSonuc.son_oneri && (
+                    <div style={{
+                      background: '#111',
+                      color: '#fff',
+                      borderRadius: 10,
+                      padding: '14px 16px',
+                      fontSize: 13,
+                      lineHeight: 1.55,
+                    }}>
+                      <div style={{ fontSize: 11, fontWeight: 600, opacity: 0.7, letterSpacing: '0.04em', marginBottom: 6, textTransform: 'uppercase' }}>
+                        AI Son Önerisi
+                      </div>
+                      {inceleSonuc.son_oneri}
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {tamamlandi && (
+                <div style={{
+                  background: '#E1F5EE',
+                  border: '0.5px solid #1D9E75',
+                  borderRadius: 10,
+                  padding: '14px 16px',
+                  marginBottom: 12,
+                  fontSize: 13,
+                  color: '#0F6E56',
+                  lineHeight: 1.55,
+                }}>
+                  ✓ Kampanya yapılandırması tamamlandı. Bu özeti Google Ads&apos;e geçirip yayına alabilirsin.
+                </div>
+              )}
+
+              <div style={altBar}>
+                <button onClick={() => setAsama3AltAdim(5)} style={secondaryBtn}>← Bütçe</button>
+                <div style={{ display: 'flex', gap: 8 }}>
+                  {!inceleSonuc && !inceleLoading && (
+                    <button onClick={analizEtIncele} style={secondaryBtn}>
+                      AI değerlendir
+                    </button>
+                  )}
+                  <button
+                    onClick={() => setTamamlandi(true)}
+                    disabled={tamamlandi}
+                    style={primaryBtn(tamamlandi)}
+                  >
+                    {tamamlandi ? '✓ Tamamlandı' : 'Kampanyayı Tamamla'}
+                  </button>
+                </div>
+              </div>
             </div>
           )}
         </section>

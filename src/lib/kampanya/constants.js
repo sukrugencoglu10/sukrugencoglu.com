@@ -128,6 +128,8 @@ export const ASAMA3_ALT_ADIMLAR = [
   { no: 2, label: 'Kampanya Ayarları' },
   { no: 3, label: 'AI Max' },
   { no: 4, label: 'Reklam Oluştur' },
+  { no: 5, label: 'Bütçe' },
+  { no: 6, label: 'İncele' },
 ]
 
 // 3.4 — Reklam Oluştur alt-adımları

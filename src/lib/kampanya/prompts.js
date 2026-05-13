@@ -226,3 +226,65 @@ SADECE geçerli JSON dön, başka metin yok:
   ]
 }`
 }
+
+// Aşama 3.5: Günlük bütçe önerisi (3 tier — düşük/orta/yüksek)
+export function butcePrompt(sektor, secilenHedefId, secilenTurId, secilenTeklifId) {
+  const hedef = HEDEFLER.find(h => h.id === secilenHedefId)
+  const tur = TURLER.find(t => t.id === secilenTurId)
+  const teklif = TEKLIF_STRATEJILERI.find(s => s.id === secilenTeklifId)
+
+  return `Sen deneyimli bir Google Ads uzmanısın. Şu yapılandırmaya göre günlük bütçe önerisi yap:
+- Sektör: ${sektor}
+- Hedef: ${hedef?.label}
+- Kampanya türü: ${tur?.label}
+- Teklif stratejisi: ${teklif?.label || '—'}
+
+Türkiye pazarı için 3 farklı bütçe seviyesi öner (Türk Lirası, günlük). Sektörün rekabet düzeyi ve hedef türüne göre uygun aralıkları seç.
+
+3 tier:
+- "dusuk": Test/öğrenme amaçlı minimum bütçe. Veri biriktirmek için yeterli.
+- "orta": Önerilen denge — gerçekçi sonuçlar alabilecek seviye.
+- "yuksek": Hızlı ölçek + agresif test için.
+
+Hangi tier'i önerdiğini de belirt (genelde "orta").
+
+SADECE geçerli JSON dön, başka metin yok:
+{
+  "tierler": [
+    { "tier": "dusuk", "gunluk": 100, "aciklama": "1-2 cümle bu seviyede ne beklenir" },
+    { "tier": "orta", "gunluk": 300, "aciklama": "..." },
+    { "tier": "yuksek", "gunluk": 800, "aciklama": "..." }
+  ],
+  "onerilen": "dusuk" | "orta" | "yuksek",
+  "gerekce": "Sektör + hedef bağlamında neden bu tier'i önerdiğini 1-2 cümlede özetle"
+}
+
+Bütçeler integer (sayı) olarak verilsin, TL birimi olduğu varsayılır.`
+}
+
+// Aşama 3.6: Tüm seçimlerin son değerlendirmesi
+export function inceleOzetPrompt(ozet) {
+  return `Sen deneyimli bir Google Ads uzmanısın. Bir kullanıcı aşağıdaki kampanya seçimlerini yaptı. Tutarlılığı kontrol et ve yayına almadan önce kısa bir değerlendirme yap.
+
+Kampanya Özeti:
+- Sektör: ${ozet.sektor}
+- Hedef: ${ozet.hedef}
+- Kampanya türü: ${ozet.tur}
+- Teklif stratejisi: ${ozet.teklif}
+- Yalnızca yeni müşteriler: ${ozet.yeniMusteri ? 'Evet' : 'Hayır'}
+- Seçili anahtar kelime sayısı: ${ozet.kelimeSayisi}
+- Seçili başlık sayısı: ${ozet.baslikSayisi}
+- Seçili açıklama sayısı: ${ozet.aciklamaSayisi}
+- Günlük bütçe: ${ozet.butce} TL
+
+Görev: 3 başlık altında değerlendir.
+
+SADECE geçerli JSON dön, başka metin yok:
+{
+  "guclu_yanlar": ["...", "...", "..."],
+  "dikkat_edilecekler": ["...", "..."],
+  "son_oneri": "1-2 cümlelik karar verdirici son söz: yayına alınabilir mi, neyi düzeltmeli?"
+}
+
+Listeleri 2-4 madde tutun, her madde kısa olsun (max 12-15 kelime).`
+}
