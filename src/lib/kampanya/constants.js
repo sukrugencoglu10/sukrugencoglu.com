@@ -134,11 +134,13 @@ export const ASAMA3_ALT_ADIMLAR = [
 export const REKLAM_ALT_ADIMLAR = [
   { no: 1, label: 'Anahtar Kelimeler' },
   { no: 2, label: 'Başlıklar' },
+  { no: 3, label: 'Açıklamalar' },
 ]
 
 // Google Ads karakter limitleri
 export const ANAHTAR_KELIME_MAX_KARAKTER = 80
 export const BASLIK_MAX_KARAKTER = 30
+export const ACIKLAMA_MAX_KARAKTER = 90
 
 // Aşama 3.2 — Kampanya Ayarları başlıkları (Google Ads ekranındaki bölümler)
 export const KAMPANYA_AYARI_BASLIKLARI = [

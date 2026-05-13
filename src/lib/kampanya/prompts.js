@@ -197,3 +197,32 @@ SADECE geçerli JSON dön, başka metin yok:
   ]
 }`
 }
+
+// Aşama 3.4.3: Reklam açıklamaları (Responsive Search Ads — max 90 karakter, 4 adet)
+export function aciklamaPrompt(sektor, secilenHedefId, secilenTurId) {
+  const hedef = HEDEFLER.find(h => h.id === secilenHedefId)
+  const tur = TURLER.find(t => t.id === secilenTurId)
+
+  return `Sen deneyimli bir Google Ads metin yazarısın. Şu yapılandırmaya göre 4 reklam açıklaması (description) öner:
+- Sektör: ${sektor}
+- Hedef: ${hedef?.label}
+- Kampanya türü: ${tur?.label}
+
+KRİTİK KURAL: Google Ads her bir açıklamayı MAX 90 KARAKTER kabul eder. Hiçbir açıklama 90 karakteri geçmesin. İdeal aralık 70-88 karakter.
+
+4 açıklamayı farklı stillerde ver — her stilden 1 adet:
+- "ozellik": Hizmet/ürünün somut özelliklerine odaklı
+- "fayda": Müşterinin elde edeceği faydaya odaklı
+- "guven": Güven & sosyal kanıt (deneyim, müşteri sayısı, garanti vb.)
+- "cta": Eyleme çağrı + aciliyet hissi
+
+Türkçe yaz. Cümle yapısı kullan, 1-2 etken cümleden oluşsun.
+
+SADECE geçerli JSON dön, başka metin yok:
+{
+  "aciklamalar": [
+    { "aciklama": "...", "stil": "ozellik" | "fayda" | "guven" | "cta", "neden": "1 cümlelik kısa not" },
+    ... (toplam 4 adet)
+  ]
+}`
+}

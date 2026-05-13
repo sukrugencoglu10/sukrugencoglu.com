@@ -14,6 +14,7 @@ import {
   REKLAM_ALT_ADIMLAR,
   ANAHTAR_KELIME_MAX_KARAKTER,
   BASLIK_MAX_KARAKTER,
+  ACIKLAMA_MAX_KARAKTER,
 } from '@/lib/kampanya/constants'
 import {
   hedefAnalizPrompt,
@@ -22,6 +23,7 @@ import {
   ayarlarAnalizPrompt,
   anahtarKelimePrompt,
   baslikPrompt,
+  aciklamaPrompt,
 } from '@/lib/kampanya/prompts'
 import { callClaudeJson } from '@/lib/kampanya/api'
 import Stepper from './Stepper'
@@ -77,6 +79,12 @@ export default function KampanyaStudyosu() {
   const [secilenBasliklar, setSecilenBasliklar] = useState(new Set())
   const [baslikLoading, setBaslikLoading] = useState(false)
   const [baslikHata, setBaslikHata] = useState(null)
+
+  // 3.4.3 — Açıklamalar
+  const [aciklamalar, setAciklamalar] = useState([])
+  const [secilenAciklamalar, setSecilenAciklamalar] = useState(new Set())
+  const [aciklamaLoading, setAciklamaLoading] = useState(false)
+  const [aciklamaHata, setAciklamaHata] = useState(null)
 
   const analizEtHedefler = async () => {
     if (!sektor.trim()) return
@@ -213,6 +221,31 @@ export default function KampanyaStudyosu() {
       const next = new Set(prev)
       if (next.has(baslik)) next.delete(baslik)
       else next.add(baslik)
+      return next
+    })
+  }
+
+  const analizEtAciklamalar = async (hedefId, turId) => {
+    setAciklamaLoading(true)
+    setAciklamaHata(null)
+    setAciklamalar([])
+    setSecilenAciklamalar(new Set())
+    try {
+      const sonuc = await callClaudeJson(
+        aciklamaPrompt(sektor.trim(), hedefId, turId)
+      )
+      setAciklamalar(sonuc.aciklamalar || [])
+    } catch (e) {
+      setAciklamaHata(e.message || 'Analiz başarısız')
+    }
+    setAciklamaLoading(false)
+  }
+
+  const toggleAciklama = (aciklama) => {
+    setSecilenAciklamalar((prev) => {
+      const next = new Set(prev)
+      if (next.has(aciklama)) next.delete(aciklama)
+      else next.add(aciklama)
       return next
     })
   }
@@ -902,6 +935,164 @@ export default function KampanyaStudyosu() {
 
                   <div style={altBar}>
                     <button onClick={() => setReklamAltAdim(1)} style={secondaryBtn}>← Anahtar Kelimeler</button>
+                    <button onClick={() => setReklamAltAdim(3)} style={primaryBtn(false)}>
+                      Sonraki →
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {/* 3.4.3 Açıklamalar */}
+              {reklamAltAdim === 3 && (
+                <div>
+                  <div style={{ marginBottom: 12, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
+                    <div>
+                      <h3 style={{ fontSize: 14, fontWeight: 500, margin: 0, color: '#111' }}>
+                        Reklam açıklamaları
+                      </h3>
+                      <p style={{ fontSize: 12, color: '#888', marginTop: 2 }}>
+                        4 açıklama önerisi · Google Ads açıklama limiti: <strong>{ACIKLAMA_MAX_KARAKTER}</strong> karakter
+                      </p>
+                    </div>
+                    <button
+                      onClick={() => analizEtAciklamalar(secilenHedef, secilenTur)}
+                      disabled={aciklamaLoading}
+                      style={{
+                        padding: '7px 14px',
+                        background: aciklamaLoading ? '#ddd' : '#111',
+                        color: '#fff',
+                        border: 'none',
+                        borderRadius: 8,
+                        fontSize: 12,
+                        cursor: aciklamaLoading ? 'not-allowed' : 'pointer',
+                        fontFamily: 'inherit',
+                      }}
+                    >
+                      {aciklamaLoading
+                        ? 'Üretiliyor...'
+                        : aciklamalar.length > 0
+                        ? 'Yeniden üret'
+                        : 'Açıklama üret'}
+                    </button>
+                  </div>
+
+                  <div style={{ fontSize: 12, color: '#666', padding: '10px 14px', background: '#f7f7f5', border: '0.5px solid #e8e8e8', borderRadius: 8, marginBottom: 12, lineHeight: 1.55 }}>
+                    2 ila 4 açıklama girilir. Açıklama görünen URL&apos;nin altında gösterilir ve cihaza ya da Google Ads&apos;in performans tahminine göre farklı kombinasyonlarda çıkabilir.
+                  </div>
+
+                  {aciklamaHata && <div style={hataKutusu}>{aciklamaHata}</div>}
+
+                  {aciklamalar.length === 0 && !aciklamaLoading && (
+                    <div style={ipucuKutusu}>
+                      ↑ &quot;Açıklama üret&quot; butonuna tıkla. AI sektörüne ({sektor || '—'}) göre 4 açıklama çıkaracak (özellik · fayda · güven · CTA).
+                    </div>
+                  )}
+
+                  {aciklamalar.length > 0 && (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: '1rem' }}>
+                      {aciklamalar.map((a, i) => {
+                        const len = a.aciklama.length
+                        const limitAsildi = len > ACIKLAMA_MAX_KARAKTER
+                        const yakin = len > ACIKLAMA_MAX_KARAKTER * 0.75
+                        const sayacRengi = limitAsildi
+                          ? { bg: '#FEE2E2', border: '#F87171', color: '#991B1B' }
+                          : yakin
+                          ? { bg: '#FEF3C7', border: '#F59E0B', color: '#92400E' }
+                          : { bg: '#E1F5EE', border: '#1D9E75', color: '#0F6E56' }
+                        const isSelected = secilenAciklamalar.has(a.aciklama)
+                        const stilEtiket = {
+                          'ozellik': 'Özellik',
+                          'fayda': 'Fayda',
+                          'guven': 'Güven',
+                          'cta': 'CTA',
+                        }[a.stil] || a.stil
+                        return (
+                          <button
+                            key={i}
+                            onClick={() => toggleAciklama(a.aciklama)}
+                            style={{
+                              display: 'flex',
+                              flexDirection: 'column',
+                              gap: 8,
+                              padding: '12px 14px',
+                              background: isSelected ? '#111' : '#fff',
+                              color: isSelected ? '#fff' : '#111',
+                              border: '0.5px solid',
+                              borderColor: isSelected ? '#111' : '#e8e8e8',
+                              borderRadius: 10,
+                              cursor: 'pointer',
+                              fontFamily: 'inherit',
+                              fontSize: 13,
+                              textAlign: 'left',
+                              width: '100%',
+                            }}
+                          >
+                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
+                              <span style={{
+                                fontSize: 10,
+                                fontWeight: 600,
+                                padding: '2px 8px',
+                                borderRadius: 10,
+                                background: isSelected ? '#333' : '#f0f0ee',
+                                color: isSelected ? '#fff' : '#666',
+                                letterSpacing: '0.04em',
+                                textTransform: 'uppercase',
+                              }}>
+                                {stilEtiket}
+                              </span>
+                              <span
+                                style={{
+                                  fontSize: 10,
+                                  fontWeight: 600,
+                                  padding: '2px 7px',
+                                  borderRadius: 10,
+                                  background: isSelected ? '#fff' : sayacRengi.bg,
+                                  border: `0.5px solid ${sayacRengi.border}`,
+                                  color: sayacRengi.color,
+                                  whiteSpace: 'nowrap',
+                                  fontFamily: 'monospace',
+                                }}
+                                title={limitAsildi ? 'Limit aşıldı!' : `${len}/${ACIKLAMA_MAX_KARAKTER} karakter`}
+                              >
+                                {len}/{ACIKLAMA_MAX_KARAKTER}
+                              </span>
+                            </div>
+                            <div style={{ fontSize: 13, lineHeight: 1.5, fontWeight: 500 }}>
+                              {a.aciklama}
+                            </div>
+                            {a.neden && (
+                              <div style={{
+                                fontSize: 11,
+                                color: isSelected ? '#bbb' : '#888',
+                                fontStyle: 'italic',
+                                lineHeight: 1.4,
+                              }}>
+                                {a.neden}
+                              </div>
+                            )}
+                          </button>
+                        )
+                      })}
+                    </div>
+                  )}
+
+                  {aciklamalar.length > 0 && (
+                    <div style={{
+                      fontSize: 12,
+                      color: secilenAciklamalar.size < 2 ? '#92400E' : '#666',
+                      padding: '8px 12px',
+                      background: secilenAciklamalar.size < 2 ? '#FEF3C7' : '#f7f7f5',
+                      border: secilenAciklamalar.size < 2 ? '0.5px solid #F59E0B' : 'none',
+                      borderRadius: 8,
+                      marginBottom: 12,
+                    }}>
+                      Seçili: <strong>{secilenAciklamalar.size}</strong>/4 açıklama
+                      {secilenAciklamalar.size < 2 && ' · En az 2 açıklama seçmelisiniz'}
+                    </div>
+                  )}
+
+                  <div style={altBar}>
+                    <button onClick={() => setReklamAltAdim(2)} style={secondaryBtn}>← Başlıklar</button>
                     <button onClick={() => {}} disabled style={primaryBtn(true)} title="Sonraki ekran henüz tanımlanmadı">
                       Sonraki →
                     </button>
