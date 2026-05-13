@@ -8,6 +8,7 @@ import { useState, useEffect, useRef } from 'react'
 import { createPortal } from 'react-dom'
 import BlogWizard from '@/components/studyo/BlogWizard'
 import PaketWizard from '@/components/studyo/PaketWizard'
+import KampanyaStudyosu from '@/components/studyo/kampanya/KampanyaStudyosu'
 import DetailModal from '@/components/ui/DetailModal'
 // ─── Login ekranı ─────────────────────────────────────────────────────────────
 function LoginScreen({ onSuccess }) {
@@ -7206,6 +7207,12 @@ const TOOLS = [
     label: 'Reklam KPI',
     icon: '⬡',
     component: MantiKHaritasi,
+  },
+  {
+    id: 'kampanya',
+    label: 'Kampanya',
+    icon: '🎯',
+    component: KampanyaStudyosu,
   },
   {
     id: 'yz-haritasi',
