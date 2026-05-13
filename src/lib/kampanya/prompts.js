@@ -1,5 +1,5 @@
 // Claude prompt template'leri — sektör + opsiyonlar → JSON öneri
-import { HEDEFLER, TURLER } from './constants'
+import { HEDEFLER, TURLER, TEKLIF_STRATEJILERI } from './constants'
 
 // Aşama 1: Sektöre göre her hedef için uygunluk değerlendirmesi
 export function hedefAnalizPrompt(sektor) {
@@ -62,5 +62,45 @@ SADECE geçerli JSON dön, markdown veya başka metin yok:
   "video": { "uygunluk": "...", "gerekce": "..." },
   "goruntulu": { "uygunluk": "...", "gerekce": "..." },
   "alisveris": { "uygunluk": "...", "gerekce": "..." }
+}`
+}
+
+// Aşama 3.1: Teklif verme stratejisi — sektör + hedef + tür bağlamına göre puanla
+export function teklifAnalizPrompt(sektor, secilenHedefId, secilenTurId) {
+  const hedef = HEDEFLER.find(h => h.id === secilenHedefId)
+  const tur = TURLER.find(t => t.id === secilenTurId)
+  const stratejiListesi = TEKLIF_STRATEJILERI
+    .map(s => `- ${s.id}: ${s.label} — ${s.aciklama}`)
+    .join('\n')
+
+  return `Sen deneyimli bir Google Ads uzmanısın. Bir kullanıcı su yapilanmayi sectiniz:
+- Sektör: ${sektor}
+- Hedef: ${hedef?.label}
+- Kampanya türü: ${tur?.label}
+
+Şimdi teklif verme (bidding) stratejisini seçecek. Aşağıdaki seçenekleri bu sektör + hedef + tür kombinasyonu için değerlendir.
+
+Teklif stratejileri:
+${stratejiListesi}
+
+Görev: Her strateji için:
+- "uygunluk": "cok-uygun" | "uygun" | "az-uygun" | "onerilmez"
+- "gerekce": Bu kombinasyona özel SOMUT sebep (1-2 kısa cümle, Türkçe)
+
+Kurallar:
+- Yeni hesaplarda dönüşüm verisi az olabileceği için "Önerilen" çoğu zaman güvenli — bunu dikkate al
+- "Dönüşüm değeri" sadece e-ticaret/değer takibi olan kampanyalar için anlamlıdır
+- "Gösterim payı" marka bilinirliği veya rakip baskısı senaryolarında uygundur
+- En fazla 2 strateji "cok-uygun" olabilir
+- Müşteri "Yalnızca yeni müşteriler için teklif ver" seçeneği için de kısa bir öneri ekle
+
+SADECE geçerli JSON dön, başka metin yok:
+{
+  "onerilen": { "uygunluk": "...", "gerekce": "..." },
+  "donusumler": { "uygunluk": "...", "gerekce": "..." },
+  "donusum-degeri": { "uygunluk": "...", "gerekce": "..." },
+  "tiklamalar": { "uygunluk": "...", "gerekce": "..." },
+  "gosterim-payi": { "uygunluk": "...", "gerekce": "..." },
+  "yeni-musteri": { "oneri": "evet" | "hayir", "gerekce": "1-2 cümle" }
 }`
 }

@@ -93,6 +93,42 @@ export const UYGUNLUK = {
   'onerilmez':   { label: 'Önerilmez',   color: '#4B5563', bg: '#F3F4F6', border: '#9CA3AF' },
 }
 
+// Aşama 3 — Alt basamak 1: Teklif verme stratejileri (Google Ads bidding)
+export const TEKLIF_STRATEJILERI = [
+  {
+    id: 'onerilen',
+    label: 'Önerilen',
+    aciklama: 'Google Ads sizin için en uygun stratejiyi otomatik seçer',
+  },
+  {
+    id: 'donusumler',
+    label: 'Dönüşümler',
+    aciklama: 'Bütçeniz için en fazla dönüşümü almaya odaklanır',
+  },
+  {
+    id: 'donusum-degeri',
+    label: 'Dönüşüm değeri',
+    aciklama: 'Bütçeniz için toplam dönüşüm değerini en üst düzeye çıkarır',
+  },
+  {
+    id: 'tiklamalar',
+    label: 'Tıklamalar',
+    aciklama: 'Bütçeniz için en fazla tıklamayı almaya odaklanır',
+  },
+  {
+    id: 'gosterim-payi',
+    label: 'Gösterim payı',
+    aciklama: 'Belirli bir gösterim payı hedefine ulaşmaya çalışır',
+  },
+]
+
+// Aşama 3 alt-basamakları (3 sub-step)
+export const ASAMA3_ALT_ADIMLAR = [
+  { no: 1, label: 'Teklif verme' },
+  { no: 2, label: '—' },
+  { no: 3, label: '—' },
+]
+
 // Sektör input için hızlı öneri chip'leri
 export const SEKTOR_ONERILERI = [
   'E-ticaret',
