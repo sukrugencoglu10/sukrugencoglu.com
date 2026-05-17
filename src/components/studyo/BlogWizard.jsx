@@ -129,6 +129,11 @@ export default function BlogWizard({ initialPost, onCancel, onSave }) {
   const [loadingSummary, setLoadingSummary] = useState(false)
   const [uploading, setUploading] = useState(false)
   const [uploadError, setUploadError] = useState('')
+  const [imageTab, setImageTab] = useState('upload') // 'upload' | 'ai'
+  const [aiPrompt, setAiPrompt] = useState('')
+  const [aiPromptLoading, setAiPromptLoading] = useState(false)
+  const [aiGenerating, setAiGenerating] = useState(false)
+  const [aiError, setAiError] = useState('')
   const [manualTag, setManualTag] = useState('')
   const [publishing, setPublishing] = useState(false)
   const [showPreview, setShowPreview] = useState(false)
@@ -279,6 +284,14 @@ export default function BlogWizard({ initialPost, onCancel, onSave }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [step])
 
+  // AI image tab açıldığında prompt'u otomatik üret
+  useEffect(() => {
+    if (step === 3 && imageTab === 'ai' && !aiPrompt && !aiPromptLoading && (post.titleTR || post.contentTR)) {
+      suggestImagePrompt()
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [step, imageTab])
+
   // ─── File upload ────────────────────────────────────────────────
   const handleFileUpload = async (file) => {
     if (!file) return
@@ -294,6 +307,49 @@ export default function BlogWizard({ initialPost, onCancel, onSave }) {
       setUploadError(err.message)
     } finally {
       setUploading(false)
+    }
+  }
+
+  // ─── AI cover image ─────────────────────────────────────────────
+  const suggestImagePrompt = async () => {
+    setAiPromptLoading(true); setAiError('')
+    try {
+      const res = await fetch('/api/blog-ai', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'suggest_image_prompt',
+          title: post.titleTR,
+          content: post.contentTR.slice(0, 1500),
+        }),
+      })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error || 'Prompt üretilemedi')
+      setAiPrompt(data.prompt || '')
+    } catch (err) {
+      setAiError(err.message)
+    } finally {
+      setAiPromptLoading(false)
+    }
+  }
+
+  const generateImage = async () => {
+    const p = aiPrompt.trim()
+    if (p.length < 5) { setAiError('Prompt çok kısa'); return }
+    setAiGenerating(true); setAiError('')
+    try {
+      const res = await fetch('/api/blog-image-generate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ prompt: p, aspectRatio: '16:9' }),
+      })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error || 'Görsel üretilemedi')
+      update({ coverImage: data.url })
+    } catch (err) {
+      setAiError(err.message)
+    } finally {
+      setAiGenerating(false)
     }
   }
 
@@ -594,27 +650,99 @@ export default function BlogWizard({ initialPost, onCancel, onSave }) {
               </button>
             </div>
           ) : (
-            <div
-              onClick={() => fileInputRef.current?.click()}
-              onDragOver={e => { e.preventDefault() }}
-              onDrop={e => { e.preventDefault(); handleFileUpload(e.dataTransfer.files?.[0]) }}
-              style={{
-                border: '2px dashed #ccc', borderRadius: 12, padding: '3rem 1rem', textAlign: 'center',
-                cursor: uploading ? 'wait' : 'pointer', color: '#888', background: '#fafafa', marginBottom: 14,
-              }}>
-              <div style={{ fontSize: 32, marginBottom: 8 }}>📷</div>
-              <div style={{ fontSize: 14, fontWeight: 600, color: '#555' }}>
-                {uploading ? 'Yükleniyor...' : 'Görsel yüklemek için tıkla veya sürükle'}
+            <>
+              {/* Tab seçici */}
+              <div style={{ display: 'flex', gap: 6, marginBottom: 12, borderBottom: '1px solid #eee' }}>
+                {[
+                  { key: 'upload', label: '📤 Yükle' },
+                  { key: 'ai', label: '✨ AI ile oluştur' },
+                ].map(t => (
+                  <button
+                    key={t.key}
+                    onClick={() => setImageTab(t.key)}
+                    style={{
+                      padding: '10px 16px', fontSize: 13, fontWeight: 600,
+                      background: 'transparent', border: 'none', cursor: 'pointer',
+                      color: imageTab === t.key ? accent : '#888',
+                      borderBottom: `2px solid ${imageTab === t.key ? accent : 'transparent'}`,
+                      marginBottom: -1,
+                    }}>
+                    {t.label}
+                  </button>
+                ))}
               </div>
-              <div style={{ fontSize: 11, color: '#aaa', marginTop: 4 }}>JPG, PNG, WEBP, GIF · max 8MB</div>
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept="image/jpeg,image/png,image/webp,image/gif"
-                onChange={e => handleFileUpload(e.target.files?.[0])}
-                style={{ display: 'none' }}
-              />
-            </div>
+
+              {imageTab === 'upload' && (
+                <div
+                  onClick={() => fileInputRef.current?.click()}
+                  onDragOver={e => { e.preventDefault() }}
+                  onDrop={e => { e.preventDefault(); handleFileUpload(e.dataTransfer.files?.[0]) }}
+                  style={{
+                    border: '2px dashed #ccc', borderRadius: 12, padding: '3rem 1rem', textAlign: 'center',
+                    cursor: uploading ? 'wait' : 'pointer', color: '#888', background: '#fafafa', marginBottom: 14,
+                  }}>
+                  <div style={{ fontSize: 32, marginBottom: 8 }}>📷</div>
+                  <div style={{ fontSize: 14, fontWeight: 600, color: '#555' }}>
+                    {uploading ? 'Yükleniyor...' : 'Görsel yüklemek için tıkla veya sürükle'}
+                  </div>
+                  <div style={{ fontSize: 11, color: '#aaa', marginTop: 4 }}>JPG, PNG, WEBP, GIF · max 8MB</div>
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/jpeg,image/png,image/webp,image/gif"
+                    onChange={e => handleFileUpload(e.target.files?.[0])}
+                    style={{ display: 'none' }}
+                  />
+                </div>
+              )}
+
+              {imageTab === 'ai' && (
+                <div style={{ border: '1px solid #eee', borderRadius: 12, padding: 16, background: '#fafafa', marginBottom: 14 }}>
+                  <div style={{ fontSize: 12, color: '#888', marginBottom: 10, lineHeight: 1.5 }}>
+                    Yazının başlığı ve içeriğinden Google Imagen ile kapak görseli oluştur. Prompt'u istediğin gibi düzenleyebilirsin.
+                  </div>
+
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
+                    <label style={{ fontSize: 11, fontWeight: 600, color: '#555' }}>Görsel prompt'u (İngilizce)</label>
+                    <button
+                      onClick={suggestImagePrompt}
+                      disabled={aiPromptLoading || aiGenerating}
+                      style={{
+                        fontSize: 11, padding: '4px 10px', border: '1px solid #ddd',
+                        background: '#fff', borderRadius: 4,
+                        cursor: (aiPromptLoading || aiGenerating) ? 'wait' : 'pointer', color: '#555',
+                      }}>
+                      {aiPromptLoading ? 'Üretiliyor...' : '🔄 Otomatik öner'}
+                    </button>
+                  </div>
+
+                  <textarea
+                    value={aiPrompt}
+                    onChange={e => setAiPrompt(e.target.value)}
+                    rows={4}
+                    disabled={aiGenerating}
+                    placeholder={aiPromptLoading ? 'Claude prompt üretiyor...' : 'Görseli tanımla (ör. "editorial illustration of a small business owner reviewing analytics on a laptop, flat modern style, warm colors, no text")'}
+                    style={{
+                      width: '100%', padding: 10, fontSize: 13, border: '1px solid #ddd',
+                      borderRadius: 6, outline: 'none', resize: 'vertical', boxSizing: 'border-box',
+                      fontFamily: 'inherit', background: aiGenerating ? '#f5f5f5' : '#fff',
+                    }}
+                  />
+
+                  <button
+                    onClick={generateImage}
+                    disabled={aiGenerating || aiPromptLoading || aiPrompt.trim().length < 5}
+                    style={{
+                      marginTop: 10, width: '100%', padding: '12px 16px', fontSize: 14, fontWeight: 600,
+                      background: (aiGenerating || aiPrompt.trim().length < 5) ? '#ccc' : accent,
+                      color: '#fff', border: 'none', borderRadius: 8,
+                      cursor: aiGenerating ? 'wait' : (aiPrompt.trim().length < 5 ? 'not-allowed' : 'pointer'),
+                    }}>
+                    {aiGenerating ? '🎨 Görsel üretiliyor... (~15sn)' : '🎨 Görseli oluştur'}
+                  </button>
+                </div>
+              )}
+            </>
           )}
 
           {uploadError && (
@@ -623,6 +751,11 @@ export default function BlogWizard({ initialPost, onCancel, onSave }) {
             </div>
           )}
 
+          {aiError && (
+            <div style={{ padding: 10, background: '#fff1f0', border: '1px solid #ffccc7', borderRadius: 6, color: '#cf1322', fontSize: 12, marginBottom: 10 }}>
+              {aiError}
+            </div>
+          )}
         </div>
       )}
 

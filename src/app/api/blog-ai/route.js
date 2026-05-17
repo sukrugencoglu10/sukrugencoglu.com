@@ -152,6 +152,34 @@ Sadece şu JSON formatında dön:
       })
     }
 
+    // ── Yeni: Kapak görseli için prompt önerisi ────────────────────
+    if (action === 'suggest_image_prompt') {
+      const { title = '', content = '' } = body
+      const titleClean = String(title).trim()
+      const contentClean = String(content).trim().slice(0, 1500)
+      if (!titleClean && contentClean.length < 20) {
+        return NextResponse.json({ error: 'Başlık veya içerik gerekli' }, { status: 400 })
+      }
+      const sys = `You craft concise visual prompts for blog cover images.
+Output an editorial illustration prompt: flat modern style, clean composition, no text in the image, brand-friendly color palette (warm neutrals, soft blues/oranges).
+Keep it under 60 words. English only. No quotes, no preface.`
+      const prompt = `Blog post (Turkish):
+Title: ${titleClean || '(untitled)'}
+Excerpt:
+"""
+${contentClean}
+"""
+
+Return ONLY a JSON object: {"prompt":"..."}`
+      const text = await callClaude(prompt, 300, sys)
+      const parsed = extractJson(text)
+      const imgPrompt = parsed && typeof parsed.prompt === 'string' ? parsed.prompt.trim() : ''
+      if (!imgPrompt) {
+        return NextResponse.json({ error: 'Prompt üretilemedi', raw: text }, { status: 502 })
+      }
+      return NextResponse.json({ prompt: imgPrompt })
+    }
+
     // ── Mevcut: Başlık önerisi ─────────────────────────────────────
     const { contentTR } = body
     if (!contentTR || contentTR.trim().length < 20) {
