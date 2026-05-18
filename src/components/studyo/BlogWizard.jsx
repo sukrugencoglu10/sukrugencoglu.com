@@ -950,6 +950,33 @@ export default function BlogWizard({ initialPost, onCancel, onSave }) {
             />
           </div>
 
+          {/* Son düzenleme — başlık + içerik */}
+          <details style={{ marginBottom: 18, padding: 14, background: '#fafafa', border: '1px solid #eee', borderRadius: 10 }}>
+            <summary style={{ cursor: 'pointer', fontSize: 12, fontWeight: 700, color: '#555', userSelect: 'none' }}>
+              ✏️ Son düzenleme — başlık ve metni düzenle
+            </summary>
+            <div style={{ marginTop: 12 }}>
+              <label style={{ fontSize: 11, fontWeight: 600, color: '#888', display: 'block', marginBottom: 4 }}>Başlık</label>
+              <input
+                value={post.titleTR}
+                onChange={e => update({ titleTR: e.target.value })}
+                placeholder="Başlık..."
+                style={{ width: '100%', padding: 10, fontSize: 14, fontWeight: 600, border: '1px solid #ddd', borderRadius: 6, outline: 'none', boxSizing: 'border-box', marginBottom: 12 }}
+              />
+              <label style={{ fontSize: 11, fontWeight: 600, color: '#888', display: 'block', marginBottom: 4 }}>İçerik (Markdown)</label>
+              <textarea
+                value={post.contentTR}
+                onChange={e => update({ contentTR: e.target.value })}
+                rows={16}
+                placeholder="Markdown içerik..."
+                style={{ width: '100%', padding: 10, fontSize: 13, border: '1px solid #ddd', borderRadius: 6, outline: 'none', resize: 'vertical', fontFamily: 'monospace', lineHeight: 1.6, boxSizing: 'border-box' }}
+              />
+              <div style={{ fontSize: 11, color: '#aaa', marginTop: 4 }}>
+                {readingMin(post.contentTR)} dk okuma · {post.contentTR.length} karakter — değişiklikler aşağıdaki önizlemeye anında yansır.
+              </div>
+            </div>
+          </details>
+
           {/* Rendered preview */}
           <div style={{ background: '#fafafa', borderRadius: 12, overflow: 'hidden', border: '1px solid #eee' }}>
             {post.coverImage ? (
