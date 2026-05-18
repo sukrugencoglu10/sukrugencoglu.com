@@ -22,6 +22,8 @@ const CATEGORY_COLORS: Record<string, string> = {
   genel: "#6B7280",
   reklam: "#EF4444",
   seo: "#0EA5E9",
+  eticaret: "#EC4899",
+  fullstack: "#14B8A6",
 };
 
 type OgInput = {

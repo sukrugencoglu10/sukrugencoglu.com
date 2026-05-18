@@ -6,12 +6,12 @@ import CardShare from "@/components/blog/CardShare";
 
 const ACCENT: Record<string, string> = {
   gtm: "#1D9E75", analytics: "#3B82F6", cro: "#F59E0B",
-  otomasyon: "#8B5CF6", genel: "#6B7280", reklam: "#EF4444", seo: "#0EA5E9",
+  otomasyon: "#8B5CF6", genel: "#6B7280", reklam: "#EF4444", seo: "#0EA5E9", eticaret: "#EC4899", fullstack: "#14B8A6",
 };
 
 const CAT_LABEL: Record<string, string> = {
   gtm: "GTM", analytics: "Analytics", cro: "CRO",
-  otomasyon: "Otomasyon", genel: "Genel", reklam: "Reklam", seo: "SEO",
+  otomasyon: "Otomasyon", genel: "Genel", reklam: "Reklam", seo: "SEO", eticaret: "E-Ticaret", fullstack: "Full-Stack",
 };
 
 export default function BlogListePage() {

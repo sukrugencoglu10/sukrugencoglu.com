@@ -5,7 +5,7 @@
 
 import { NextResponse } from 'next/server'
 
-const CATEGORIES = ['genel', 'gtm', 'analytics', 'cro', 'otomasyon', 'reklam', 'seo']
+const CATEGORIES = ['genel', 'gtm', 'analytics', 'cro', 'otomasyon', 'reklam', 'seo', 'eticaret', 'fullstack']
 
 const PERSONA = `Sen sukrugencoglu.com için içerik üreten bir SEO uzmanı ve dijital pazarlama yazarısın.
 Hedef kitle: Türkiye'deki KOBİ sahipleri, e-ticaret operatörleri, dijital pazarlama yöneticileri.

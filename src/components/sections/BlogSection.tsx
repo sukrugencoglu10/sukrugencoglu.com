@@ -28,6 +28,8 @@ const CATEGORY_COLORS: Record<string, string> = {
   cro: "#F59E0B",
   otomasyon: "#8B5CF6",
   genel: "#6B7280",
+  eticaret: "#EC4899",
+  fullstack: "#14B8A6",
 };
 
 export default function BlogSection() {
