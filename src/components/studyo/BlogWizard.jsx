@@ -699,7 +699,7 @@ export default function BlogWizard({ initialPost, onCancel, onSave }) {
               {imageTab === 'ai' && (
                 <div style={{ border: '1px solid #eee', borderRadius: 12, padding: 16, background: '#fafafa', marginBottom: 14 }}>
                   <div style={{ fontSize: 12, color: '#888', marginBottom: 10, lineHeight: 1.5 }}>
-                    Yazının başlığı ve içeriğinden Google Imagen ile kapak görseli oluştur. Prompt'u istediğin gibi düzenleyebilirsin.
+                    Yazının başlığı ve içeriğinden Flux ile kapak görseli oluştur. Prompt'u istediğin gibi düzenleyebilirsin.
                   </div>
 
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
