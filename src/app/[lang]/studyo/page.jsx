@@ -9,6 +9,7 @@ import { createPortal } from 'react-dom'
 import BlogWizard from '@/components/studyo/BlogWizard'
 import PaketWizard from '@/components/studyo/PaketWizard'
 import KampanyaStudyosu from '@/components/studyo/kampanya/KampanyaStudyosu'
+import SiteAnalizi from '@/components/studyo/SiteAnalizi'
 import DetailModal from '@/components/ui/DetailModal'
 // ─── Login ekranı ─────────────────────────────────────────────────────────────
 function LoginScreen({ onSuccess }) {
@@ -7190,6 +7191,12 @@ function SeoKontrolMerkezi() {
 }
 
 const TOOLS = [
+  {
+    id: 'site-analizi',
+    label: 'Site Analizi',
+    icon: '⚡',
+    component: SiteAnalizi,
+  },
   {
     id: 'reklam-hiyerarsisi-harita',
     label: 'Reklam Hiyerarşisi',
