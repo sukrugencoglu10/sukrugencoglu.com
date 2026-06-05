@@ -12,7 +12,7 @@ const card = { background: '#fff', border: '0.5px solid #e8e8e8', borderRadius: 
 
 const SOURCE_LABELS = { hiz: '⚡ Hız', seo: '🔎 SEO Meta', linkler: '🔗 Kırık Linkler' }
 
-export default function AiOneriler({ url, results }) {
+export default function AiOneriler({ url, results, onResult }) {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [text, setText] = useState('')
@@ -25,6 +25,7 @@ export default function AiOneriler({ url, results }) {
     setLoading(true)
     setError('')
     setText('')
+    onResult?.(null)
     try {
       const res = await fetch('/api/analiz-oneri', {
         method: 'POST',
@@ -33,7 +34,7 @@ export default function AiOneriler({ url, results }) {
       })
       const json = await res.json()
       if (!res.ok) setError(json.error || 'Öneri üretilemedi')
-      else setText(json.text || '')
+      else { setText(json.text || ''); onResult?.(json.text || '') }
     } catch {
       setError('Bağlantı hatası')
     }
