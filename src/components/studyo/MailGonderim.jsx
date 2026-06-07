@@ -10,13 +10,13 @@ const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 7)
 
 const VARSAYILAN_KONU = 'Merhaba {ad}, size özel bir teklifimiz var'
-const VARSAYILAN_GOVDE = `<div style="font-family: Arial, sans-serif; max-width:560px; margin:0 auto; color:#222; line-height:1.6;">
-  <h2 style="color:#0F6E56;">Merhaba {ad},</h2>
-  <p>{firma} ekibi olarak {sektor} alanında size nasıl yardımcı olabileceğimizi konuşmak isteriz.</p>
-  <p>
+const VARSAYILAN_GOVDE = `<div style="font-family: Arial, sans-serif; max-width:560px; margin:0 auto; color:#222; line-height:1.5;">
+  <h2 style="margin:0 0 10px; color:#0F6E56;">Merhaba {ad},</h2>
+  <p style="margin:0 0 12px;">{firma} ekibi olarak {sektor} alanında size nasıl yardımcı olabileceğimizi konuşmak isteriz.</p>
+  <p style="margin:0 0 12px;">
     <a href="https://sukrugencoglu.com" style="display:inline-block; background:#1D9E75; color:#fff; padding:10px 20px; border-radius:8px; text-decoration:none;">Detaylı bilgi</a>
   </p>
-  <p style="font-size:13px; color:#888;">Şükrü Gençoğlu · sukrugencoglu.com</p>
+  <p style="margin:0; font-size:13px; color:#888;">Şükrü Gençoğlu · sukrugencoglu.com</p>
 </div>`
 
 // Görseli Supabase'e yükler, public URL döndürür (blog ile aynı endpoint)
@@ -29,6 +29,16 @@ async function gorselYukle(file) {
   return data.url
 }
 const IMG_HTML = (url) => `<img src="${url}" alt="" style="max-width:100%; height:auto; border-radius:8px;" />`
+
+// Editör ve önizlemede satır aralığı / blok boşluklarını standart ve sıkı tutar
+const MAIL_BODY_CSS = `
+.mg-mail-body { line-height: 1.5; }
+.mg-mail-body p { margin: 0 0 12px; }
+.mg-mail-body h1, .mg-mail-body h2, .mg-mail-body h3 { margin: 0 0 10px; line-height: 1.3; }
+.mg-mail-body ul, .mg-mail-body ol { margin: 0 0 12px; padding-left: 22px; }
+.mg-mail-body li { margin: 0 0 4px; }
+.mg-mail-body > *:last-child { margin-bottom: 0; }
+`
 
 // ── ortak stiller ──────────────────────────────────────────────
 const card = {
@@ -112,6 +122,7 @@ export default function MailGonderim() {
 
   return (
     <div style={{ maxWidth: 900, margin: '0 auto', padding: '1.5rem 1rem' }}>
+      <style>{MAIL_BODY_CSS}</style>
       <div style={{ marginBottom: '1.25rem' }}>
         <h1 style={{ fontSize: 22, fontWeight: 700, color: '#111', margin: 0 }}>✉️ Mail Gönderim</h1>
         <p style={{ fontSize: 13, color: '#888', margin: '6px 0 0' }}>
@@ -599,7 +610,7 @@ function GonderSekmesi({ gruplar }) {
           <div style={{ fontSize: 11, color: '#aaa' }}>Konu</div>
           <div style={{ fontSize: 14, fontWeight: 600, color: '#111' }}>{doldur(konu)}</div>
         </div>
-        <div style={{ border: '0.5px solid #f0f0f0', borderRadius: 8, padding: 12, background: '#fff', overflow: 'auto', maxHeight: 480 }} dangerouslySetInnerHTML={{ __html: doldur(govde) }} />
+        <div className="mg-mail-body" style={{ border: '0.5px solid #f0f0f0', borderRadius: 8, padding: 12, background: '#fff', overflow: 'auto', maxHeight: 480 }} dangerouslySetInnerHTML={{ __html: doldur(govde) }} />
       </div>
     </div>
   )
@@ -674,6 +685,11 @@ function RichEditor({ value, onChange }) {
       savedRange.current = s.getRangeAt(0).cloneRange()
     }
   }
+  // Editör içindeki her seçim değişikliğini sakla — renk/boyut uygularken güvenilir geri yükleme
+  useEffect(() => {
+    document.addEventListener('selectionchange', selKaydet)
+    return () => document.removeEventListener('selectionchange', selKaydet)
+  }, [])
   // Seçili metne piksel cinsinden yazı boyutu uygular (execCommand + <font> → <span> dönüşümü)
   const boyutUygula = (px) => {
     if (!px) return
@@ -688,6 +704,16 @@ function RichEditor({ value, onChange }) {
       span.innerHTML = f.innerHTML
       f.replaceWith(span)
     })
+    emit()
+  }
+  // Seçili metne renk uygular — seçimi geri yükler, inline style üretir (mail-uyumlu)
+  const renkUygula = (color) => {
+    ref.current?.focus()
+    const s = window.getSelection()
+    if (savedRange.current) { s.removeAllRanges(); s.addRange(savedRange.current) }
+    document.execCommand('styleWithCSS', false, true)
+    document.execCommand('foreColor', false, color)
+    document.execCommand('styleWithCSS', false, false)
     emit()
   }
 
@@ -758,9 +784,9 @@ function RichEditor({ value, onChange }) {
         <TBtn title="Madde işaretli liste" onClick={() => komut('insertUnorderedList')}>•</TBtn>
         <TBtn title="Numaralı liste" onClick={() => komut('insertOrderedList')} mono>1.</TBtn>
         {ayrac}
-        <label title="Yazı rengi" onMouseDown={(e) => e.preventDefault()} style={{ display: 'inline-flex', alignItems: 'center', gap: 3, height: 30, padding: '0 6px', border: '0.5px solid #e0e0e0', borderRadius: 6, cursor: 'pointer', background: '#fff' }}>
+        <label title="Yazı rengi (önce metni seç)" style={{ display: 'inline-flex', alignItems: 'center', gap: 3, height: 30, padding: '0 6px', border: '0.5px solid #e0e0e0', borderRadius: 6, cursor: 'pointer', background: '#fff' }}>
           <span style={{ fontSize: 12, color: '#333' }}>A</span>
-          <input type="color" onChange={(e) => komut('foreColor', e.target.value)} style={{ width: 18, height: 18, border: 'none', background: 'none', padding: 0, cursor: 'pointer' }} />
+          <input type="color" onMouseDown={selKaydet} onChange={(e) => renkUygula(e.target.value)} style={{ width: 18, height: 18, border: 'none', background: 'none', padding: 0, cursor: 'pointer' }} />
         </label>
         <TBtn title="Bağlantı ekle" onClick={linkEkle}>🔗</TBtn>
         <TBtn title="Resim ekle" onClick={() => dosyaRef.current?.click()}>{yukleniyor ? '⏳' : '🖼'}</TBtn>
@@ -774,6 +800,7 @@ function RichEditor({ value, onChange }) {
       </div>
       <div
         ref={ref}
+        className="mg-mail-body"
         contentEditable
         suppressContentEditableWarning
         onInput={emit}
@@ -781,7 +808,7 @@ function RichEditor({ value, onChange }) {
         onPaste={yapistir}
         onKeyUp={selKaydet}
         onMouseUp={selKaydet}
-        style={{ minHeight: 260, maxHeight: 480, overflow: 'auto', padding: '14px 16px', fontSize: 14, lineHeight: 1.6, color: '#222', outline: 'none', fontFamily: 'Arial, sans-serif', background: '#fff' }}
+        style={{ minHeight: 260, maxHeight: 480, overflow: 'auto', padding: '14px 16px', fontSize: 14, lineHeight: 1.5, color: '#222', outline: 'none', fontFamily: 'Arial, sans-serif', background: '#fff' }}
       />
     </div>
   )
