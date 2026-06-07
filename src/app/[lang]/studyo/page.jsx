@@ -10,6 +10,7 @@ import BlogWizard from '@/components/studyo/BlogWizard'
 import PaketWizard from '@/components/studyo/PaketWizard'
 import KampanyaStudyosu from '@/components/studyo/kampanya/KampanyaStudyosu'
 import SiteAnalizi from '@/components/studyo/SiteAnalizi'
+import MailGonderim from '@/components/studyo/MailGonderim'
 import DetailModal from '@/components/ui/DetailModal'
 // ─── Login ekranı ─────────────────────────────────────────────────────────────
 function LoginScreen({ onSuccess }) {
@@ -7220,6 +7221,12 @@ const TOOLS = [
     label: 'Kampanya',
     icon: '📣',
     component: KampanyaStudyosu,
+  },
+  {
+    id: 'mail-gonderim',
+    label: 'Mail Gönderim',
+    icon: '✉️',
+    component: MailGonderim,
   },
   {
     id: 'yz-haritasi',
