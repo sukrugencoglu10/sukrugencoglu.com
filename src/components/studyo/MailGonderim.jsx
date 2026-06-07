@@ -666,6 +666,31 @@ function RichEditor({ value, onChange }) {
   const komut = (cmd, arg) => { ref.current?.focus(); document.execCommand(cmd, false, arg); emit() }
   const ekleHTML = (html) => { ref.current?.focus(); document.execCommand('insertHTML', false, html); emit() }
 
+  // Seçimi sakla (araç çubuğuyla etkileşimde editör odağı kaybolduğunda geri yüklemek için)
+  const savedRange = useRef(null)
+  const selKaydet = () => {
+    const s = window.getSelection()
+    if (s && s.rangeCount && ref.current && ref.current.contains(s.anchorNode)) {
+      savedRange.current = s.getRangeAt(0).cloneRange()
+    }
+  }
+  // Seçili metne piksel cinsinden yazı boyutu uygular (execCommand + <font> → <span> dönüşümü)
+  const boyutUygula = (px) => {
+    if (!px) return
+    ref.current?.focus()
+    const s = window.getSelection()
+    if (savedRange.current) { s.removeAllRanges(); s.addRange(savedRange.current) }
+    if (s.isCollapsed) return // seçim yoksa uygulanmaz
+    document.execCommand('fontSize', false, '7')
+    ref.current.querySelectorAll('font[size="7"]').forEach((f) => {
+      const span = document.createElement('span')
+      span.style.fontSize = px + 'px'
+      span.innerHTML = f.innerHTML
+      f.replaceWith(span)
+    })
+    emit()
+  }
+
   const linkEkle = () => {
     const url = prompt('Bağlantı adresi (https://...)')
     if (!url) return
@@ -714,6 +739,21 @@ function RichEditor({ value, onChange }) {
         <TBtn title="İtalik" onClick={() => komut('italic')}><i>I</i></TBtn>
         <TBtn title="Altı çizili" onClick={() => komut('underline')}><u>U</u></TBtn>
         {ayrac}
+        <select
+          title="Yazı boyutu (önce metni seç)"
+          value=""
+          onMouseDown={selKaydet}
+          onChange={(e) => { boyutUygula(e.target.value); e.target.value = '' }}
+          style={{ height: 30, border: '0.5px solid #e0e0e0', borderRadius: 6, background: '#fff', fontSize: 12, color: '#333', cursor: 'pointer', padding: '0 4px', fontFamily: 'inherit' }}
+        >
+          <option value="" disabled>Boyut</option>
+          <option value="12">Küçük</option>
+          <option value="14">Normal</option>
+          <option value="16">Orta</option>
+          <option value="20">Büyük</option>
+          <option value="26">Çok büyük</option>
+        </select>
+        {ayrac}
         <TBtn title="Başlık" onClick={() => komut('formatBlock', 'H3')}>H</TBtn>
         <TBtn title="Madde işaretli liste" onClick={() => komut('insertUnorderedList')}>•</TBtn>
         <TBtn title="Numaralı liste" onClick={() => komut('insertOrderedList')} mono>1.</TBtn>
@@ -739,6 +779,8 @@ function RichEditor({ value, onChange }) {
         onInput={emit}
         onBlur={emit}
         onPaste={yapistir}
+        onKeyUp={selKaydet}
+        onMouseUp={selKaydet}
         style={{ minHeight: 260, maxHeight: 480, overflow: 'auto', padding: '14px 16px', fontSize: 14, lineHeight: 1.6, color: '#222', outline: 'none', fontFamily: 'Arial, sans-serif', background: '#fff' }}
       />
     </div>
