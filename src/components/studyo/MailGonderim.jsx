@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect, useMemo, useRef } from 'react'
 import { SEKTOR_ONERILERI } from '@/lib/kampanya/constants'
 
 const ACCENT = '#1D9E75'
@@ -367,6 +367,64 @@ function GonderSekmesi({ gruplar }) {
   const [sonuc, setSonuc] = useState(null)
   const [hata, setHata] = useState('')
 
+  // Resim ekleme / yapıştırma
+  const govdeRef = useRef(null)
+  const dosyaRef = useRef(null)
+  const [resimYukleniyor, setResimYukleniyor] = useState(false)
+  const [resimHata, setResimHata] = useState('')
+
+  const imgEtiketi = (url) => `\n<img src="${url}" alt="" style="max-width:100%; height:auto; border-radius:8px;" />\n`
+
+  // İmlecin bulunduğu yere metin ekler (textarea'nın canlı değerinden okur)
+  const metneEkle = (snippet) => {
+    const el = govdeRef.current
+    if (!el) { setGovde((g) => g + snippet); return }
+    const start = el.selectionStart
+    const end = el.selectionEnd
+    const cur = el.value
+    setGovde(cur.slice(0, start) + snippet + cur.slice(end))
+    requestAnimationFrame(() => {
+      el.focus()
+      const pos = start + snippet.length
+      el.setSelectionRange(pos, pos)
+    })
+  }
+
+  const resimYukle = async (file) => {
+    if (!file) return
+    if (!file.type || !file.type.startsWith('image/')) { setResimHata('Sadece görsel dosyası eklenebilir.'); return }
+    setResimYukleniyor(true)
+    setResimHata('')
+    try {
+      const fd = new FormData()
+      fd.append('file', file)
+      const res = await fetch('/api/blog-image-upload', { method: 'POST', body: fd })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error || 'Yükleme başarısız')
+      metneEkle(imgEtiketi(data.url))
+    } catch (err) {
+      setResimHata(err.message)
+    } finally {
+      setResimYukleniyor(false)
+    }
+  }
+
+  // Panodan resim yapıştırma — görsel varsa yükle, yoksa normal metin yapıştırması devam eder
+  const govdeYapistir = (e) => {
+    const items = e.clipboardData?.items
+    if (!items) return
+    for (const it of items) {
+      if (it.type && it.type.startsWith('image/')) {
+        const file = it.getAsFile()
+        if (file) {
+          e.preventDefault()
+          resimYukle(file)
+          return
+        }
+      }
+    }
+  }
+
   const alicilar = useMemo(() => {
     const set = new Map()
     for (const g of gruplar) {
@@ -459,11 +517,32 @@ function GonderSekmesi({ gruplar }) {
           <label style={labelStyle}>Konu</label>
           <input value={konu} onChange={(e) => setKonu(e.target.value)} style={{ ...inputStyle, marginBottom: 12 }} />
 
-          <label style={labelStyle}>HTML gövde</label>
-          <textarea value={govde} onChange={(e) => setGovde(e.target.value)} rows={12} style={{ ...inputStyle, resize: 'vertical', minHeight: 200, fontFamily: 'ui-monospace, monospace', fontSize: 12.5, lineHeight: 1.6 }} />
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
+            <label style={{ ...labelStyle, marginBottom: 0 }}>HTML gövde</label>
+            <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+              {resimHata && <span style={{ fontSize: 11, color: '#c0392b' }}>{resimHata}</span>}
+              <button
+                type="button"
+                onClick={() => dosyaRef.current?.click()}
+                disabled={resimYukleniyor}
+                style={{ ...ghostBtn, padding: '5px 11px', color: resimYukleniyor ? '#aaa' : DARK, borderColor: resimYukleniyor ? '#eee' : ACCENT, cursor: resimYukleniyor ? 'not-allowed' : 'pointer' }}
+              >
+                {resimYukleniyor ? 'Yükleniyor...' : '🖼 Resim ekle'}
+              </button>
+              <input
+                ref={dosyaRef}
+                type="file"
+                accept="image/jpeg,image/png,image/webp,image/gif"
+                onChange={(e) => { resimYukle(e.target.files?.[0]); e.target.value = '' }}
+                style={{ display: 'none' }}
+              />
+            </div>
+          </div>
+          <textarea ref={govdeRef} value={govde} onChange={(e) => setGovde(e.target.value)} onPaste={govdeYapistir} rows={12} style={{ ...inputStyle, resize: 'vertical', minHeight: 200, fontFamily: 'ui-monospace, monospace', fontSize: 12.5, lineHeight: 1.6 }} />
 
           <p style={{ fontSize: 11.5, color: '#888', margin: '8px 0 0' }}>
             Kişiselleştirme: <code style={{ color: DARK }}>{'{ad}'}</code> <code style={{ color: DARK }}>{'{firma}'}</code> <code style={{ color: DARK }}>{'{sektor}'}</code> <code style={{ color: DARK }}>{'{email}'}</code>
+            <br />🖼 Resim: butonla yükle veya editöre doğrudan <strong>Ctrl+V</strong> ile yapıştır (Supabase'e yüklenip linki eklenir).
           </p>
         </div>
 
