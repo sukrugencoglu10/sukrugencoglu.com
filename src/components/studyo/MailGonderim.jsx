@@ -19,6 +19,17 @@ const VARSAYILAN_GOVDE = `<div style="font-family: Arial, sans-serif; max-width:
   <p style="font-size:13px; color:#888;">Şükrü Gençoğlu · sukrugencoglu.com</p>
 </div>`
 
+// Görseli Supabase'e yükler, public URL döndürür (blog ile aynı endpoint)
+async function gorselYukle(file) {
+  const fd = new FormData()
+  fd.append('file', file)
+  const res = await fetch('/api/blog-image-upload', { method: 'POST', body: fd })
+  const data = await res.json()
+  if (!res.ok) throw new Error(data.error || 'Yükleme başarısız')
+  return data.url
+}
+const IMG_HTML = (url) => `<img src="${url}" alt="" style="max-width:100%; height:auto; border-radius:8px;" />`
+
 // ── ortak stiller ──────────────────────────────────────────────
 const card = {
   background: '#fff',
@@ -367,13 +378,13 @@ function GonderSekmesi({ gruplar }) {
   const [sonuc, setSonuc] = useState(null)
   const [hata, setHata] = useState('')
 
-  // Resim ekleme / yapıştırma
+  const [gorunum, setGorunum] = useState('editor') // 'editor' | 'html'
+
+  // HTML kaynağı modu için resim ekleme / yapıştırma
   const govdeRef = useRef(null)
   const dosyaRef = useRef(null)
   const [resimYukleniyor, setResimYukleniyor] = useState(false)
   const [resimHata, setResimHata] = useState('')
-
-  const imgEtiketi = (url) => `\n<img src="${url}" alt="" style="max-width:100%; height:auto; border-radius:8px;" />\n`
 
   // İmlecin bulunduğu yere metin ekler (textarea'nın canlı değerinden okur)
   const metneEkle = (snippet) => {
@@ -396,12 +407,7 @@ function GonderSekmesi({ gruplar }) {
     setResimYukleniyor(true)
     setResimHata('')
     try {
-      const fd = new FormData()
-      fd.append('file', file)
-      const res = await fetch('/api/blog-image-upload', { method: 'POST', body: fd })
-      const data = await res.json()
-      if (!res.ok) throw new Error(data.error || 'Yükleme başarısız')
-      metneEkle(imgEtiketi(data.url))
+      metneEkle('\n' + IMG_HTML(await gorselYukle(file)) + '\n')
     } catch (err) {
       setResimHata(err.message)
     } finally {
@@ -518,31 +524,42 @@ function GonderSekmesi({ gruplar }) {
           <input value={konu} onChange={(e) => setKonu(e.target.value)} style={{ ...inputStyle, marginBottom: 12 }} />
 
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
-            <label style={{ ...labelStyle, marginBottom: 0 }}>HTML gövde</label>
-            <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-              {resimHata && <span style={{ fontSize: 11, color: '#c0392b' }}>{resimHata}</span>}
-              <button
-                type="button"
-                onClick={() => dosyaRef.current?.click()}
-                disabled={resimYukleniyor}
-                style={{ ...ghostBtn, padding: '5px 11px', color: resimYukleniyor ? '#aaa' : DARK, borderColor: resimYukleniyor ? '#eee' : ACCENT, cursor: resimYukleniyor ? 'not-allowed' : 'pointer' }}
-              >
-                {resimYukleniyor ? 'Yükleniyor...' : '🖼 Resim ekle'}
-              </button>
-              <input
-                ref={dosyaRef}
-                type="file"
-                accept="image/jpeg,image/png,image/webp,image/gif"
-                onChange={(e) => { resimYukle(e.target.files?.[0]); e.target.value = '' }}
-                style={{ display: 'none' }}
-              />
+            <label style={{ ...labelStyle, marginBottom: 0 }}>Mail içeriği</label>
+            <div style={{ display: 'flex', gap: 6 }}>
+              <button type="button" onClick={() => setGorunum('editor')} style={{ ...ghostBtn, padding: '5px 11px', background: gorunum === 'editor' ? '#E1F5EE' : 'transparent', color: gorunum === 'editor' ? DARK : '#666', borderColor: gorunum === 'editor' ? ACCENT : '#ddd' }}>✏️ Görsel</button>
+              <button type="button" onClick={() => setGorunum('html')} style={{ ...ghostBtn, padding: '5px 11px', fontFamily: 'ui-monospace, monospace', background: gorunum === 'html' ? '#E1F5EE' : 'transparent', color: gorunum === 'html' ? DARK : '#666', borderColor: gorunum === 'html' ? ACCENT : '#ddd' }}>{'</>'} HTML</button>
             </div>
           </div>
-          <textarea ref={govdeRef} value={govde} onChange={(e) => setGovde(e.target.value)} onPaste={govdeYapistir} rows={12} style={{ ...inputStyle, resize: 'vertical', minHeight: 200, fontFamily: 'ui-monospace, monospace', fontSize: 12.5, lineHeight: 1.6 }} />
+
+          {gorunum === 'editor' ? (
+            <RichEditor value={govde} onChange={setGovde} />
+          ) : (
+            <>
+              <div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: 8, marginBottom: 6 }}>
+                {resimHata && <span style={{ fontSize: 11, color: '#c0392b' }}>{resimHata}</span>}
+                <button
+                  type="button"
+                  onClick={() => dosyaRef.current?.click()}
+                  disabled={resimYukleniyor}
+                  style={{ ...ghostBtn, padding: '5px 11px', color: resimYukleniyor ? '#aaa' : DARK, borderColor: resimYukleniyor ? '#eee' : ACCENT, cursor: resimYukleniyor ? 'not-allowed' : 'pointer' }}
+                >
+                  {resimYukleniyor ? 'Yükleniyor...' : '🖼 Resim ekle'}
+                </button>
+                <input
+                  ref={dosyaRef}
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp,image/gif"
+                  onChange={(e) => { resimYukle(e.target.files?.[0]); e.target.value = '' }}
+                  style={{ display: 'none' }}
+                />
+              </div>
+              <textarea ref={govdeRef} value={govde} onChange={(e) => setGovde(e.target.value)} onPaste={govdeYapistir} rows={12} style={{ ...inputStyle, resize: 'vertical', minHeight: 200, fontFamily: 'ui-monospace, monospace', fontSize: 12.5, lineHeight: 1.6 }} />
+            </>
+          )}
 
           <p style={{ fontSize: 11.5, color: '#888', margin: '8px 0 0' }}>
             Kişiselleştirme: <code style={{ color: DARK }}>{'{ad}'}</code> <code style={{ color: DARK }}>{'{firma}'}</code> <code style={{ color: DARK }}>{'{sektor}'}</code> <code style={{ color: DARK }}>{'{email}'}</code>
-            <br />🖼 Resim: butonla yükle veya editöre doğrudan <strong>Ctrl+V</strong> ile yapıştır (Supabase'e yüklenip linki eklenir).
+            <br />🖼 Resim: araç çubuğundan ekle veya doğrudan <strong>Ctrl+V</strong> ile yapıştır.
           </p>
         </div>
 
@@ -626,6 +643,104 @@ function GecmisSekmesi() {
           </div>
         </div>
       ))}
+    </div>
+  )
+}
+
+// ─────────────────────────────────────────────────────────────
+// Gmail benzeri zengin metin (WYSIWYG) editörü — contentEditable + execCommand
+// ─────────────────────────────────────────────────────────────
+function RichEditor({ value, onChange }) {
+  const ref = useRef(null)
+  const dosyaRef = useRef(null)
+  const [yukleniyor, setYukleniyor] = useState(false)
+  const [hata, setHata] = useState('')
+
+  // Dışarıdan gelen değeri yalnızca editör içeriğinden farklıysa uygula (imleç sıçramasını önler)
+  useEffect(() => {
+    const el = ref.current
+    if (el && value !== el.innerHTML) el.innerHTML = value || ''
+  }, [value])
+
+  const emit = () => { if (ref.current) onChange(ref.current.innerHTML) }
+  const komut = (cmd, arg) => { ref.current?.focus(); document.execCommand(cmd, false, arg); emit() }
+  const ekleHTML = (html) => { ref.current?.focus(); document.execCommand('insertHTML', false, html); emit() }
+
+  const linkEkle = () => {
+    const url = prompt('Bağlantı adresi (https://...)')
+    if (!url) return
+    const sel = window.getSelection()
+    if (sel && !sel.isCollapsed) komut('createLink', url)
+    else ekleHTML(`<a href="${url}">${url}</a>`)
+  }
+
+  const gorsel = async (file) => {
+    if (!file) return
+    if (!file.type || !file.type.startsWith('image/')) { setHata('Sadece görsel'); return }
+    setYukleniyor(true); setHata('')
+    try { ekleHTML(IMG_HTML(await gorselYukle(file))) }
+    catch (e) { setHata(e.message) }
+    finally { setYukleniyor(false) }
+  }
+
+  const yapistir = (e) => {
+    const items = e.clipboardData?.items
+    if (!items) return
+    for (const it of items) {
+      if (it.type && it.type.startsWith('image/')) {
+        const f = it.getAsFile()
+        if (f) { e.preventDefault(); gorsel(f); return }
+      }
+    }
+  }
+
+  const TBtn = ({ onClick, title, children, mono }) => (
+    <button
+      type="button"
+      title={title}
+      onMouseDown={(e) => e.preventDefault()}
+      onClick={onClick}
+      style={{ minWidth: 30, height: 30, padding: '0 8px', border: '0.5px solid #e0e0e0', background: '#fff', borderRadius: 6, cursor: 'pointer', fontSize: 13, fontFamily: mono ? 'ui-monospace, monospace' : 'inherit', color: '#333' }}
+    >
+      {children}
+    </button>
+  )
+  const ayrac = <span style={{ width: 1, height: 18, background: '#e0e0e0', margin: '0 2px' }} />
+
+  return (
+    <div style={{ border: '0.5px solid #ddd', borderRadius: 8, overflow: 'hidden' }}>
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4, padding: 6, borderBottom: '0.5px solid #eee', background: '#fafafa', alignItems: 'center' }}>
+        <TBtn title="Kalın" onClick={() => komut('bold')}><b>B</b></TBtn>
+        <TBtn title="İtalik" onClick={() => komut('italic')}><i>I</i></TBtn>
+        <TBtn title="Altı çizili" onClick={() => komut('underline')}><u>U</u></TBtn>
+        {ayrac}
+        <TBtn title="Başlık" onClick={() => komut('formatBlock', 'H3')}>H</TBtn>
+        <TBtn title="Madde işaretli liste" onClick={() => komut('insertUnorderedList')}>•</TBtn>
+        <TBtn title="Numaralı liste" onClick={() => komut('insertOrderedList')} mono>1.</TBtn>
+        {ayrac}
+        <label title="Yazı rengi" onMouseDown={(e) => e.preventDefault()} style={{ display: 'inline-flex', alignItems: 'center', gap: 3, height: 30, padding: '0 6px', border: '0.5px solid #e0e0e0', borderRadius: 6, cursor: 'pointer', background: '#fff' }}>
+          <span style={{ fontSize: 12, color: '#333' }}>A</span>
+          <input type="color" onChange={(e) => komut('foreColor', e.target.value)} style={{ width: 18, height: 18, border: 'none', background: 'none', padding: 0, cursor: 'pointer' }} />
+        </label>
+        <TBtn title="Bağlantı ekle" onClick={linkEkle}>🔗</TBtn>
+        <TBtn title="Resim ekle" onClick={() => dosyaRef.current?.click()}>{yukleniyor ? '⏳' : '🖼'}</TBtn>
+        <TBtn title="Biçimi temizle" onClick={() => komut('removeFormat')}>⌫</TBtn>
+        {ayrac}
+        {['{ad}', '{firma}', '{sektor}', '{email}'].map((t) => (
+          <TBtn key={t} mono title={'Ekle: ' + t} onClick={() => ekleHTML(t)}>{t}</TBtn>
+        ))}
+        {hata && <span style={{ fontSize: 11, color: '#c0392b', marginLeft: 6 }}>{hata}</span>}
+        <input ref={dosyaRef} type="file" accept="image/jpeg,image/png,image/webp,image/gif" onChange={(e) => { gorsel(e.target.files?.[0]); e.target.value = '' }} style={{ display: 'none' }} />
+      </div>
+      <div
+        ref={ref}
+        contentEditable
+        suppressContentEditableWarning
+        onInput={emit}
+        onBlur={emit}
+        onPaste={yapistir}
+        style={{ minHeight: 260, maxHeight: 480, overflow: 'auto', padding: '14px 16px', fontSize: 14, lineHeight: 1.6, color: '#222', outline: 'none', fontFamily: 'Arial, sans-serif', background: '#fff' }}
+      />
     </div>
   )
 }
