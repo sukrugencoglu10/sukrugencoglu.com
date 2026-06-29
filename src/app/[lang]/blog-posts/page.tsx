@@ -25,8 +25,8 @@ export const metadata: Metadata = {
   },
 };
 
-export default function BlogPostsPage({ params }: { params: { lang: string } }) {
-  const lang = params.lang || "en";
+export default async function BlogPostsPage({ params }: { params: Promise<{ lang: string }> }) {
+  const { lang } = await params;
   return (
     <>
       <BlogListePage />

@@ -23,8 +23,8 @@ export const metadata: Metadata = {
   },
 };
 
-export default function BlogYazilariPage({ params }: { params: { lang: string } }) {
-  const lang = params.lang || "tr";
+export default async function BlogYazilariPage({ params }: { params: Promise<{ lang: string }> }) {
+  const { lang } = await params;
   return (
     <>
       <BlogListePage />
