@@ -5,7 +5,7 @@ export const en = {
     process: "Studio",
     services: "Services",
     about: "About",
-    contact: "Contact",
+    contact: "Blog Posts",
     cta: "Let's Work Together",
   },
   hero: {

@@ -448,11 +448,6 @@ export default function CalisimalarLayout() {
           <span className="cal-nav-label">SSS</span>
           <span className="cal-nav-arrow">→</span>
         </a>
-        <a href={`/${lang}/blog`} className="cal-nav-card">
-          <span className="cal-nav-icon">✍️</span>
-          <span className="cal-nav-label">Blog Yazıları</span>
-          <span className="cal-nav-arrow">→</span>
-        </a>
       </div>
 
       {/* ── Maps section ── */}

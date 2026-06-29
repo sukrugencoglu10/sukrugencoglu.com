@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import AboutSection from "@/components/sections/AboutSection";
 import { PersonLd, BreadcrumbLd } from "@/lib/seo/JsonLd";
 import { siteConfig } from "@/lib/seo/config";
+import ContactSection from "@/components/sections/ContactSection";
+import PlusServicesWizard from "@/components/ui/PlusServicesWizard";
 
 const baseUrl = siteConfig.baseUrl;
 
@@ -36,6 +38,13 @@ export default function AboutPage() {
       <BreadcrumbLd items={breadcrumbs} />
       <PersonLd lang="en" />
       <AboutSection />
+      <ContactSection
+        pinnedAnons={
+          <div className="flex flex-col gap-6">
+            <PlusServicesWizard showContactButton />
+          </div>
+        }
+      />
     </>
   );
 }

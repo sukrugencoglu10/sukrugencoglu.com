@@ -41,11 +41,11 @@ export default function Navbar() {
       setActiveSection("process");
       return;
     }
-    if (pathname.endsWith("/work") || pathname.endsWith("/calismalar") || pathname.includes("/blog")) {
+    if (pathname.endsWith("/work") || pathname.endsWith("/calismalar")) {
       setActiveSection("work");
       return;
     }
-    if (pathname.endsWith("/contact") || pathname.endsWith("/iletisim")) {
+    if (pathname.endsWith("/contact") || pathname.endsWith("/iletisim") || pathname.includes("/blog")) {
       setActiveSection("contact");
       return;
     }

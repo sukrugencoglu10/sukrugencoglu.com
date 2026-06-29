@@ -7,7 +7,7 @@ export const tr: Translations = {
     process: "Stüdyo",
     services: "Hizmetlerimiz",
     about: "Hakkımda",
-    contact: "İletişim",
+    contact: "Blog Yazıları",
     cta: "Birlikte Çalışalım",
   },
   hero: {
