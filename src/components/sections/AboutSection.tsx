@@ -97,10 +97,10 @@ export default function AboutSection() {
           {/* Sol: Metin */}
           <div className="flex flex-col gap-6">
             <Badge color="blue">{t.about.badge}</Badge>
-            <h2 className="text-3xl sm:text-4xl font-extrabold text-ink tracking-tight">
+            <h1 className="text-3xl sm:text-4xl font-extrabold text-ink tracking-tight">
               {t.about.title}{" "}
               <span className="text-[#1e6296]">{t.about.title_accent}</span>
-            </h2>
+            </h1>
             <p className="text-ink-muted leading-relaxed">
               {t.about.bio.split("Şükrü Gençoğlu").map((part, i, arr) => (
                 <span key={i}>
@@ -150,7 +150,7 @@ export default function AboutSection() {
             <span className="text-xs font-semibold uppercase tracking-wider text-ink-muted">
               {t.about.skills_title}
             </span>
-            <h3 className="text-2xl sm:text-3xl font-extrabold text-ink mt-2">Tech Stack</h3>
+            <h2 className="text-2xl sm:text-3xl font-extrabold text-ink mt-2">Tech Stack</h2>
           </div>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
             {techStack.map((category) => (
@@ -159,7 +159,7 @@ export default function AboutSection() {
                 className="flex flex-col items-center gap-3 p-6 rounded-xl border border-border bg-surface-secondary hover:border-[#1e6296]/30 transition-colors"
               >
                 <span className="text-3xl">{category.icon}</span>
-                <h4 className="text-sm font-bold text-ink uppercase tracking-wide">{category.title}</h4>
+                <h3 className="text-sm font-bold text-ink uppercase tracking-wide">{category.title}</h3>
                 <ul className="flex flex-col gap-1.5 text-center">
                   {category.items.map((item) => (
                     <li key={item} className="text-xs text-ink-muted">{item}</li>

@@ -151,9 +151,9 @@ export default function ProjectTable() {
                     )}
                   </div>
                   <div className="flex flex-col">
-                    <span className="font-semibold text-lg text-ink leading-tight">
+                    <h3 className="font-semibold text-lg text-ink leading-tight m-0">
                       {project.company}
-                    </span>
+                    </h3>
                     <span className="text-sm font-medium text-ink-muted md:hidden">
                       {title}
                     </span>

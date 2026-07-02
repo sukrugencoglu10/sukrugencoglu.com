@@ -55,10 +55,10 @@ export default function ServicesSection() {
             <img src="https://upload.wikimedia.org/wikipedia/commons/f/fb/Adobe_Illustrator_CC_icon.svg" alt="Adobe Illustrator" className="h-10 sm:h-12 w-auto object-contain transition-transform hover:scale-110 rounded-lg" />
           </div>
 
-          <h2 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-ink tracking-tight">
+          <h1 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-ink tracking-tight">
             {t.services.title}{" "}
             <span className="text-orange">{t.services.title_accent}</span>
-          </h2>
+          </h1>
         </div>
 
         {/* Slider */}
@@ -127,14 +127,14 @@ export default function ServicesSection() {
                 >
                   {String(active + 1).padStart(2, "0")} / {String(total).padStart(2, "0")}
                 </div>
-                <h3 className="text-2xl lg:text-3xl font-extrabold text-ink mb-4 leading-snug">
+                <h2 className="text-2xl lg:text-3xl font-extrabold text-ink mb-4 leading-snug">
                   {items[active].title}
-                </h3>
+                </h2>
                 {items[active].sections ? (
                   <div onClick={e => e.stopPropagation()} className="overflow-y-auto max-h-[380px] pr-2 space-y-5 text-[0.9rem]">
                     {items[active].sections!.map((sec, si) => (
                       <div key={si}>
-                        <p className="font-bold text-ink mb-1">{sec.heading}</p>
+                        <h3 className="font-bold text-ink mb-1 text-base">{sec.heading}</h3>
                         {sec.intro && <p className="text-ink-secondary mb-2 leading-relaxed">{sec.intro}</p>}
                         <ul className="space-y-1">
                           {sec.bullets.map((b, bi) => (
@@ -147,7 +147,7 @@ export default function ServicesSection() {
                     ))}
                     {items[active].closing && (
                       <div className="border-t border-border pt-4">
-                        <p className="font-bold text-ink mb-1">{items[active].closing!.heading}</p>
+                        <h3 className="font-bold text-ink mb-1 text-base">{items[active].closing!.heading}</h3>
                         <p className="text-ink-secondary leading-relaxed italic">&ldquo;{items[active].closing!.text}&rdquo;</p>
                       </div>
                     )}
@@ -203,9 +203,9 @@ export default function ServicesSection() {
               <div style={{ color: "#bbb" }} className="text-xs font-bold tracking-widest mb-1 uppercase">
                 {String(active + 1).padStart(2, "0")} / {String(total).padStart(2, "0")}
               </div>
-              <h3 className="text-xl font-extrabold text-ink mb-3 leading-snug">
+              <h2 className="text-xl font-extrabold text-ink mb-3 leading-snug">
                 {items[active].title}
-              </h3>
+              </h2>
               {items[active].sections ? (
                 <div onClick={e => e.stopPropagation()} className="overflow-y-auto max-h-[340px] pr-1 space-y-4 text-sm">
                   {items[active].sections!.map((sec, si) => (

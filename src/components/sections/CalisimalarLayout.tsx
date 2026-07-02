@@ -1,15 +1,12 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
-import Image from "next/image";
+import { useState, useEffect } from "react";
 import { useLanguage } from "@/context/LanguageContext";
 import { useRouter } from "next/navigation";
 import dynamic from "next/dynamic";
-import DetailModal from "@/components/ui/DetailModal";
 
 const AdvertisingHierarchyLiveMap = dynamic(() => import("@/components/ui/AdvertisingHierarchyLiveMap"), { ssr: false });
 const ReklamKpiLiveMap = dynamic(() => import("@/components/ui/ReklamKpiLiveMap"), { ssr: false });
-const ReklamStratejisiLiveMap = dynamic(() => import("@/components/ui/ReklamStratejisiLiveMap"), { ssr: false });
 
 /* ─── helpers ────────────────────────────────────────────────── */
 function renderWithLinks(text: string) {
@@ -42,15 +39,53 @@ function HiyerarsiInner({ activeItemId, onSelect }: { activeItemId: string | nul
   );
 }
 
-function SssInner({ activeItemId, onSelect }: { activeItemId: string | null; onSelect: (id: string) => void }) {
+function SssAccordion() {
   const [items, setItems] = useState<any[]>([]);
+  const [openIds, setOpenIds] = useState<Set<string>>(new Set());
   useEffect(() => {
     fetch("/api/sss").then(r => r.json())
       .then(d => { if (Array.isArray(d)) setItems(d); }).catch(() => {});
   }, []);
+  const toggle = (id: string) =>
+    setOpenIds(prev => { const s = new Set(prev); s.has(id) ? s.delete(id) : s.add(id); return s; });
+  if (!items.length) return <Loading />;
   return (
-    <InnerList items={items.map(i => ({ id: String(i.id), label: i.title }))}
-      activeId={activeItemId} onSelect={onSelect} />
+    <div style={{ maxWidth: 820, margin: "0 auto", padding: "2.5rem 1.25rem", animation: "fadeInDetail 0.2s ease-out" }}>
+      <h2 style={{ fontSize: "clamp(22px, 3vw, 30px)", fontWeight: 800, color: "#111",
+        textAlign: "center", margin: "0 0 1.75rem", letterSpacing: "-0.01em" }}>
+        Sıkça Sorulan Sorular
+      </h2>
+      <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+        {items.map(item => {
+          const id = String(item.id);
+          const isOpen = openIds.has(id);
+          return (
+            <div key={id} style={{
+              border: "0.5px solid #e8e8e8", borderRadius: 12, overflow: "hidden",
+              background: "#fff", boxShadow: isOpen ? "0 4px 14px rgba(0,0,0,0.04)" : "none",
+              transition: "box-shadow 0.15s",
+            }}>
+              <button onClick={() => toggle(id)}
+                style={{ width: "100%", padding: "14px 18px",
+                  background: isOpen ? "#fafafa" : "#fff",
+                  border: "none", cursor: "pointer", textAlign: "left", fontFamily: "inherit",
+                  display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12 }}>
+                <span style={{ fontSize: 14, fontWeight: 600, color: "#222", lineHeight: 1.45 }}>{item.title}</span>
+                <span style={{ fontSize: 20, color: "#1e6296", flexShrink: 0, fontWeight: 300, lineHeight: 1 }}>
+                  {isOpen ? "−" : "+"}
+                </span>
+              </button>
+              {isOpen && (
+                <div style={{ padding: "14px 18px 16px", fontSize: 13.5, color: "#555", lineHeight: 1.75,
+                  borderTop: "0.5px solid #eee", background: "#fcfcfc", whiteSpace: "pre-wrap" }}>
+                  {renderWithLinks(item.description || "")}
+                </div>
+              )}
+            </div>
+          );
+        })}
+      </div>
+    </div>
   );
 }
 
@@ -157,23 +192,6 @@ function HiyerarsiDetail({ itemId }: { itemId: string }) {
   );
 }
 
-function SssDetail({ itemId }: { itemId: string }) {
-  const [data, setData] = useState<any[]>([]);
-  useEffect(() => {
-    fetch("/api/sss").then(r => r.json()).then(d => { if (Array.isArray(d)) setData(d); }).catch(() => {});
-  }, []);
-  const item = data.find(i => String(i.id) === itemId);
-  if (!item) return <Loading />;
-  return (
-    <div style={{ padding: "2rem" }}>
-      <h2 style={{ fontSize: 22, fontWeight: 700, color: "#111", margin: "0 0 1rem", lineHeight: 1.25 }}>{item.title}</h2>
-      <p style={{ fontSize: 14, color: "#555", lineHeight: 1.8, margin: 0, whiteSpace: "pre-wrap" }}>
-        {renderWithLinks(item.description || "")}
-      </p>
-    </div>
-  );
-}
-
 function NotlarDetail({ itemId }: { itemId: string }) {
   const [data, setData] = useState<any[]>([]);
   useEffect(() => {
@@ -199,78 +217,10 @@ function NotlarDetail({ itemId }: { itemId: string }) {
   );
 }
 
-/* ─── SSS cards grid ─────────────────────────────────────────── */
-function SssCards() {
-  const [items, setItems] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [openId, setOpenId] = useState<string | null>(null);
-
-  useEffect(() => {
-    fetch("/api/sss").then(r => r.json())
-      .then(d => { if (Array.isArray(d)) setItems(d); })
-      .catch(() => {})
-      .finally(() => setLoading(false));
-  }, []);
-
-  if (loading) return <Loading />;
-  if (!items.length) return (
-    <div style={{ padding: "3rem", textAlign: "center", color: "#bbb", fontSize: 13 }}>
-      Henüz SSS eklenmemiş.
-    </div>
-  );
-
-  return (
-    <div style={{ animation: "fadeInDetail 0.2s ease-out" }}>
-      <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem", padding: "1rem" }}>
-        {items.map(item => {
-          const isOpen = openId === String(item.id);
-          return (
-            <div
-              key={item.id}
-              onClick={() => setOpenId(isOpen ? null : String(item.id))}
-              style={{
-                background: "#fff",
-                border: `1px solid ${isOpen ? "#111" : "#e8e8e8"}`,
-                borderRadius: 14,
-                padding: "1.25rem 1.5rem",
-                cursor: "pointer",
-                transition: "all 0.15s",
-                display: "flex",
-                flexDirection: "column",
-                gap: 8,
-              }}
-              onMouseEnter={e => { if (!isOpen) (e.currentTarget as HTMLDivElement).style.borderColor = "#aaa"; }}
-              onMouseLeave={e => { if (!isOpen) (e.currentTarget as HTMLDivElement).style.borderColor = "#e8e8e8"; }}
-            >
-              <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 8 }}>
-                <h3 style={{ margin: 0, fontSize: 14, fontWeight: 700, color: "#111", lineHeight: 1.4 }}>
-                  {item.title}
-                </h3>
-                <span style={{ flexShrink: 0, fontSize: 14, color: "#888", transform: isOpen ? "rotate(180deg)" : "rotate(0deg)", transition: "transform 0.15s" }}>▾</span>
-              </div>
-              {!isOpen && (
-                <p style={{ margin: 0, fontSize: 12, color: "#999", lineHeight: 1.6,
-                  display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical" as const, overflow: "hidden" }}>
-                  {item.description}
-                </p>
-              )}
-              {isOpen && (
-                <p style={{ margin: 0, fontSize: 13, color: "#444", lineHeight: 1.8, whiteSpace: "pre-wrap" }}>
-                  {renderWithLinks(item.description || "")}
-                </p>
-              )}
-            </div>
-          );
-        })}
-      </div>
-    </div>
-  );
-}
-
 /* ─── Blog cards grid ─────────────────────────────────────────── */
 const ACCENT: Record<string, string> = {
   gtm: "#1D9E75", analytics: "#3B82F6", cro: "#F59E0B",
-  otomasyon: "#8B5CF6", genel: "#6B7280", reklam: "#EF4444", seo: "#0EA5E9", eticaret: "#EC4899", fullstack: "#14B8A6",
+  otomasyon: "#8B5CF6", genel: "#6B7280", reklam: "#EF4444",
 };
 
 function BlogCards() {
@@ -278,41 +228,6 @@ function BlogCards() {
   const router = useRouter();
   const [posts, setPosts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const [dblClickPost, setDblClickPost] = useState<any>(null);
-  const clickTimerRef = useRef<{ id: string; timer: ReturnType<typeof setTimeout> } | null>(null);
-  const lastTapRef = useRef<{ id: string | null; time: number }>({ id: null, time: 0 });
-
-  const handleDoubleTap = (e: React.TouchEvent, post: any) => {
-    const now = Date.now();
-    const last = lastTapRef.current;
-    if (last.id === post.id && now - last.time < 300) {
-      e.preventDefault();
-      lastTapRef.current = { id: null, time: 0 };
-      if (clickTimerRef.current) { clearTimeout(clickTimerRef.current.timer); clickTimerRef.current = null; }
-      setDblClickPost(post);
-    } else {
-      lastTapRef.current = { id: post.id, time: now };
-    }
-  };
-
-  const handleCardClick = (post: any) => {
-    const existing = clickTimerRef.current;
-    if (existing !== null && existing.id === post.id) {
-      clearTimeout(existing.timer);
-      clickTimerRef.current = null;
-      setDblClickPost(post);
-    } else {
-      if (existing) clearTimeout(existing.timer);
-      clickTimerRef.current = {
-        id: post.id,
-        timer: setTimeout(() => {
-          clickTimerRef.current = null;
-          router.push(`/${lang}/blog/${post.slug}`);
-        }, 250),
-      };
-    }
-  };
-
   useEffect(() => {
     fetch("/api/blog-yazilari").then(r => r.json())
       .then(d => { if (Array.isArray(d)) setPosts(d.filter((p: any) => p.published)); })
@@ -329,22 +244,6 @@ function BlogCards() {
 
   return (
     <div style={{ animation: "fadeInDetail 0.2s ease-out" }}>
-      {dblClickPost && (
-        <DetailModal
-          title={lang === "tr" ? dblClickPost.titleTR : dblClickPost.titleEN}
-          subtitle={(() => {
-            try {
-              const d = new Date(dblClickPost.publishedAt).toLocaleDateString(lang === "tr" ? "tr-TR" : "en-US", { year: "numeric", month: "short", day: "numeric" });
-              return `${d} · ${dblClickPost.readingMinutes} dk`;
-            } catch { return dblClickPost.publishedAt; }
-          })()}
-          description={lang === "tr" ? dblClickPost.summaryTR : dblClickPost.summaryEN}
-          accentColor={ACCENT[dblClickPost.category] || "#1D9E75"}
-          badge={dblClickPost.category}
-          tags={dblClickPost.tags}
-          onClose={() => setDblClickPost(null)}
-        />
-      )}
       <div className="cal-blog-grid">
         {posts.map(post => {
           const title = lang === "tr" ? post.titleTR : post.titleEN;
@@ -357,8 +256,7 @@ function BlogCards() {
           return (
             <div
               key={post.id}
-              onClick={() => handleCardClick(post)}
-              onTouchEnd={(e) => handleDoubleTap(e, post)}
+              onClick={() => router.push(`/${lang}/blog/${post.slug}`)}
               style={{
                 background: "#fff",
                 border: "0.5px solid #e8e8e8",
@@ -380,15 +278,14 @@ function BlogCards() {
             >
               {/* Cover: image or emoji strip */}
               {post.coverImage ? (
-                <div style={{ position: "relative", width: "100%", height: 140, borderBottom: `2px solid ${accent}22` }}>
-                  <Image
-                    src={post.coverImage}
-                    alt=""
-                    fill
-                    sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
-                    style={{ objectFit: "cover" }}
-                  />
-                </div>
+                <img
+                  src={post.coverImage}
+                  alt=""
+                  style={{
+                    width: "100%", height: 140, objectFit: "cover", display: "block",
+                    borderBottom: `2px solid ${accent}22`,
+                  }}
+                />
               ) : (
                 <div style={{
                   height: 80, background: accent + "18",
@@ -437,73 +334,198 @@ function Loading() {
 
 /* ─── Main Layout ─────────────────────────────────────────────── */
 export default function CalisimalarLayout() {
-  const { lang } = useLanguage();
+  const [activeSection, setActiveSection] = useState<SectionId | null>(null);
+  const [activeItemId, setActiveItemId] = useState<string | null>(null);
+
+  const handleSectionClick = (id: SectionId) => {
+    if (activeSection === id) {
+      setActiveSection(null);
+      setActiveItemId(null);
+    } else {
+      setActiveSection(id);
+      setActiveItemId(null);
+    }
+  };
+
+  const handleItemSelect = (id: string) => setActiveItemId(id);
+
   return (
     <div style={{ minHeight: "calc(100vh - 80px)", background: "#fafafa", fontFamily: "inherit" }}>
 
-      {/* ── İki tıklanabilir kart ── */}
-      <div className="cal-nav-cards">
-        <a href={`/${lang}/sss`} className="cal-nav-card">
-          <span className="cal-nav-icon">❓</span>
-          <span className="cal-nav-label">SSS</span>
-          <span className="cal-nav-arrow">→</span>
-        </a>
+      {/* ── Top tab bar ── */}
+      <div className="cal-tabbar">
+        {SECTIONS.map(sec => {
+          const isActive = activeSection === sec.id;
+          return (
+            <button
+              key={sec.id}
+              onClick={() => handleSectionClick(sec.id)}
+              className={`cal-tab${isActive ? " cal-tab--active" : ""}`}>
+              <span className="cal-tab-icon">{sec.icon}</span>
+              <span className="cal-tab-label">{sec.label}</span>
+            </button>
+          );
+        })}
+        {activeSection && (
+          <button
+            onClick={() => { setActiveSection(null); setActiveItemId(null); }}
+            className="cal-tab-close"
+            title="Kapat">
+            ✕
+          </button>
+        )}
       </div>
 
-      {/* ── Maps section ── */}
-      <div className="cal-maps-wrap">
-        <div style={{ marginBottom: "1.5rem", textAlign: "center" }}>
-          <h1 style={{ fontSize: "clamp(20px, 3vw, 32px)", fontWeight: 800, color: "#111",
-            margin: "0 0 10px", lineHeight: 1.2 }}>
-            Canlı Reklam & Web Hiyerarşisi
-          </h1>
-          <p style={{ fontSize: 14, color: "#888", maxWidth: 520, margin: "0 auto", lineHeight: 1.7 }}>
-            Aşağıdaki harita, Şükrü Gençoğlu tarafından Stüdyo üzerinde oluşturulan
-            ve gerçek zamanlı olarak güncellenen dijital büyüme stratejisini göstermektedir.
-          </p>
+      {/* ── Content area ── */}
+      {!activeSection ? (
+        /* Maps view */
+        <div className="cal-maps-wrap">
+          <div style={{ marginBottom: "1.5rem", textAlign: "center" }}>
+            <h1 style={{ fontSize: "clamp(20px, 3vw, 32px)", fontWeight: 800, color: "#111",
+              margin: "0 0 10px", lineHeight: 1.2 }}>
+              Canlı Reklam & Web Hiyerarşisi
+            </h1>
+            <p style={{ fontSize: 14, color: "#888", maxWidth: 520, margin: "0 auto", lineHeight: 1.7 }}>
+              Aşağıdaki harita, Şükrü Gençoğlu tarafından Stüdyo üzerinde oluşturulan
+              ve gerçek zamanlı olarak güncellenen dijital büyüme stratejisini göstermektedir.
+            </p>
+          </div>
+          <AdvertisingHierarchyLiveMap />
+          <ReklamKpiLiveMap />
         </div>
-        <ReklamStratejisiLiveMap />
-        <AdvertisingHierarchyLiveMap />
-        <ReklamKpiLiveMap />
-      </div>
+      ) : activeSection === "dusunceler" ? (
+        /* Blog yazıları — tam genişlik kart grid */
+        <BlogCards />
+      ) : activeSection === "sss" ? (
+        /* SSS — tek kolon accordion */
+        <SssAccordion />
+      ) : (
+        /* Diğer sekmeler — iç liste + detay */
+        <div className={`cal-split${activeItemId ? " cal-split--detail" : ""}`}>
+
+          {/* Inner list panel */}
+          <div className="cal-list-panel">
+            <div style={{ padding: "14px 16px 8px", borderBottom: "0.5px solid #ebebeb" }}>
+              <div style={{ fontSize: 10, fontWeight: 700, color: "#bbb", letterSpacing: "0.08em" }}>
+                {SECTIONS.find(s => s.id === activeSection)?.label.toUpperCase()}
+              </div>
+            </div>
+          </div>
+
+          {/* Detail panel */}
+          <main className="cal-detail-panel">
+            {/* Mobile geri butonu */}
+            {activeItemId && (
+              <button
+                onClick={() => setActiveItemId(null)}
+                className="cal-back-btn">
+                ← Listeye Dön
+              </button>
+            )}
+            {!activeItemId ? (
+              <div style={{ display: "flex", flexDirection: "column", alignItems: "center",
+                justifyContent: "center", height: "100%", minHeight: 300, color: "#ccc", gap: 12 }}>
+                <span style={{ fontSize: 36 }}>{SECTIONS.find(s => s.id === activeSection)?.icon}</span>
+                <span style={{ fontSize: 13 }}>Listeden bir öğe seç</span>
+              </div>
+            ) : (
+              <div style={{ animation: "fadeInDetail 0.2s ease-out" }}>
+                  </div>
+            )}
+          </main>
+        </div>
+      )}
 
       <style>{`
-        /* ── Maps wrapper ── */
-        .cal-maps-wrap { padding: 1.5rem 1rem; }
-
-        /* ── Nav kartlar ── */
-        .cal-nav-cards {
+        /* ── Tab bar ── */
+        .cal-tabbar {
+          position: sticky;
+          top: 80px;
+          z-index: 20;
+          background: #fff;
+          border-bottom: 0.5px solid #e8e8e8;
           display: flex;
-          gap: 1rem;
-          padding: 1.5rem 1rem;
-          border-top: 0.5px solid #e8e8e8;
+          align-items: stretch;
+          justify-content: center;
+          overflow-x: auto;
+          -webkit-overflow-scrolling: touch;
+          scrollbar-width: none;
         }
-        .cal-nav-card {
-          flex: 1;
+        .cal-tabbar::-webkit-scrollbar { display: none; }
+
+        .cal-tab {
           display: flex;
           align-items: center;
-          gap: 12px;
-          padding: 1.5rem 2rem;
-          background: #fff;
-          border: 1px solid #e8e8e8;
-          border-radius: 14px;
-          text-decoration: none;
-          color: #111;
-          font-family: inherit;
-          transition: border-color 0.15s, box-shadow 0.15s, transform 0.15s;
+          gap: 7px;
+          padding: 14px 16px;
+          border: none;
+          border-bottom: 2.5px solid transparent;
+          background: transparent;
           cursor: pointer;
+          font-family: inherit;
+          font-size: 13px;
+          font-weight: 500;
+          color: #888;
+          transition: all 0.15s;
+          white-space: nowrap;
+          flex-shrink: 0;
         }
-        .cal-nav-card:hover {
-          border-color: #111;
-          box-shadow: 0 6px 20px rgba(0,0,0,0.07);
-          transform: translateY(-2px);
+        .cal-tab--active {
+          border-bottom-color: #111;
+          color: #111;
+          font-weight: 700;
         }
-        .cal-nav-icon { font-size: 28px; }
-        .cal-nav-label { font-size: 16px; font-weight: 700; flex: 1; }
-        .cal-nav-arrow { font-size: 20px; color: #bbb; transition: color 0.15s, transform 0.15s; }
-        .cal-nav-card:hover .cal-nav-arrow { color: #111; transform: translateX(4px); }
+        .cal-tab-icon { font-size: 15px; }
+        .cal-tab-close {
+          margin-left: auto;
+          margin-right: 0.5rem;
+          padding: 0 12px;
+          border: none;
+          background: transparent;
+          cursor: pointer;
+          font-size: 16px;
+          color: #ccc;
+          flex-shrink: 0;
+        }
 
-        /* ── Blog grid (blog sayfasında kullanılır) ── */
+        /* ── Maps wrapper ── */
+        .cal-maps-wrap {
+          padding: 1.5rem 1rem;
+        }
+
+        /* ── Split layout ── */
+        .cal-split {
+          display: flex;
+          min-height: calc(100vh - 130px);
+        }
+        .cal-list-panel {
+          width: 240px;
+          flex-shrink: 0;
+          background: #f7f7f7;
+          border-right: 0.5px solid #e8e8e8;
+          overflow-y: auto;
+          animation: slideInLeft 0.18s ease-out;
+        }
+        .cal-detail-panel {
+          flex: 1;
+          min-width: 0;
+          overflow-y: auto;
+        }
+        .cal-back-btn {
+          display: none;
+          margin: 1rem 1rem 0;
+          padding: 7px 14px;
+          border: 0.5px solid #e0e0e0;
+          border-radius: 8px;
+          background: #f5f5f5;
+          font-size: 12px;
+          font-weight: 600;
+          color: #555;
+          cursor: pointer;
+          font-family: inherit;
+        }
+
+        /* ── Blog cards grid ── */
         .cal-blog-grid {
           display: grid;
           grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
@@ -512,6 +534,10 @@ export default function CalisimalarLayout() {
         }
 
         /* ── Animations ── */
+        @keyframes slideInLeft {
+          from { opacity: 0; transform: translateX(-12px); }
+          to   { opacity: 1; transform: translateX(0); }
+        }
         @keyframes fadeInDetail {
           from { opacity: 0; transform: translateY(8px); }
           to   { opacity: 1; transform: translateY(0); }
@@ -519,8 +545,25 @@ export default function CalisimalarLayout() {
 
         /* ── Mobile ── */
         @media (max-width: 640px) {
-          .cal-nav-cards { flex-direction: column; }
-          .cal-blog-grid { grid-template-columns: 1fr; }
+          .cal-tabbar { justify-content: flex-start; }
+          .cal-tab { padding: 12px 12px; gap: 5px; font-size: 12px; }
+          .cal-tab-label { display: none; }
+          .cal-tab-icon { font-size: 18px; }
+          .cal-tab--active .cal-tab-label { display: inline; }
+
+          .cal-maps-wrap { padding: 1rem 0.75rem; }
+
+          .cal-split { flex-direction: column; }
+          .cal-list-panel { width: 100%; border-right: none; border-bottom: 0.5px solid #e8e8e8; }
+          .cal-split--detail .cal-list-panel { display: none; }
+          .cal-split--detail .cal-detail-panel { display: block; }
+          .cal-back-btn { display: inline-flex; align-items: center; gap: 4px; }
+
+          .cal-blog-grid {
+            grid-template-columns: 1fr;
+            padding: 1rem 0.75rem;
+            gap: 1rem;
+          }
         }
 
         @media (max-width: 400px) {

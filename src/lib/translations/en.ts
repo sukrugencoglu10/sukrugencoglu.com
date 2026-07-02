@@ -164,7 +164,7 @@ export const en = {
     copyright: "© 2025 Şükrü Gençoğlu. All rights reserved.",
   },
   mantikhHaritasi: {
-    badge: "Logic Map",
+    badge: "Ad Strategy",
     title: "The Right Strategy in",
     title_accent: "Ad Management",
     subtitle: "A systematic approach to running ads that convert — every step, every decision.",
