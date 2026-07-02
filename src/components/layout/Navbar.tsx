@@ -168,7 +168,7 @@ export default function Navbar() {
         >
           {/* btn-orange */}
           <Link
-            href={`/${lang}/${getSlug(lang, "contact")}`}
+            href={`/${lang}#mantik-haritasi`}
             style={{
               backgroundColor: "#ff5f00",
               color: "white",
@@ -259,7 +259,7 @@ export default function Navbar() {
           })}
           <div style={{ marginTop: "16px", display: "flex", flexDirection: "column", gap: "10px" }}>
             <Link
-              href={`/${lang}/${getSlug(lang, "contact")}`}
+              href={`/${lang}#mantik-haritasi`}
               onClick={() => setMobileOpen(false)}
               style={{ display: "block", textAlign: "center", padding: "9px", border: "1px solid #ff5f00", backgroundColor: "#ff5f00", borderRadius: "4px", color: "white", textDecoration: "none", fontWeight: 600, transition: "all 0.3s ease", boxShadow: "0 0 0 rgba(255, 95, 0, 0)" }}
               onMouseEnter={(e) => {
