@@ -1,11 +1,16 @@
 import { MetadataRoute } from "next";
+import { siteConfig } from "@/lib/seo/config";
 
 export default function robots(): MetadataRoute.Robots {
   return {
-    rules: {
-      userAgent: "*",
-      allow: "/",
-    },
-    sitemap: "https://www.sukrugencoglu.com/sitemap.xml",
+    rules: [
+      {
+        userAgent: "*",
+        allow: "/",
+        disallow: ["/studyo", "/studyo/", "/api/"],
+      },
+    ],
+    sitemap: `${siteConfig.baseUrl}/sitemap.xml`,
+    host: siteConfig.baseUrl,
   };
 }

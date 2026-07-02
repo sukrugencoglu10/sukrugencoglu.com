@@ -175,8 +175,8 @@ export const tr: Translations = {
     card_desc: "Her adımda ölçülebilir sonuçlar. Her kampanyada stratejik kararlar.",
     items: [
       {
-        title: "Reklam verme ve çıkma amacımız, niyetimiz, hedefimiz nedir?",
-        subs: ["Google'da ilk sayfada çıkma", "Telefon aramaları", "WhatsApp tıklanmaları", "Form"],
+        title: "Reklam Yayınlama Amacımız Nedir?",
+        subs: ["Satış ve müşteri sayısını arttırma"],
       },
       {
         title: "Reklam yayında kalmaz, yönetilir",
@@ -185,6 +185,10 @@ export const tr: Translations = {
       {
         title: "Doğru reklam kampanyası ile doğru amaca hizmet ederek doğru hedef kitleye ulaşma",
         subs: ["Niş hedef kitleye stratejik kampanya kurulumu", "Özel optimizasyon"],
+      },
+      {
+        title: "Reklam Neticesi",
+        subs: ["Google'da ilk sıraya çıkma", "WhatsApp tıklamaları", "Telefon aramaları", "Form Talebi"],
       },
       {
         title: "Reklamların optimize edilmesi",

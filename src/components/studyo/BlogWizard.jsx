@@ -8,10 +8,10 @@ import ReactMarkdown from 'react-markdown'
 import remarkBreaks from 'remark-breaks'
 import remarkGfm from 'remark-gfm'
 
-const CATEGORIES = ['genel', 'gtm', 'analytics', 'cro', 'otomasyon', 'reklam']
+const CATEGORIES = ['genel', 'gtm', 'analytics', 'cro', 'otomasyon', 'reklam', 'seo']
 const CAT_COLORS = {
   gtm: '#1D9E75', analytics: '#3B82F6', cro: '#F59E0B',
-  otomasyon: '#8B5CF6', genel: '#6B7280', reklam: '#EF4444',
+  otomasyon: '#8B5CF6', genel: '#6B7280', reklam: '#EF4444', seo: '#0EA5E9',
 }
 const STEP_LABELS = ['İçerik', 'Başlık', 'Görsel', 'Kategori & Etiket', 'Önizle & Yayınla']
 
@@ -134,6 +134,17 @@ export default function BlogWizard({ initialPost, onCancel, onSave }) {
   const [showPreview, setShowPreview] = useState(false)
   const fileInputRef = useRef(null)
 
+  // Keyword-driven draft generation (Faz D)
+  const [draftMode, setDraftMode] = useState('blank') // 'blank' | 'keyword'
+  const [keywordInput, setKeywordInput] = useState('')
+  const [keywordPillar, setKeywordPillar] = useState('genel')
+  const [generatingDraft, setGeneratingDraft] = useState(false)
+  const [draftError, setDraftError] = useState('')
+
+  // EN translation (Faz D)
+  const [translating, setTranslating] = useState(false)
+  const [translateError, setTranslateError] = useState('')
+
   const update = (patch) => setPost(p => ({ ...p, ...patch }))
 
   // ─── AI helpers ─────────────────────────────────────────────────
@@ -172,6 +183,65 @@ export default function BlogWizard({ initialPost, onCancel, onSave }) {
       setMetaError(err.message)
     } finally {
       setLoadingMeta(false)
+    }
+  }
+
+  const generateDraftFromKeyword = async () => {
+    if (!keywordInput.trim()) return
+    setGeneratingDraft(true); setDraftError('')
+    try {
+      const res = await fetch('/api/blog-ai', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'generate_draft_from_keyword',
+          keyword: keywordInput.trim(),
+          pillar: keywordPillar,
+          targetLength: 800,
+        }),
+      })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error || 'Taslak üretilemedi')
+      update({
+        contentTR: data.contentTR || '',
+        titleTR: data.titleTR || '',
+        summaryTR: data.summaryTR || '',
+        category: data.suggestedCategory || 'genel',
+        tags: Array.isArray(data.suggestedTags) ? data.suggestedTags : [],
+      })
+      setDraftMode('blank') // ekran taslakla dolu, normal akışa geç
+    } catch (err) {
+      setDraftError(err.message)
+    } finally {
+      setGeneratingDraft(false)
+    }
+  }
+
+  const translateToEn = async () => {
+    if (!post.contentTR) return
+    setTranslating(true); setTranslateError('')
+    try {
+      const res = await fetch('/api/blog-ai', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'translate_to_en',
+          titleTR: post.titleTR,
+          summaryTR: post.summaryTR,
+          contentTR: post.contentTR,
+        }),
+      })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error || 'Çeviri başarısız')
+      update({
+        titleEN: data.titleEN || '',
+        summaryEN: data.summaryEN || '',
+        contentEN: data.contentEN || '',
+      })
+    } catch (err) {
+      setTranslateError(err.message)
+    } finally {
+      setTranslating(false)
     }
   }
 
@@ -284,6 +354,73 @@ export default function BlogWizard({ initialPost, onCancel, onSave }) {
       {/* STEP 1 — Content */}
       {step === 1 && (
         <div>
+          {/* Mode toggle: blank / keyword */}
+          <div style={{ display: 'flex', gap: 6, marginBottom: 14 }}>
+            <button
+              onClick={() => setDraftMode('blank')}
+              style={{
+                padding: '8px 14px', fontSize: 12, fontWeight: 600, borderRadius: 6, cursor: 'pointer',
+                background: draftMode === 'blank' ? accent + '18' : '#f5f5f5',
+                border: `1px solid ${draftMode === 'blank' ? accent : '#ddd'}`,
+                color: draftMode === 'blank' ? accent : '#555',
+              }}>
+              ✎ Boş başla
+            </button>
+            <button
+              onClick={() => setDraftMode('keyword')}
+              style={{
+                padding: '8px 14px', fontSize: 12, fontWeight: 600, borderRadius: 6, cursor: 'pointer',
+                background: draftMode === 'keyword' ? accent + '18' : '#f5f5f5',
+                border: `1px solid ${draftMode === 'keyword' ? accent : '#ddd'}`,
+                color: draftMode === 'keyword' ? accent : '#555',
+              }}>
+              ✨ Anahtar kelimeden AI taslak
+            </button>
+          </div>
+
+          {draftMode === 'keyword' && (
+            <div style={{ background: '#fafafa', border: '1px solid #eee', borderRadius: 10, padding: 16, marginBottom: 16 }}>
+              <p style={{ fontSize: 13, color: '#888', margin: '0 0 12px' }}>
+                Anahtar kelime gir, AI taslak yazıyı üretsin. Sonra düzenleyip yayınlarsın.
+              </p>
+              <div style={{ display: 'flex', gap: 8, marginBottom: 10, flexWrap: 'wrap' }}>
+                <input
+                  value={keywordInput}
+                  onChange={e => setKeywordInput(e.target.value)}
+                  placeholder="ör. google ads dönüşüm takibi kurulumu"
+                  style={{ flex: 2, minWidth: 220, padding: 10, fontSize: 13, border: '1px solid #ddd', borderRadius: 6, outline: 'none' }}
+                />
+                <select
+                  value={keywordPillar}
+                  onChange={e => setKeywordPillar(e.target.value)}
+                  style={{ flex: 1, minWidth: 130, padding: 10, fontSize: 13, border: '1px solid #ddd', borderRadius: 6, background: '#fff' }}>
+                  <option value="genel">Genel</option>
+                  <option value="reklam">Google/Meta Ads</option>
+                  <option value="analytics">Analytics</option>
+                  <option value="gtm">GTM</option>
+                  <option value="cro">CRO</option>
+                  <option value="seo">SEO</option>
+                  <option value="otomasyon">Otomasyon</option>
+                </select>
+                <button
+                  onClick={generateDraftFromKeyword}
+                  disabled={generatingDraft || !keywordInput.trim()}
+                  style={{
+                    padding: '0 18px', background: generatingDraft || !keywordInput.trim() ? '#ccc' : accent,
+                    color: '#fff', border: 'none', borderRadius: 6,
+                    cursor: generatingDraft ? 'wait' : 'pointer', fontSize: 13, fontWeight: 600,
+                  }}>
+                  {generatingDraft ? 'Üretiliyor...' : 'Taslak üret →'}
+                </button>
+              </div>
+              {draftError && (
+                <div style={{ padding: 10, background: '#fff1f0', border: '1px solid #ffccc7', borderRadius: 6, color: '#cf1322', fontSize: 12 }}>
+                  {draftError}
+                </div>
+              )}
+            </div>
+          )}
+
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
             <h2 style={{ fontSize: 18, margin: 0, fontWeight: 700 }}>Blog metnini yapıştır</h2>
             <button
@@ -342,21 +479,21 @@ export default function BlogWizard({ initialPost, onCancel, onSave }) {
                   <ReactMarkdown
                     remarkPlugins={[remarkGfm, remarkBreaks]}
                     components={{
-                      h1: ({node, ...p}) => <h1 style={{ fontSize: 22, fontWeight: 700, margin: '0 0 12px', borderBottom: '1px solid #eee', paddingBottom: 6 }} {...p} />,
-                      h2: ({node, ...p}) => <h2 style={{ fontSize: 18, fontWeight: 700, margin: '20px 0 8px' }} {...p} />,
-                      h3: ({node, ...p}) => <h3 style={{ fontSize: 15, fontWeight: 600, margin: '16px 0 6px' }} {...p} />,
-                      p: ({node, ...p}) => <p style={{ margin: '0 0 12px' }} {...p} />,
-                      ul: ({node, ...p}) => <ul style={{ paddingLeft: 20, margin: '0 0 12px' }} {...p} />,
-                      ol: ({node, ...p}) => <ol style={{ paddingLeft: 20, margin: '0 0 12px' }} {...p} />,
-                      li: ({node, ...p}) => <li style={{ marginBottom: 4 }} {...p} />,
-                      strong: ({node, ...p}) => <strong style={{ fontWeight: 700 }} {...p} />,
-                      table: ({node, ...p}) => <table style={{ borderCollapse: 'collapse', width: '100%', margin: '0 0 12px', fontSize: 13 }} {...p} />,
-                      th: ({node, ...p}) => <th style={{ border: '1px solid #ddd', padding: '6px 10px', background: '#f5f5f5', fontWeight: 600, textAlign: 'left' }} {...p} />,
-                      td: ({node, ...p}) => <td style={{ border: '1px solid #ddd', padding: '6px 10px' }} {...p} />,
-                      hr: ({node, ...p}) => <hr style={{ border: 'none', borderTop: '1px solid #eee', margin: '16px 0' }} {...p} />,
-                      code: ({node, inline, ...p}) => inline
-                        ? <code style={{ background: '#f0f0f0', padding: '1px 5px', borderRadius: 4, fontSize: 12, fontFamily: 'monospace' }} {...p} />
-                        : <pre style={{ background: '#f6f8fa', padding: 12, borderRadius: 6, overflow: 'auto', fontSize: 12 }}><code {...p} /></pre>,
+                      h1: ({children}) => <h1 style={{ fontSize: 22, fontWeight: 700, margin: '0 0 12px', borderBottom: '1px solid #eee', paddingBottom: 6 }}>{children}</h1>,
+                      h2: ({children}) => <h2 style={{ fontSize: 18, fontWeight: 700, margin: '20px 0 8px' }}>{children}</h2>,
+                      h3: ({children}) => <h3 style={{ fontSize: 15, fontWeight: 600, margin: '16px 0 6px' }}>{children}</h3>,
+                      p: ({children}) => <p style={{ margin: '0 0 12px' }}>{children}</p>,
+                      ul: ({children}) => <ul style={{ paddingLeft: 20, margin: '0 0 12px' }}>{children}</ul>,
+                      ol: ({children}) => <ol style={{ paddingLeft: 20, margin: '0 0 12px' }}>{children}</ol>,
+                      li: ({children}) => <li style={{ marginBottom: 4 }}>{children}</li>,
+                      strong: ({children}) => <strong style={{ fontWeight: 700 }}>{children}</strong>,
+                      table: ({children}) => <table style={{ borderCollapse: 'collapse', width: '100%', margin: '0 0 12px', fontSize: 13 }}>{children}</table>,
+                      th: ({children}) => <th style={{ border: '1px solid #ddd', padding: '6px 10px', background: '#f5f5f5', fontWeight: 600, textAlign: 'left' }}>{children}</th>,
+                      td: ({children}) => <td style={{ border: '1px solid #ddd', padding: '6px 10px' }}>{children}</td>,
+                      hr: () => <hr style={{ border: 'none', borderTop: '1px solid #eee', margin: '16px 0' }} />,
+                      code: ({children, className}) => className
+                        ? <pre style={{ background: '#f6f8fa', padding: 12, borderRadius: 6, overflow: 'auto', fontSize: 12 }}><code className={className}>{children}</code></pre>
+                        : <code style={{ background: '#f0f0f0', padding: '1px 5px', borderRadius: 4, fontSize: 12, fontFamily: 'monospace' }}>{children}</code>,
                     }}
                   >
                     {post.contentTR}
@@ -639,6 +776,58 @@ export default function BlogWizard({ initialPost, onCancel, onSave }) {
           <p style={{ fontSize: 13, color: '#888', margin: '0 0 16px' }}>
             Yazı yayınlandığında çalışmalar sayfasında böyle görünecek.
           </p>
+
+          {/* EN translation panel */}
+          <div style={{ marginBottom: 18, padding: 14, background: '#fafafa', border: '1px solid #eee', borderRadius: 10 }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8, gap: 8, flexWrap: 'wrap' }}>
+              <div>
+                <div style={{ fontSize: 12, fontWeight: 700, color: '#555' }}>İngilizce versiyon</div>
+                <div style={{ fontSize: 11, color: '#999', marginTop: 2 }}>
+                  {post.contentEN ? `✓ ${post.contentEN.length} karakter — düzenleyebilirsin` : 'Henüz çevrilmedi'}
+                </div>
+              </div>
+              <button
+                onClick={translateToEn}
+                disabled={translating || !post.contentTR}
+                style={{
+                  padding: '8px 14px', background: translating ? '#ccc' : accent,
+                  color: '#fff', border: 'none', borderRadius: 6,
+                  cursor: translating ? 'wait' : 'pointer', fontSize: 12, fontWeight: 600,
+                }}>
+                {translating ? 'Çevriliyor...' : post.contentEN ? '↻ Yeniden çevir' : 'AI ile EN üret'}
+              </button>
+            </div>
+            {translateError && (
+              <div style={{ padding: 8, background: '#fff1f0', border: '1px solid #ffccc7', borderRadius: 6, color: '#cf1322', fontSize: 11, marginTop: 6 }}>
+                {translateError}
+              </div>
+            )}
+            {post.contentEN && (
+              <details style={{ marginTop: 10 }}>
+                <summary style={{ fontSize: 11, color: '#888', cursor: 'pointer' }}>EN içeriği düzenle/görüntüle</summary>
+                <input
+                  value={post.titleEN}
+                  onChange={e => update({ titleEN: e.target.value })}
+                  placeholder="English title"
+                  style={{ width: '100%', padding: 8, fontSize: 12, border: '1px solid #ddd', borderRadius: 6, outline: 'none', marginTop: 6, boxSizing: 'border-box' }}
+                />
+                <textarea
+                  value={post.summaryEN}
+                  onChange={e => update({ summaryEN: e.target.value })}
+                  rows={2}
+                  placeholder="English summary"
+                  style={{ width: '100%', padding: 8, fontSize: 12, border: '1px solid #ddd', borderRadius: 6, outline: 'none', marginTop: 6, resize: 'vertical', fontFamily: 'inherit', boxSizing: 'border-box' }}
+                />
+                <textarea
+                  value={post.contentEN}
+                  onChange={e => update({ contentEN: e.target.value })}
+                  rows={10}
+                  placeholder="English content (Markdown)"
+                  style={{ width: '100%', padding: 8, fontSize: 12, border: '1px solid #ddd', borderRadius: 6, outline: 'none', marginTop: 6, resize: 'vertical', fontFamily: 'monospace', boxSizing: 'border-box' }}
+                />
+              </details>
+            )}
+          </div>
 
           <div style={{ marginBottom: 18 }}>
             <label style={{ fontSize: 12, fontWeight: 600, color: '#555', display: 'block', marginBottom: 6 }}>
