@@ -8,10 +8,10 @@ import ReactMarkdown from 'react-markdown'
 import remarkBreaks from 'remark-breaks'
 import remarkGfm from 'remark-gfm'
 
-const CATEGORIES = ['genel', 'gtm', 'analytics', 'cro', 'otomasyon', 'reklam']
+const CATEGORIES = ['genel', 'gtm', 'analytics', 'cro', 'otomasyon', 'reklam', 'seo', 'eticaret', 'fullstack']
 const CAT_COLORS = {
   gtm: '#1D9E75', analytics: '#3B82F6', cro: '#F59E0B',
-  otomasyon: '#8B5CF6', genel: '#6B7280', reklam: '#EF4444',
+  otomasyon: '#8B5CF6', genel: '#6B7280', reklam: '#EF4444', seo: '#0EA5E9', eticaret: '#EC4899', fullstack: '#14B8A6',
 }
 const STEP_LABELS = ['İçerik', 'Başlık', 'Görsel', 'Kategori & Etiket', 'Önizle & Yayınla']
 
@@ -129,9 +129,26 @@ export default function BlogWizard({ initialPost, onCancel, onSave }) {
   const [loadingSummary, setLoadingSummary] = useState(false)
   const [uploading, setUploading] = useState(false)
   const [uploadError, setUploadError] = useState('')
+  const [imageTab, setImageTab] = useState('upload') // 'upload' | 'ai'
+  const [aiPrompt, setAiPrompt] = useState('')
+  const [aiPromptLoading, setAiPromptLoading] = useState(false)
+  const [aiGenerating, setAiGenerating] = useState(false)
+  const [aiError, setAiError] = useState('')
   const [manualTag, setManualTag] = useState('')
   const [publishing, setPublishing] = useState(false)
+  const [showPreview, setShowPreview] = useState(false)
   const fileInputRef = useRef(null)
+
+  // Keyword-driven draft generation (Faz D)
+  const [draftMode, setDraftMode] = useState('blank') // 'blank' | 'keyword'
+  const [keywordInput, setKeywordInput] = useState('')
+  const [keywordPillar, setKeywordPillar] = useState('genel')
+  const [generatingDraft, setGeneratingDraft] = useState(false)
+  const [draftError, setDraftError] = useState('')
+
+  // EN translation (Faz D)
+  const [translating, setTranslating] = useState(false)
+  const [translateError, setTranslateError] = useState('')
 
   const update = (patch) => setPost(p => ({ ...p, ...patch }))
 
@@ -174,6 +191,65 @@ export default function BlogWizard({ initialPost, onCancel, onSave }) {
     }
   }
 
+  const generateDraftFromKeyword = async () => {
+    if (!keywordInput.trim()) return
+    setGeneratingDraft(true); setDraftError('')
+    try {
+      const res = await fetch('/api/blog-ai', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'generate_draft_from_keyword',
+          keyword: keywordInput.trim(),
+          pillar: keywordPillar,
+          targetLength: 800,
+        }),
+      })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error || 'Taslak üretilemedi')
+      update({
+        contentTR: data.contentTR || '',
+        titleTR: data.titleTR || '',
+        summaryTR: data.summaryTR || '',
+        category: data.suggestedCategory || 'genel',
+        tags: Array.isArray(data.suggestedTags) ? data.suggestedTags : [],
+      })
+      setDraftMode('blank') // ekran taslakla dolu, normal akışa geç
+    } catch (err) {
+      setDraftError(err.message)
+    } finally {
+      setGeneratingDraft(false)
+    }
+  }
+
+  const translateToEn = async () => {
+    if (!post.contentTR) return
+    setTranslating(true); setTranslateError('')
+    try {
+      const res = await fetch('/api/blog-ai', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'translate_to_en',
+          titleTR: post.titleTR,
+          summaryTR: post.summaryTR,
+          contentTR: post.contentTR,
+        }),
+      })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error || 'Çeviri başarısız')
+      update({
+        titleEN: data.titleEN || '',
+        summaryEN: data.summaryEN || '',
+        contentEN: data.contentEN || '',
+      })
+    } catch (err) {
+      setTranslateError(err.message)
+    } finally {
+      setTranslating(false)
+    }
+  }
+
   const suggestSummary = async () => {
     if (post.summaryTR) return
     setLoadingSummary(true)
@@ -208,6 +284,14 @@ export default function BlogWizard({ initialPost, onCancel, onSave }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [step])
 
+  // AI image tab açıldığında prompt'u otomatik üret
+  useEffect(() => {
+    if (step === 3 && imageTab === 'ai' && !aiPrompt && !aiPromptLoading && (post.titleTR || post.contentTR)) {
+      suggestImagePrompt()
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [step, imageTab])
+
   // ─── File upload ────────────────────────────────────────────────
   const handleFileUpload = async (file) => {
     if (!file) return
@@ -223,6 +307,49 @@ export default function BlogWizard({ initialPost, onCancel, onSave }) {
       setUploadError(err.message)
     } finally {
       setUploading(false)
+    }
+  }
+
+  // ─── AI cover image ─────────────────────────────────────────────
+  const suggestImagePrompt = async () => {
+    setAiPromptLoading(true); setAiError('')
+    try {
+      const res = await fetch('/api/blog-ai', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'suggest_image_prompt',
+          title: post.titleTR,
+          content: post.contentTR.slice(0, 1500),
+        }),
+      })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error || 'Prompt üretilemedi')
+      setAiPrompt(data.prompt || '')
+    } catch (err) {
+      setAiError(err.message)
+    } finally {
+      setAiPromptLoading(false)
+    }
+  }
+
+  const generateImage = async () => {
+    const p = aiPrompt.trim()
+    if (p.length < 5) { setAiError('Prompt çok kısa'); return }
+    setAiGenerating(true); setAiError('')
+    try {
+      const res = await fetch('/api/blog-image-generate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ prompt: p, aspectRatio: '16:9' }),
+      })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error || 'Görsel üretilemedi')
+      update({ coverImage: data.url })
+    } catch (err) {
+      setAiError(err.message)
+    } finally {
+      setAiGenerating(false)
     }
   }
 
@@ -283,33 +410,156 @@ export default function BlogWizard({ initialPost, onCancel, onSave }) {
       {/* STEP 1 — Content */}
       {step === 1 && (
         <div>
-          <h2 style={{ fontSize: 18, margin: '0 0 6px', fontWeight: 700 }}>Blog metnini yapıştır</h2>
+          {/* Mode toggle: blank / keyword */}
+          <div style={{ display: 'flex', gap: 6, marginBottom: 14 }}>
+            <button
+              onClick={() => setDraftMode('blank')}
+              style={{
+                padding: '8px 14px', fontSize: 12, fontWeight: 600, borderRadius: 6, cursor: 'pointer',
+                background: draftMode === 'blank' ? accent + '18' : '#f5f5f5',
+                border: `1px solid ${draftMode === 'blank' ? accent : '#ddd'}`,
+                color: draftMode === 'blank' ? accent : '#555',
+              }}>
+              ✎ Boş başla
+            </button>
+            <button
+              onClick={() => setDraftMode('keyword')}
+              style={{
+                padding: '8px 14px', fontSize: 12, fontWeight: 600, borderRadius: 6, cursor: 'pointer',
+                background: draftMode === 'keyword' ? accent + '18' : '#f5f5f5',
+                border: `1px solid ${draftMode === 'keyword' ? accent : '#ddd'}`,
+                color: draftMode === 'keyword' ? accent : '#555',
+              }}>
+              ✨ Anahtar kelimeden AI taslak
+            </button>
+          </div>
+
+          {draftMode === 'keyword' && (
+            <div style={{ background: '#fafafa', border: '1px solid #eee', borderRadius: 10, padding: 16, marginBottom: 16 }}>
+              <p style={{ fontSize: 13, color: '#888', margin: '0 0 12px' }}>
+                Anahtar kelime gir, AI taslak yazıyı üretsin. Sonra düzenleyip yayınlarsın.
+              </p>
+              <div style={{ display: 'flex', gap: 8, marginBottom: 10, flexWrap: 'wrap' }}>
+                <input
+                  value={keywordInput}
+                  onChange={e => setKeywordInput(e.target.value)}
+                  placeholder="ör. google ads dönüşüm takibi kurulumu"
+                  style={{ flex: 2, minWidth: 220, padding: 10, fontSize: 13, border: '1px solid #ddd', borderRadius: 6, outline: 'none' }}
+                />
+                <select
+                  value={keywordPillar}
+                  onChange={e => setKeywordPillar(e.target.value)}
+                  style={{ flex: 1, minWidth: 130, padding: 10, fontSize: 13, border: '1px solid #ddd', borderRadius: 6, background: '#fff' }}>
+                  <option value="genel">Genel</option>
+                  <option value="reklam">Google/Meta Ads</option>
+                  <option value="analytics">Analytics</option>
+                  <option value="gtm">GTM</option>
+                  <option value="cro">CRO</option>
+                  <option value="seo">SEO</option>
+                  <option value="otomasyon">Otomasyon</option>
+                </select>
+                <button
+                  onClick={generateDraftFromKeyword}
+                  disabled={generatingDraft || !keywordInput.trim()}
+                  style={{
+                    padding: '0 18px', background: generatingDraft || !keywordInput.trim() ? '#ccc' : accent,
+                    color: '#fff', border: 'none', borderRadius: 6,
+                    cursor: generatingDraft ? 'wait' : 'pointer', fontSize: 13, fontWeight: 600,
+                  }}>
+                  {generatingDraft ? 'Üretiliyor...' : 'Taslak üret →'}
+                </button>
+              </div>
+              {draftError && (
+                <div style={{ padding: 10, background: '#fff1f0', border: '1px solid #ffccc7', borderRadius: 6, color: '#cf1322', fontSize: 12 }}>
+                  {draftError}
+                </div>
+              )}
+            </div>
+          )}
+
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
+            <h2 style={{ fontSize: 18, margin: 0, fontWeight: 700 }}>Blog metnini yapıştır</h2>
+            <button
+              onClick={() => setShowPreview(p => !p)}
+              style={{
+                padding: '5px 12px', fontSize: 12, fontWeight: 600, borderRadius: 6, cursor: 'pointer',
+                background: showPreview ? accent + '18' : '#f5f5f5',
+                border: `1px solid ${showPreview ? accent : '#ddd'}`,
+                color: showPreview ? accent : '#555',
+                transition: 'all 0.15s',
+              }}
+            >
+              {showPreview ? '✎ Sadece Editör' : '⊞ Önizleme'}
+            </button>
+          </div>
           <p style={{ fontSize: 13, color: '#888', margin: '0 0 16px' }}>
             Markdown destekler (## başlık, **kalın**, - liste, vb.). Metin girildikten sonra başlık, kategori, etiket ve özet önerileri otomatik üretilir.
           </p>
-          <textarea
-            value={post.contentTR}
-            onChange={e => update({ contentTR: e.target.value })}
-            onPaste={e => {
-              const html = e.clipboardData?.getData('text/html')
-              if (!html) return // düz metin yapıştırmaları default davranışla geçer
-              const md = htmlToMarkdown(html)
-              if (!md) return
-              e.preventDefault()
-              const ta = e.target
-              const start = ta.selectionStart ?? ta.value.length
-              const end = ta.selectionEnd ?? ta.value.length
-              const next = ta.value.slice(0, start) + md + ta.value.slice(end)
-              update({ contentTR: next })
-              requestAnimationFrame(() => {
-                const pos = start + md.length
-                try { ta.setSelectionRange(pos, pos); ta.focus() } catch {}
-              })
-            }}
-            rows={20}
-            placeholder={'## Giriş\n\nBurada yazının gövdesi yer alır...\n\n- Madde 1\n- Madde 2\n\nİpucu: Google Sheets / Excel / Notion\'dan tablo yapıştırabilirsin — otomatik markdown tablosuna dönüşür.'}
-            style={{ width: '100%', padding: 14, fontSize: 14, lineHeight: 1.6, border: '1px solid #ddd', borderRadius: 8, outline: 'none', resize: 'vertical', fontFamily: 'monospace', background: '#f9f9f9', boxSizing: 'border-box' }}
-          />
+          <div style={{ display: 'flex', gap: 12 }}>
+            <textarea
+              value={post.contentTR}
+              onChange={e => update({ contentTR: e.target.value })}
+              onPaste={e => {
+                const html = e.clipboardData?.getData('text/html')
+                if (!html) return
+                const md = htmlToMarkdown(html)
+                if (!md) return
+                e.preventDefault()
+                const ta = e.target
+                const start = ta.selectionStart ?? ta.value.length
+                const end = ta.selectionEnd ?? ta.value.length
+                const next = ta.value.slice(0, start) + md + ta.value.slice(end)
+                update({ contentTR: next })
+                requestAnimationFrame(() => {
+                  const pos = start + md.length
+                  try { ta.setSelectionRange(pos, pos); ta.focus() } catch {}
+                })
+              }}
+              rows={20}
+              placeholder={'## Giriş\n\nBurada yazının gövdesi yer alır...\n\n- Madde 1\n- Madde 2\n\nİpucu: Google Sheets / Excel / Notion\'dan tablo yapıştırabilirsin — otomatik markdown tablosuna dönüşür.'}
+              style={{
+                flex: 1, padding: 14, fontSize: 13, lineHeight: 1.6,
+                border: '1px solid #ddd', borderRadius: 8, outline: 'none',
+                resize: 'vertical', fontFamily: 'monospace', background: '#f9f9f9',
+                boxSizing: 'border-box', minHeight: 420,
+              }}
+            />
+            {showPreview && (
+              <div style={{
+                flex: 1, padding: 16, fontSize: 14, lineHeight: 1.8,
+                border: '1px solid #eee', borderRadius: 8, background: '#fff',
+                overflowY: 'auto', minHeight: 420, maxHeight: 600,
+                color: '#222',
+              }}>
+                {post.contentTR.trim() ? (
+                  <ReactMarkdown
+                    remarkPlugins={[remarkGfm, remarkBreaks]}
+                    components={{
+                      h1: ({children}) => <h1 style={{ fontSize: 22, fontWeight: 700, margin: '0 0 12px', borderBottom: '1px solid #eee', paddingBottom: 6 }}>{children}</h1>,
+                      h2: ({children}) => <h2 style={{ fontSize: 18, fontWeight: 700, margin: '20px 0 8px' }}>{children}</h2>,
+                      h3: ({children}) => <h3 style={{ fontSize: 15, fontWeight: 600, margin: '16px 0 6px' }}>{children}</h3>,
+                      p: ({children}) => <p style={{ margin: '0 0 12px' }}>{children}</p>,
+                      ul: ({children}) => <ul style={{ paddingLeft: 20, margin: '0 0 12px' }}>{children}</ul>,
+                      ol: ({children}) => <ol style={{ paddingLeft: 20, margin: '0 0 12px' }}>{children}</ol>,
+                      li: ({children}) => <li style={{ marginBottom: 4 }}>{children}</li>,
+                      strong: ({children}) => <strong style={{ fontWeight: 700 }}>{children}</strong>,
+                      table: ({children}) => <table style={{ borderCollapse: 'collapse', width: '100%', margin: '0 0 12px', fontSize: 13 }}>{children}</table>,
+                      th: ({children}) => <th style={{ border: '1px solid #ddd', padding: '6px 10px', background: '#f5f5f5', fontWeight: 600, textAlign: 'left' }}>{children}</th>,
+                      td: ({children}) => <td style={{ border: '1px solid #ddd', padding: '6px 10px' }}>{children}</td>,
+                      hr: () => <hr style={{ border: 'none', borderTop: '1px solid #eee', margin: '16px 0' }} />,
+                      code: ({children, className}) => className
+                        ? <pre style={{ background: '#f6f8fa', padding: 12, borderRadius: 6, overflow: 'auto', fontSize: 12 }}><code className={className}>{children}</code></pre>
+                        : <code style={{ background: '#f0f0f0', padding: '1px 5px', borderRadius: 4, fontSize: 12, fontFamily: 'monospace' }}>{children}</code>,
+                    }}
+                  >
+                    {post.contentTR}
+                  </ReactMarkdown>
+                ) : (
+                  <span style={{ color: '#bbb', fontStyle: 'italic', fontSize: 13 }}>Önizleme için solda yazmaya başlayın...</span>
+                )}
+              </div>
+            )}
+          </div>
           <div style={{ fontSize: 11, color: '#aaa', marginTop: 6 }}>
             {post.contentTR.trim().split(/\s+/).filter(Boolean).length} kelime · ~{readingMin(post.contentTR)} dk okuma
           </div>
@@ -387,7 +637,7 @@ export default function BlogWizard({ initialPost, onCancel, onSave }) {
         <div>
           <h2 style={{ fontSize: 18, margin: '0 0 6px', fontWeight: 700 }}>Kapak görseli ekle</h2>
           <p style={{ fontSize: 13, color: '#888', margin: '0 0 16px' }}>
-            Yazının başlığının üstünde görünecek. İstersen atla, emoji + renk kullanılır.
+            Yazının başlığının üstünde görünecek. İstersen geç.
           </p>
 
           {post.coverImage ? (
@@ -400,27 +650,99 @@ export default function BlogWizard({ initialPost, onCancel, onSave }) {
               </button>
             </div>
           ) : (
-            <div
-              onClick={() => fileInputRef.current?.click()}
-              onDragOver={e => { e.preventDefault() }}
-              onDrop={e => { e.preventDefault(); handleFileUpload(e.dataTransfer.files?.[0]) }}
-              style={{
-                border: '2px dashed #ccc', borderRadius: 12, padding: '3rem 1rem', textAlign: 'center',
-                cursor: uploading ? 'wait' : 'pointer', color: '#888', background: '#fafafa', marginBottom: 14,
-              }}>
-              <div style={{ fontSize: 32, marginBottom: 8 }}>📷</div>
-              <div style={{ fontSize: 14, fontWeight: 600, color: '#555' }}>
-                {uploading ? 'Yükleniyor...' : 'Görsel yüklemek için tıkla veya sürükle'}
+            <>
+              {/* Tab seçici */}
+              <div style={{ display: 'flex', gap: 6, marginBottom: 12, borderBottom: '1px solid #eee' }}>
+                {[
+                  { key: 'upload', label: '📤 Yükle' },
+                  { key: 'ai', label: '✨ AI ile oluştur' },
+                ].map(t => (
+                  <button
+                    key={t.key}
+                    onClick={() => setImageTab(t.key)}
+                    style={{
+                      padding: '10px 16px', fontSize: 13, fontWeight: 600,
+                      background: 'transparent', border: 'none', cursor: 'pointer',
+                      color: imageTab === t.key ? accent : '#888',
+                      borderBottom: `2px solid ${imageTab === t.key ? accent : 'transparent'}`,
+                      marginBottom: -1,
+                    }}>
+                    {t.label}
+                  </button>
+                ))}
               </div>
-              <div style={{ fontSize: 11, color: '#aaa', marginTop: 4 }}>JPG, PNG, WEBP, GIF · max 8MB</div>
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept="image/jpeg,image/png,image/webp,image/gif"
-                onChange={e => handleFileUpload(e.target.files?.[0])}
-                style={{ display: 'none' }}
-              />
-            </div>
+
+              {imageTab === 'upload' && (
+                <div
+                  onClick={() => fileInputRef.current?.click()}
+                  onDragOver={e => { e.preventDefault() }}
+                  onDrop={e => { e.preventDefault(); handleFileUpload(e.dataTransfer.files?.[0]) }}
+                  style={{
+                    border: '2px dashed #ccc', borderRadius: 12, padding: '3rem 1rem', textAlign: 'center',
+                    cursor: uploading ? 'wait' : 'pointer', color: '#888', background: '#fafafa', marginBottom: 14,
+                  }}>
+                  <div style={{ fontSize: 32, marginBottom: 8 }}>📷</div>
+                  <div style={{ fontSize: 14, fontWeight: 600, color: '#555' }}>
+                    {uploading ? 'Yükleniyor...' : 'Görsel yüklemek için tıkla veya sürükle'}
+                  </div>
+                  <div style={{ fontSize: 11, color: '#aaa', marginTop: 4 }}>JPG, PNG, WEBP, GIF · max 8MB</div>
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/jpeg,image/png,image/webp,image/gif"
+                    onChange={e => handleFileUpload(e.target.files?.[0])}
+                    style={{ display: 'none' }}
+                  />
+                </div>
+              )}
+
+              {imageTab === 'ai' && (
+                <div style={{ border: '1px solid #eee', borderRadius: 12, padding: 16, background: '#fafafa', marginBottom: 14 }}>
+                  <div style={{ fontSize: 12, color: '#888', marginBottom: 10, lineHeight: 1.5 }}>
+                    Yazının başlığı ve içeriğinden Flux ile kapak görseli oluştur. Prompt'u istediğin gibi düzenleyebilirsin.
+                  </div>
+
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
+                    <label style={{ fontSize: 11, fontWeight: 600, color: '#555' }}>Görsel prompt'u (İngilizce)</label>
+                    <button
+                      onClick={suggestImagePrompt}
+                      disabled={aiPromptLoading || aiGenerating}
+                      style={{
+                        fontSize: 11, padding: '4px 10px', border: '1px solid #ddd',
+                        background: '#fff', borderRadius: 4,
+                        cursor: (aiPromptLoading || aiGenerating) ? 'wait' : 'pointer', color: '#555',
+                      }}>
+                      {aiPromptLoading ? 'Üretiliyor...' : '🔄 Otomatik öner'}
+                    </button>
+                  </div>
+
+                  <textarea
+                    value={aiPrompt}
+                    onChange={e => setAiPrompt(e.target.value)}
+                    rows={4}
+                    disabled={aiGenerating}
+                    placeholder={aiPromptLoading ? 'Claude prompt üretiyor...' : 'Görseli tanımla (ör. "editorial illustration of a small business owner reviewing analytics on a laptop, flat modern style, warm colors, no text")'}
+                    style={{
+                      width: '100%', padding: 10, fontSize: 13, border: '1px solid #ddd',
+                      borderRadius: 6, outline: 'none', resize: 'vertical', boxSizing: 'border-box',
+                      fontFamily: 'inherit', background: aiGenerating ? '#f5f5f5' : '#fff',
+                    }}
+                  />
+
+                  <button
+                    onClick={generateImage}
+                    disabled={aiGenerating || aiPromptLoading || aiPrompt.trim().length < 5}
+                    style={{
+                      marginTop: 10, width: '100%', padding: '12px 16px', fontSize: 14, fontWeight: 600,
+                      background: (aiGenerating || aiPrompt.trim().length < 5) ? '#ccc' : accent,
+                      color: '#fff', border: 'none', borderRadius: 8,
+                      cursor: aiGenerating ? 'wait' : (aiPrompt.trim().length < 5 ? 'not-allowed' : 'pointer'),
+                    }}>
+                    {aiGenerating ? '🎨 Görsel üretiliyor... (~15sn)' : '🎨 Görseli oluştur'}
+                  </button>
+                </div>
+              )}
+            </>
           )}
 
           {uploadError && (
@@ -429,31 +751,11 @@ export default function BlogWizard({ initialPost, onCancel, onSave }) {
             </div>
           )}
 
-          <div style={{ padding: 14, background: '#fafafa', borderRadius: 10, border: '1px solid #eee' }}>
-            <div style={{ fontSize: 12, color: '#888', marginBottom: 8, fontWeight: 600 }}>
-              Görsel yoksa gösterilecek emoji + renk
+          {aiError && (
+            <div style={{ padding: 10, background: '#fff1f0', border: '1px solid #ffccc7', borderRadius: 6, color: '#cf1322', fontSize: 12, marginBottom: 10 }}>
+              {aiError}
             </div>
-            <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
-              <input
-                value={post.coverEmoji}
-                onChange={e => update({ coverEmoji: e.target.value })}
-                maxLength={4}
-                style={{ width: 60, padding: 8, fontSize: 24, textAlign: 'center', border: '1px solid #ddd', borderRadius: 6, outline: 'none' }}
-              />
-              <input
-                type="color"
-                value={post.coverColor}
-                onChange={e => update({ coverColor: e.target.value })}
-                style={{ width: 48, height: 40, padding: 2, border: '1px solid #ddd', borderRadius: 6, cursor: 'pointer' }}
-              />
-              <div style={{
-                flex: 1, height: 40, background: post.coverColor + '22', borderRadius: 6,
-                display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 22,
-              }}>
-                {post.coverEmoji}
-              </div>
-            </div>
-          </div>
+          )}
         </div>
       )}
 
@@ -583,6 +885,58 @@ export default function BlogWizard({ initialPost, onCancel, onSave }) {
             Yazı yayınlandığında çalışmalar sayfasında böyle görünecek.
           </p>
 
+          {/* EN translation panel */}
+          <div style={{ marginBottom: 18, padding: 14, background: '#fafafa', border: '1px solid #eee', borderRadius: 10 }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8, gap: 8, flexWrap: 'wrap' }}>
+              <div>
+                <div style={{ fontSize: 12, fontWeight: 700, color: '#555' }}>İngilizce versiyon</div>
+                <div style={{ fontSize: 11, color: '#999', marginTop: 2 }}>
+                  {post.contentEN ? `✓ ${post.contentEN.length} karakter — düzenleyebilirsin` : 'Henüz çevrilmedi'}
+                </div>
+              </div>
+              <button
+                onClick={translateToEn}
+                disabled={translating || !post.contentTR}
+                style={{
+                  padding: '8px 14px', background: translating ? '#ccc' : accent,
+                  color: '#fff', border: 'none', borderRadius: 6,
+                  cursor: translating ? 'wait' : 'pointer', fontSize: 12, fontWeight: 600,
+                }}>
+                {translating ? 'Çevriliyor...' : post.contentEN ? '↻ Yeniden çevir' : 'AI ile EN üret'}
+              </button>
+            </div>
+            {translateError && (
+              <div style={{ padding: 8, background: '#fff1f0', border: '1px solid #ffccc7', borderRadius: 6, color: '#cf1322', fontSize: 11, marginTop: 6 }}>
+                {translateError}
+              </div>
+            )}
+            {post.contentEN && (
+              <details style={{ marginTop: 10 }}>
+                <summary style={{ fontSize: 11, color: '#888', cursor: 'pointer' }}>EN içeriği düzenle/görüntüle</summary>
+                <input
+                  value={post.titleEN}
+                  onChange={e => update({ titleEN: e.target.value })}
+                  placeholder="English title"
+                  style={{ width: '100%', padding: 8, fontSize: 12, border: '1px solid #ddd', borderRadius: 6, outline: 'none', marginTop: 6, boxSizing: 'border-box' }}
+                />
+                <textarea
+                  value={post.summaryEN}
+                  onChange={e => update({ summaryEN: e.target.value })}
+                  rows={2}
+                  placeholder="English summary"
+                  style={{ width: '100%', padding: 8, fontSize: 12, border: '1px solid #ddd', borderRadius: 6, outline: 'none', marginTop: 6, resize: 'vertical', fontFamily: 'inherit', boxSizing: 'border-box' }}
+                />
+                <textarea
+                  value={post.contentEN}
+                  onChange={e => update({ contentEN: e.target.value })}
+                  rows={10}
+                  placeholder="English content (Markdown)"
+                  style={{ width: '100%', padding: 8, fontSize: 12, border: '1px solid #ddd', borderRadius: 6, outline: 'none', marginTop: 6, resize: 'vertical', fontFamily: 'monospace', boxSizing: 'border-box' }}
+                />
+              </details>
+            )}
+          </div>
+
           <div style={{ marginBottom: 18 }}>
             <label style={{ fontSize: 12, fontWeight: 600, color: '#555', display: 'block', marginBottom: 6 }}>
               Özet {loadingSummary && <span style={{ color: '#aaa', fontWeight: 400 }}>(üretiliyor...)</span>}
@@ -595,6 +949,33 @@ export default function BlogWizard({ initialPost, onCancel, onSave }) {
               style={{ width: '100%', padding: 10, fontSize: 13, border: '1px solid #ddd', borderRadius: 6, outline: 'none', resize: 'vertical', fontFamily: 'inherit', boxSizing: 'border-box' }}
             />
           </div>
+
+          {/* Son düzenleme — başlık + içerik */}
+          <details style={{ marginBottom: 18, padding: 14, background: '#fafafa', border: '1px solid #eee', borderRadius: 10 }}>
+            <summary style={{ cursor: 'pointer', fontSize: 12, fontWeight: 700, color: '#555', userSelect: 'none' }}>
+              ✏️ Son düzenleme — başlık ve metni düzenle
+            </summary>
+            <div style={{ marginTop: 12 }}>
+              <label style={{ fontSize: 11, fontWeight: 600, color: '#888', display: 'block', marginBottom: 4 }}>Başlık</label>
+              <input
+                value={post.titleTR}
+                onChange={e => update({ titleTR: e.target.value })}
+                placeholder="Başlık..."
+                style={{ width: '100%', padding: 10, fontSize: 14, fontWeight: 600, border: '1px solid #ddd', borderRadius: 6, outline: 'none', boxSizing: 'border-box', marginBottom: 12 }}
+              />
+              <label style={{ fontSize: 11, fontWeight: 600, color: '#888', display: 'block', marginBottom: 4 }}>İçerik (Markdown)</label>
+              <textarea
+                value={post.contentTR}
+                onChange={e => update({ contentTR: e.target.value })}
+                rows={16}
+                placeholder="Markdown içerik..."
+                style={{ width: '100%', padding: 10, fontSize: 13, border: '1px solid #ddd', borderRadius: 6, outline: 'none', resize: 'vertical', fontFamily: 'monospace', lineHeight: 1.6, boxSizing: 'border-box' }}
+              />
+              <div style={{ fontSize: 11, color: '#aaa', marginTop: 4 }}>
+                {readingMin(post.contentTR)} dk okuma · {post.contentTR.length} karakter — değişiklikler aşağıdaki önizlemeye anında yansır.
+              </div>
+            </div>
+          </details>
 
           {/* Rendered preview */}
           <div style={{ background: '#fafafa', borderRadius: 12, overflow: 'hidden', border: '1px solid #eee' }}>

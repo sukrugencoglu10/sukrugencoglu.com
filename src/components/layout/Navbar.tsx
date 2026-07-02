@@ -45,7 +45,7 @@ export default function Navbar() {
       setActiveSection("work");
       return;
     }
-    if (pathname.endsWith("/contact") || pathname.endsWith("/iletisim")) {
+    if (pathname.endsWith("/contact") || pathname.endsWith("/iletisim") || pathname.includes("/blog")) {
       setActiveSection("contact");
       return;
     }

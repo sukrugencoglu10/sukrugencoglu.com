@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
+import DetailModal from "@/components/ui/DetailModal";
 
 const NODE_W = 120;
 const NODE_H = 66;
@@ -68,9 +69,22 @@ export default function ReklamKpiLiveMap() {
   const [loading, setLoading] = useState(true);
   const [hovered, setHovered] = useState<string | null>(null);
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [dblNode, setDblNode] = useState<any>(null);
   const [zoom, setZoom] = useState(1);
   const canvasAreaRef = useRef<HTMLDivElement>(null);
   const infoPanelRef = useRef<HTMLDivElement>(null);
+  const lastTapRef = useRef<{ id: string | null; time: number }>({ id: null, time: 0 });
+  const handleDoubleTap = (e: React.TouchEvent, term: any) => {
+    const now = Date.now();
+    const last = lastTapRef.current;
+    if (last.id === term.id && now - last.time < 300) {
+      e.preventDefault();
+      lastTapRef.current = { id: null, time: 0 };
+      setDblNode(term);
+    } else {
+      lastTapRef.current = { id: term.id, time: now };
+    }
+  };
   const [isPanning, setIsPanning] = useState(false);
   const [panStart, setPanStart] = useState({ x: 0, y: 0, scrollLeft: 0, scrollTop: 0 });
 
@@ -254,6 +268,8 @@ export default function ReklamKpiLiveMap() {
                     onMouseEnter={() => setHovered(term.id)}
                     onMouseLeave={() => setHovered(null)}
                     onClick={(e) => { e.stopPropagation(); setSelectedId(prev => prev === term.id ? null : term.id); }}
+                    onDoubleClick={(e) => { e.stopPropagation(); setDblNode(term); }}
+                    onTouchEnd={(e) => handleDoubleTap(e, term)}
                     style={{
                       position: 'absolute',
                       left: term.x - NODE_W / 2,
@@ -304,6 +320,16 @@ export default function ReklamKpiLiveMap() {
           </div>
         </div>
 
+        {dblNode && (
+          <DetailModal
+            title={dblNode.abbr}
+            subtitle={dblNode.tr}
+            description={dblNode.desc || dblNode.en}
+            accentColor={getColors(dblNode.cat).stripe}
+            badge={CAT_LABELS[dblNode.cat] || dblNode.cat}
+            onClose={() => setDblNode(null)}
+          />
+        )}
         {/* Info Panel */}
         {selectedTerm ? (
           <div ref={infoPanelRef} className="w-full bg-white border-t border-gray-100 p-6"

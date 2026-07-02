@@ -55,21 +55,6 @@ export default function ContactSection({ pinnedAnons, mobileFirstRight, noWrappe
         <h3 className="text-lg font-bold text-ink">{t.contact.form_title}</h3>
       </div>
       <GrowthForm />
-      <p className="hidden lg:block text-ink-muted leading-relaxed max-w-md">{t.contact.subtitle}</p>
-      <div className="hidden lg:flex flex-col gap-2">
-        <p className="text-xs font-semibold uppercase tracking-wider text-ink-muted mb-2">{t.contact.or_reach}</p>
-        {socialLinks.map((s) => (
-          <a key={s.name} href={s.href} target="_blank" rel="noopener noreferrer"
-            onClick={s.name === "WhatsApp" ? () => trackWhatsAppClick({
-              click_location: "contact_section",
-              click_text: s.label,
-            }) : undefined}
-            className={`flex items-center gap-3 group text-ink-secondary transition-colors ${s.name === "WhatsApp" ? "hover:text-[#25D366]" : "hover:text-[#a855f7]"}`}>
-            <span className={`p-2 rounded-lg bg-surface border border-border transition-all ${s.name === "WhatsApp" ? "group-hover:bg-[#25D366]/10 group-hover:border-[#25D366]/30" : "group-hover:bg-[#a855f7]/10 group-hover:border-[#a855f7]/30"}`}>{s.icon}</span>
-            <span className="text-sm font-medium">{s.label}</span>
-          </a>
-        ))}
-      </div>
     </div>
   );
 

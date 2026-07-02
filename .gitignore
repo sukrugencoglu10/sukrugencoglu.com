@@ -1,10 +1,11 @@
 # See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
 
-# dependencies
-/node_modules
-/.pnp
-.pnp.js
-.yarn/install-state.gz
+#node_modules/
+.next/
+out/
+build/
+.env*
+.DS_Store
 
 # testing
 /coverage
@@ -37,3 +38,12 @@ next-env.d.ts
 
 # Claude/Agent
 .claude
+
+
+# NEXT.JS-SPECIFIC
+.next/
+out/
+dist/
+build/
+*.log
+node_modules

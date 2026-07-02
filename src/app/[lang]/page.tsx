@@ -6,6 +6,7 @@ import MantikhHaritasiSection from "@/components/sections/MantikhHaritasiSection
 import ContactSection from "@/components/sections/ContactSection";
 import AiServicesTeaser from "@/components/sections/AiServicesTeaser";
 import PlusServicesWizard from "@/components/ui/PlusServicesWizard";
+import PaketlerStrip from "@/components/sections/PaketlerStrip";
 import MobileContactBar from "@/components/sections/MobileContactBar";
 
 const baseUrl = "https://www.sukrugencoglu.com";
@@ -76,6 +77,8 @@ export default function HomePage() {
           <PlusServicesWizard />
         </div>
       </div>
+      {/* Hazır Paketler vitrini — hem desktop hem mobil */}
+      <PaketlerStrip />
       <MobileContactBar />
     </>
   );

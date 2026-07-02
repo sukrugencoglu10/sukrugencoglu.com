@@ -7,6 +7,11 @@
 import { useState, useEffect, useRef } from 'react'
 import { createPortal } from 'react-dom'
 import BlogWizard from '@/components/studyo/BlogWizard'
+import PaketWizard from '@/components/studyo/PaketWizard'
+import KampanyaStudyosu from '@/components/studyo/kampanya/KampanyaStudyosu'
+import SiteAnalizi from '@/components/studyo/SiteAnalizi'
+import MailGonderim from '@/components/studyo/MailGonderim'
+import DetailModal from '@/components/ui/DetailModal'
 // ─── Login ekranı ─────────────────────────────────────────────────────────────
 function LoginScreen({ onSuccess }) {
   const [username, setUsername] = useState('')
@@ -208,6 +213,8 @@ function GtmZihinHaritasi() {
   const [connections, setConnections] = useState(GTM_CONNECTIONS)
   const [dragging, setDragging] = useState(null)
   const [editId, setEditId] = useState(null)
+  const [dblNode, setDblNode] = useState(null)
+  const [openedId, setOpenedId] = useState(null)
   const [saving, setSaving] = useState(false)
   const [lastSaved, setLastSaved] = useState(null)
   const [canvasZoom, setCanvasZoom] = useState(1)
@@ -215,6 +222,20 @@ function GtmZihinHaritasi() {
   const setZoom = (z) => { canvasZoomRef.current = z; setCanvasZoom(z) }
   const selectionBoxRef = useRef(null)
   const canvasRef = useRef(null)
+  const spaceHeldRef = useRef(false)
+  const lastTapRef = useRef({ id: null, time: 0 })
+  const handleDoubleTap = (e, term) => {
+    const now = Date.now()
+    const last = lastTapRef.current
+    if (last.id === term.id && now - last.time < 300) {
+      e.preventDefault()
+      lastTapRef.current = { id: null, time: 0 }
+      setOpenedId(term.id)
+      setDblNode(term)
+    } else {
+      lastTapRef.current = { id: term.id, time: now }
+    }
+  }
 
   useEffect(() => {
     fetch('/api/gtm-ekosistemi')
@@ -245,6 +266,52 @@ function GtmZihinHaritasi() {
     }
     window.addEventListener('wheel', handleWheel, { passive: false })
     return () => window.removeEventListener('wheel', handleWheel)
+  }, [])
+
+  useEffect(() => {
+    const onKeyDown = (e) => {
+      if (e.code === 'Space' && !e.repeat) {
+        spaceHeldRef.current = true
+        if (containerRef.current) containerRef.current.style.cursor = 'grab'
+        if (containerRef.current?.matches(':hover')) e.preventDefault()
+      }
+    }
+    const onKeyUp = (e) => {
+      if (e.code === 'Space') {
+        spaceHeldRef.current = false
+        if (containerRef.current) containerRef.current.style.cursor = ''
+      }
+    }
+    window.addEventListener('keydown', onKeyDown)
+    window.addEventListener('keyup', onKeyUp)
+    return () => { window.removeEventListener('keydown', onKeyDown); window.removeEventListener('keyup', onKeyUp) }
+  }, [])
+
+  useEffect(() => {
+    const container = containerRef.current
+    if (!container) return
+    let panStart = null
+    const onMouseDown = (e) => {
+      if (!spaceHeldRef.current || e.button !== 0) return
+      e.preventDefault()
+      panStart = { x: e.clientX, y: e.clientY, sl: container.scrollLeft, st: container.scrollTop }
+      container.style.cursor = 'grabbing'
+      const onMove = (me) => {
+        if (!panStart) return
+        container.scrollLeft = panStart.sl - (me.clientX - panStart.x)
+        container.scrollTop = panStart.st - (me.clientY - panStart.y)
+      }
+      const onUp = () => {
+        panStart = null
+        container.style.cursor = spaceHeldRef.current ? 'grab' : ''
+        window.removeEventListener('mousemove', onMove)
+        window.removeEventListener('mouseup', onUp)
+      }
+      window.addEventListener('mousemove', onMove)
+      window.addEventListener('mouseup', onUp)
+    }
+    container.addEventListener('mousedown', onMouseDown)
+    return () => container.removeEventListener('mousedown', onMouseDown)
   }, [])
 
   useEffect(() => {
@@ -299,7 +366,7 @@ function GtmZihinHaritasi() {
   }, [dragging])
 
   const termMap = Object.fromEntries(terms.map(t => [t.id, t]))
-  const selectedTerm = selectedIds.length === 1 ? termMap[selectedIds[0]] : null
+  const selectedTerm = (selectedIds.length === 1 && selectedIds[0] === openedId) ? termMap[selectedIds[0]] : null
 
   const activeIds = new Set(selectedIds)
   if (hovered) activeIds.add(hovered)
@@ -322,6 +389,7 @@ function GtmZihinHaritasi() {
     }
     setTerms([...terms, newNode])
     setSelectedIds([newId])
+    setOpenedId(newId)
     setEditId(newId)
   }
 
@@ -365,8 +433,11 @@ function GtmZihinHaritasi() {
           >
             <span style={{ fontSize: 16, fontWeight: 'bold' }}>+</span> Yeni Kutu Ekle
           </button>
+          
         </div>
       </div>
+
+
 
       {/* Legenda */}
       <div style={{ display: 'flex', gap: 16, marginBottom: '1rem', flexWrap: 'wrap' }}>
@@ -384,6 +455,7 @@ function GtmZihinHaritasi() {
         <div ref={canvasRef} style={{ position: "relative", width: canvasDim.w, height: canvasDim.h, margin: 0, transform: `scale(${canvasZoom})`, transformOrigin: 'top left', transition: 'transform 0.15s ease-out' }}
              onMouseDown={(e) => {
                if (e.button !== 0) return
+               if (spaceHeldRef.current) return
                if (e.target !== e.currentTarget && e.target.tagName !== 'svg') return
                const cssZoom = parseFloat(getComputedStyle(document.documentElement).zoom) || 1
                const rect = e.currentTarget.getBoundingClientRect()
@@ -493,6 +565,7 @@ function GtmZihinHaritasi() {
                 onMouseLeave={() => setHovered(null)}
                 onMouseDown={(e) => {
                     if (e.button !== 0) return
+                    if (spaceHeldRef.current) return
                     e.stopPropagation()
                     
                     let currentSelected = selectedIds;
@@ -520,6 +593,8 @@ function GtmZihinHaritasi() {
                       startPositions
                     })
                   }}
+                onDoubleClick={(e) => { e.stopPropagation(); setOpenedId(term.id); setDblNode(term) }}
+                onTouchEnd={(e) => handleDoubleTap(e, term)}
                 style={{
                   position: 'absolute',
                   left: term.x - GTM_NW / 2,
@@ -762,7 +837,7 @@ function GtmZihinHaritasi() {
         ) : (
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, color: '#ccc', minHeight: 60 }}>
             <span style={{ fontSize: 20 }}>◎</span>
-            <span style={{ fontSize: 13 }}>Bir kutucuğa tıkla, açıklamasını oku</span>
+            <span style={{ fontSize: 13 }}>Bir kutucuğa çift tıkla, açıklamasını oku</span>
           </div>
         )}
       </div>
@@ -782,6 +857,16 @@ function GtmZihinHaritasi() {
           {saving ? 'Kaydediliyor...' : 'Değişiklikleri Kaydet'}
         </button>
       </div>
+      {dblNode && (
+        <DetailModal
+          title={dblNode.abbr}
+          subtitle={dblNode.sub}
+          description={dblNode.desc}
+          accentColor={GTM_CAT_COLORS[dblNode.cat]?.stripe || '#1D9E75'}
+          badge={GTM_CAT_LABELS[dblNode.cat] || dblNode.cat}
+          onClose={() => setDblNode(null)}
+        />
+      )}
     </div>
   )
 }
@@ -860,6 +945,8 @@ function MantiKHaritasi() {
   const [connections, setConnections] = useState(CONNECTIONS)
   const [dragging, setDragging] = useState(null)
   const [editId, setEditId] = useState(null)
+  const [dblNode, setDblNode] = useState(null)
+  const [openedId, setOpenedId] = useState(null)
   const [saving, setSaving] = useState(false)
   const [lastSaved, setLastSaved] = useState(null)
   const [canvasZoom, setCanvasZoom] = useState(1)
@@ -867,6 +954,20 @@ function MantiKHaritasi() {
   const setZoom = (z) => { canvasZoomRef.current = z; setCanvasZoom(z) }
   const selectionBoxRef = useRef(null)
   const canvasRef = useRef(null)
+  const spaceHeldRef = useRef(false)
+  const lastTapRef = useRef({ id: null, time: 0 })
+  const handleDoubleTap = (e, term) => {
+    const now = Date.now()
+    const last = lastTapRef.current
+    if (last.id === term.id && now - last.time < 300) {
+      e.preventDefault()
+      lastTapRef.current = { id: null, time: 0 }
+      setOpenedId(term.id)
+      setDblNode(term)
+    } else {
+      lastTapRef.current = { id: term.id, time: now }
+    }
+  }
 
   useEffect(() => {
     fetch('/api/reklam-terimleri')
@@ -896,6 +997,52 @@ function MantiKHaritasi() {
     }
     window.addEventListener('wheel', handleWheel, { passive: false })
     return () => window.removeEventListener('wheel', handleWheel)
+  }, [])
+
+  useEffect(() => {
+    const onKeyDown = (e) => {
+      if (e.code === 'Space' && !e.repeat) {
+        spaceHeldRef.current = true
+        if (containerRef.current) containerRef.current.style.cursor = 'grab'
+        if (containerRef.current?.matches(':hover')) e.preventDefault()
+      }
+    }
+    const onKeyUp = (e) => {
+      if (e.code === 'Space') {
+        spaceHeldRef.current = false
+        if (containerRef.current) containerRef.current.style.cursor = ''
+      }
+    }
+    window.addEventListener('keydown', onKeyDown)
+    window.addEventListener('keyup', onKeyUp)
+    return () => { window.removeEventListener('keydown', onKeyDown); window.removeEventListener('keyup', onKeyUp) }
+  }, [])
+
+  useEffect(() => {
+    const container = containerRef.current
+    if (!container) return
+    let panStart = null
+    const onMouseDown = (e) => {
+      if (!spaceHeldRef.current || e.button !== 0) return
+      e.preventDefault()
+      panStart = { x: e.clientX, y: e.clientY, sl: container.scrollLeft, st: container.scrollTop }
+      container.style.cursor = 'grabbing'
+      const onMove = (me) => {
+        if (!panStart) return
+        container.scrollLeft = panStart.sl - (me.clientX - panStart.x)
+        container.scrollTop = panStart.st - (me.clientY - panStart.y)
+      }
+      const onUp = () => {
+        panStart = null
+        container.style.cursor = spaceHeldRef.current ? 'grab' : ''
+        window.removeEventListener('mousemove', onMove)
+        window.removeEventListener('mouseup', onUp)
+      }
+      window.addEventListener('mousemove', onMove)
+      window.addEventListener('mouseup', onUp)
+    }
+    container.addEventListener('mousedown', onMouseDown)
+    return () => container.removeEventListener('mousedown', onMouseDown)
   }, [])
 
   useEffect(() => {
@@ -950,7 +1097,7 @@ function MantiKHaritasi() {
   }, [dragging])
 
   const termMap = Object.fromEntries(terms.map(t => [t.id, t]))
-  const selectedTerm = selectedIds.length === 1 ? termMap[selectedIds[0]] : null
+  const selectedTerm = (selectedIds.length === 1 && selectedIds[0] === openedId) ? termMap[selectedIds[0]] : null
 
   const activeIds = new Set(selectedIds)
   if (hovered) activeIds.add(hovered)
@@ -974,6 +1121,7 @@ function MantiKHaritasi() {
     }
     setTerms([...terms, newNode])
     setSelectedIds([newId])
+    setOpenedId(newId)
     setEditId(newId)
   }
 
@@ -1037,6 +1185,7 @@ function MantiKHaritasi() {
         <div ref={canvasRef} style={{ position: "relative", width: canvasDim.w, height: canvasDim.h, margin: 0, transform: `scale(${canvasZoom})`, transformOrigin: 'top left', transition: 'transform 0.15s ease-out' }}
              onMouseDown={(e) => {
                if (e.button !== 0) return
+               if (spaceHeldRef.current) return
                if (e.target !== e.currentTarget && e.target.tagName !== 'svg') return
                const cssZoom = parseFloat(getComputedStyle(document.documentElement).zoom) || 1
                const rect = e.currentTarget.getBoundingClientRect()
@@ -1145,6 +1294,7 @@ function MantiKHaritasi() {
                   }}
                 onMouseDown={(e) => {
                     if (e.button !== 0) return
+                    if (spaceHeldRef.current) return
                     e.stopPropagation()
                     
                     let currentSelected = selectedIds;
@@ -1172,6 +1322,8 @@ function MantiKHaritasi() {
                       startPositions
                     })
                   }}
+                onDoubleClick={(e) => { e.stopPropagation(); setOpenedId(term.id); setDblNode(term) }}
+                onTouchEnd={(e) => handleDoubleTap(e, term)}
                 style={{
                   position: 'absolute',
                   left: term.x - NODE_W / 2,
@@ -1437,7 +1589,7 @@ function MantiKHaritasi() {
         ) : (
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, color: '#ccc', minHeight: 60 }}>
             <span style={{ fontSize: 20 }}>◎</span>
-            <span style={{ fontSize: 13 }}>Bir kutucuğa tıkla, açıklamasını oku</span>
+            <span style={{ fontSize: 13 }}>Bir kutucuğa çift tıkla, açıklamasını oku</span>
           </div>
         )}
       </div>
@@ -1457,6 +1609,16 @@ function MantiKHaritasi() {
           {saving ? 'Kaydediliyor...' : 'Değişiklikleri Kaydet'}
         </button>
       </div>
+      {dblNode && (
+        <DetailModal
+          title={dblNode.abbr}
+          subtitle={dblNode.tr}
+          description={dblNode.desc || dblNode.en}
+          accentColor={getCatColors(dblNode.cat).stripe}
+          badge={CAT_LABELS[dblNode.cat] || dblNode.cat}
+          onClose={() => setDblNode(null)}
+        />
+      )}
     </div>
   )
 }
@@ -1585,6 +1747,8 @@ function YzHaritasi() {
   const [connections, setConnections] = useState(AI_CONNECTIONS)
   const [dragging, setDragging] = useState(null)
   const [editId, setEditId] = useState(null)
+  const [dblNode, setDblNode] = useState(null)
+  const [openedId, setOpenedId] = useState(null)
   const [saving, setSaving] = useState(false)
   const [lastSaved, setLastSaved] = useState(null)
   const [canvasZoom, setCanvasZoom] = useState(1)
@@ -1592,6 +1756,20 @@ function YzHaritasi() {
   const setZoom = (z) => { canvasZoomRef.current = z; setCanvasZoom(z) }
   const selectionBoxRef = useRef(null)
   const canvasRef = useRef(null)
+  const spaceHeldRef = useRef(false)
+  const lastTapRef = useRef({ id: null, time: 0 })
+  const handleDoubleTap = (e, term) => {
+    const now = Date.now()
+    const last = lastTapRef.current
+    if (last.id === term.id && now - last.time < 300) {
+      e.preventDefault()
+      lastTapRef.current = { id: null, time: 0 }
+      setOpenedId(term.id)
+      setDblNode(term)
+    } else {
+      lastTapRef.current = { id: term.id, time: now }
+    }
+  }
 
   useEffect(() => {
     fetch('/api/ai-terimleri')
@@ -1599,7 +1777,7 @@ function YzHaritasi() {
       .then(data => {
         if (data && !Array.isArray(data) && data.terms) {
           setTerms(data.terms)
-          setConnections(data.connections || [])
+          setConnections(Array.isArray(data.connections) ? data.connections : AI_CONNECTIONS)
           if (data.metadata?.w) setCanvasDim({ w: data.metadata.w, h: data.metadata.h || 600 })
         } else if (data && Array.isArray(data) && data.length > 0) {
           setTerms(data)
@@ -1621,6 +1799,52 @@ function YzHaritasi() {
     }
     window.addEventListener('wheel', handleWheel, { passive: false })
     return () => window.removeEventListener('wheel', handleWheel)
+  }, [])
+
+  useEffect(() => {
+    const onKeyDown = (e) => {
+      if (e.code === 'Space' && !e.repeat) {
+        spaceHeldRef.current = true
+        if (containerRef.current) containerRef.current.style.cursor = 'grab'
+        if (containerRef.current?.matches(':hover')) e.preventDefault()
+      }
+    }
+    const onKeyUp = (e) => {
+      if (e.code === 'Space') {
+        spaceHeldRef.current = false
+        if (containerRef.current) containerRef.current.style.cursor = ''
+      }
+    }
+    window.addEventListener('keydown', onKeyDown)
+    window.addEventListener('keyup', onKeyUp)
+    return () => { window.removeEventListener('keydown', onKeyDown); window.removeEventListener('keyup', onKeyUp) }
+  }, [])
+
+  useEffect(() => {
+    const container = containerRef.current
+    if (!container) return
+    let panStart = null
+    const onMouseDown = (e) => {
+      if (!spaceHeldRef.current || e.button !== 0) return
+      e.preventDefault()
+      panStart = { x: e.clientX, y: e.clientY, sl: container.scrollLeft, st: container.scrollTop }
+      container.style.cursor = 'grabbing'
+      const onMove = (me) => {
+        if (!panStart) return
+        container.scrollLeft = panStart.sl - (me.clientX - panStart.x)
+        container.scrollTop = panStart.st - (me.clientY - panStart.y)
+      }
+      const onUp = () => {
+        panStart = null
+        container.style.cursor = spaceHeldRef.current ? 'grab' : ''
+        window.removeEventListener('mousemove', onMove)
+        window.removeEventListener('mouseup', onUp)
+      }
+      window.addEventListener('mousemove', onMove)
+      window.addEventListener('mouseup', onUp)
+    }
+    container.addEventListener('mousedown', onMouseDown)
+    return () => container.removeEventListener('mousedown', onMouseDown)
   }, [])
 
 
@@ -1699,6 +1923,7 @@ function YzHaritasi() {
     }
     setTerms([...terms, newNode])
     setSelectedIds([newId])
+    setOpenedId(newId)
     setEditId(newId)
   }
 
@@ -1742,6 +1967,18 @@ function YzHaritasi() {
           >
             <span style={{ fontSize: 16, fontWeight: 'bold' }}>+</span> Yeni Kutu Ekle
           </button>
+          {lastSaved && <span style={{ fontSize: 11, color: '#1D9E75' }}>Kaydedildi: {lastSaved}</span>}
+          <button
+            onClick={handleSave}
+            disabled={saving}
+            style={{
+              background: '#111', color: '#fff', border: 'none', borderRadius: 8,
+              padding: '6px 14px', fontSize: 12, cursor: saving ? 'not-allowed' : 'pointer',
+              opacity: saving ? 0.7 : 1, transition: 'all 0.2s'
+            }}
+          >
+            {saving ? 'Kaydediliyor...' : 'Değişiklikleri Kaydet'}
+          </button>
         </div>
       </div>
 
@@ -1764,6 +2001,7 @@ function YzHaritasi() {
           <div ref={canvasRef} style={{ position: "relative", width: canvasDim.w, height: canvasDim.h, margin: 0, transform: `scale(${canvasZoom})`, transformOrigin: 'top left', transition: 'transform 0.15s ease-out' }}
              onMouseDown={(e) => {
                if (e.button !== 0) return
+               if (spaceHeldRef.current) return
                if (e.target !== e.currentTarget && e.target.tagName !== 'svg') return
                const cssZoom = parseFloat(getComputedStyle(document.documentElement).zoom) || 1
                const rect = e.currentTarget.getBoundingClientRect()
@@ -1809,10 +2047,10 @@ function YzHaritasi() {
             <svg width={canvasDim.w} height={canvasDim.h} style={{ position: 'absolute', top: 0, left: 0, pointerEvents: 'none', overflow: 'visible', zIndex: 5 }}>
               <defs>
                 <marker id="ai-arr" markerWidth="7" markerHeight="7" refX="7" refY="3.5" orient="auto">
-                  <path d="M0,0 L0,7 L7,3.5 z" fill="#ccc" />
+                  <path d="M0,0 L0,7 L7,3.5 z" fill="#bbb" />
                 </marker>
                 <marker id="ai-arr-hi" markerWidth="7" markerHeight="7" refX="7" refY="3.5" orient="auto">
-                  <path d="M0,0 L0,7 L7,3.5 z" fill="#777" />
+                  <path d="M0,0 L0,7 L7,3.5 z" fill="#555" />
                 </marker>
               </defs>
             {connections.map((conn, i) => {
@@ -1826,7 +2064,7 @@ function YzHaritasi() {
                   <line
                     key={i}
                     x1={p1.x} y1={p1.y} x2={p2.x} y2={p2.y}
-                    stroke={isActive ? '#777' : '#ddd'}
+                    stroke={isActive ? '#555' : '#bbb'}
                     strokeWidth={isActive ? 2 : 1.5}
                     markerEnd={isActive ? 'url(#ai-arr-hi)' : 'url(#ai-arr)'}
                   />
@@ -1870,6 +2108,7 @@ function YzHaritasi() {
                   }}
                   onMouseDown={(e) => {
                     if (e.button !== 0) return
+                    if (spaceHeldRef.current) return
                     e.stopPropagation()
                     
                     let currentSelected = selectedIds;
@@ -1897,6 +2136,8 @@ function YzHaritasi() {
                       startPositions
                     })
                   }}
+                  onDoubleClick={(e) => { e.stopPropagation(); setOpenedId(term.id); setDblNode(term) }}
+                  onTouchEnd={(e) => handleDoubleTap(e, term)}
                   style={{
                     position: 'absolute',
                     left: term.x - AI_NODE_W / 2,
@@ -2025,45 +2266,71 @@ function YzHaritasi() {
                   {/* TEXTAREA_MOVED */}
 
                   <div style={{ borderTop: '0.5px solid #eee', paddingTop: 12 }}>
-                    <label style={{ fontSize: 11, color: '#888', display: 'block', marginBottom: 8, fontWeight: 600 }}>BAĞLANTI YÖNETİMİ</label>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                      <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-                        <div style={{ padding: '5px 10px', fontSize: 12, background: '#f0f0f0', border: '0.5px solid #ccc', borderRadius: 6, fontWeight: 700, whiteSpace: 'nowrap', color: '#333' }}>
-                          A: {selectedTerm.abbr}
-                        </div>
-                        <span style={{ fontSize: 16, color: '#999' }}>→</span>
-                        <select
-                          id="ai-target-select"
-                          style={{ flex: 1, padding: '6px 10px', fontSize: 12, border: '0.5px solid #ccc', borderRadius: 6, outline: 'none', background: '#fff' }}
-                        >
-                          <option value="">B kutusunu seç...</option>
-                          {terms.filter(t => t.id !== selectedTerm.id).map(t => (
-                            <option key={t.id} value={t.id}>{t.abbr} ({t.sub})</option>
-                          ))}
-                        </select>
-                        <button
-                          onClick={() => {
-                            const sel = document.getElementById('ai-target-select')
-                            if (sel.value) handleAddConnection(sel.value)
-                          }}
-                          style={{ padding: '6px 14px', fontSize: 12, background: '#f5f5f5', border: '0.5px solid #ccc', borderRadius: 6, cursor: 'pointer' }}
-                        >
-                          Ekle
-                        </button>
+                    <label style={{ fontSize: 12, color: '#666', display: 'block', marginBottom: 10, fontWeight: 700, letterSpacing: '0.04em' }}>BAĞLANTI YÖNETİMİ</label>
+
+                    {/* GİDEN: Bu → Hedef */}
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginBottom: 10 }}>
+                      <div style={{ fontSize: 12, color: '#888', paddingLeft: 2 }}>
+                        <span style={{ fontWeight: 700, color: '#444' }}>Bu</span> → hedef seç:
+                      </div>
+                      <select id="ai-target-select" style={{ width: '100%', padding: '7px 10px', fontSize: 13, border: '1px solid #ddd', borderRadius: 7, outline: 'none', background: '#fff', color: '#333' }}>
+                        <option value="">— Hedef kutusunu seç —</option>
+                        {terms.filter(t => t.id !== selectedTerm.id).map(t => (
+                          <option key={t.id} value={t.id}>{t.abbr} ({t.sub})</option>
+                        ))}
+                      </select>
+                      <button
+                        onClick={() => { const sel = document.getElementById('ai-target-select'); if (sel && sel.value) { handleAddConnection(sel.value); sel.value = '' } }}
+                        style={{ width: '100%', padding: '7px 14px', fontSize: 13, fontWeight: 600, background: '#111', color: '#fff', border: 'none', borderRadius: 7, cursor: 'pointer' }}
+                      >+ Giden Ok Ekle</button>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
+                        {connections.filter(c => c.from === selectedTerm.id).map(c => {
+                          const target = termMap[c.to]; if (!target) return null
+                          return (
+                            <div key={c.to} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '5px 10px', background: '#f5f5f5', border: '0.5px solid #e8e8e8', borderRadius: 7, fontSize: 13 }}>
+                              <span style={{ color: '#333' }}>→ {target.abbr}</span>
+                              <button onClick={() => handleRemoveConnection(c.to)} style={{ border: 'none', background: 'none', cursor: 'pointer', color: '#ff4d4f', fontSize: 12 }}>Kaldır</button>
+                            </div>
+                          )
+                        })}
                       </div>
                     </div>
 
-                    <div style={{ marginTop: 12, display: 'flex', flexDirection: 'column', gap: 6 }}>
-                      {connections.filter(c => c.from === selectedTerm.id).map(c => {
-                        const target = termMap[c.to]
-                        if (!target) return null
-                        return (
-                          <div key={c.to} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '4px 8px', background: '#f9f9f9', border: '0.5px solid #eee', borderRadius: 6, fontSize: 11 }}>
-                            <span>→ {target.abbr}</span>
-                            <button onClick={() => handleRemoveConnection(c.to)} style={{ border: 'none', background: 'none', cursor: 'pointer', color: '#ff4d4f' }}>Kaldır</button>
-                          </div>
-                        )
-                      })}
+                    {/* GELEN: Kaynak → Bu */}
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 6, paddingTop: 10, borderTop: '0.5px solid #f0f0f0' }}>
+                      <div style={{ fontSize: 12, color: '#888', paddingLeft: 2 }}>
+                        kaynak seç → <span style={{ fontWeight: 700, color: '#444' }}>Bu</span>:
+                      </div>
+                      <select id="ai-source-select" style={{ width: '100%', padding: '7px 10px', fontSize: 13, border: '1px solid #ddd', borderRadius: 7, outline: 'none', background: '#fff', color: '#333' }}>
+                        <option value="">— Kaynak kutusunu seç —</option>
+                        {terms.filter(t => t.id !== selectedTerm.id).map(t => (
+                          <option key={t.id} value={t.id}>{t.abbr} ({t.sub})</option>
+                        ))}
+                      </select>
+                      <button
+                        onClick={() => {
+                          const sel = document.getElementById('ai-source-select')
+                          if (sel && sel.value) {
+                            const srcId = sel.value
+                            if (!connections.find(c => c.from === srcId && c.to === selectedTerm.id)) {
+                              setConnections(prev => [...prev, { from: srcId, to: selectedTerm.id }])
+                            }
+                            sel.value = ''
+                          }
+                        }}
+                        style={{ width: '100%', padding: '7px 14px', fontSize: 13, fontWeight: 600, background: '#444', color: '#fff', border: 'none', borderRadius: 7, cursor: 'pointer' }}
+                      >+ Gelen Ok Ekle</button>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
+                        {connections.filter(c => c.to === selectedTerm.id).map(c => {
+                          const source = termMap[c.from]; if (!source) return null
+                          return (
+                            <div key={c.from} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '5px 10px', background: '#f5f5f5', border: '0.5px solid #e8e8e8', borderRadius: 7, fontSize: 13 }}>
+                              <span style={{ color: '#333' }}>{source.abbr} →</span>
+                              <button onClick={() => setConnections(prev => prev.filter(c2 => !(c2.from === c.from && c2.to === selectedTerm.id)))} style={{ border: 'none', background: 'none', cursor: 'pointer', color: '#ff4d4f', fontSize: 12 }}>Kaldır</button>
+                            </div>
+                          )
+                        })}
+                      </div>
                     </div>
                   </div>
 
@@ -2095,7 +2362,7 @@ function YzHaritasi() {
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: 160, gap: 8, color: '#ccc', textAlign: 'center' }}>
               <div style={{ fontSize: 28 }}>◎</div>
-              <div style={{ fontSize: 12 }}>Bir terime tıkla,<br />açıklamasını gör</div>
+              <div style={{ fontSize: 12 }}>Bir terime çift tıkla,<br />açıklamasını gör</div>
             </div>
           )}
         </div>
@@ -2168,20 +2435,16 @@ function YzHaritasi() {
         </div>
       )}
 
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: 12, marginTop: 12 }}>
-        {lastSaved && <span style={{ fontSize: 11, color: '#1D9E75' }}>Kaydedildi: {lastSaved}</span>}
-        <button
-          onClick={handleSave}
-          disabled={saving}
-          style={{
-            background: '#111', color: '#fff', border: 'none', borderRadius: 8,
-            padding: '6px 14px', fontSize: 13, cursor: saving ? 'not-allowed' : 'pointer',
-            opacity: saving ? 0.7 : 1, transition: 'all 0.2s'
-          }}
-        >
-          {saving ? 'Kaydediliyor...' : 'Değişiklikleri Kaydet'}
-        </button>
-      </div>
+      {dblNode && (
+        <DetailModal
+          title={dblNode.abbr}
+          subtitle={dblNode.sub}
+          description={dblNode.desc}
+          accentColor={AI_CAT_COLORS[dblNode.cat]?.stripe || '#1D9E75'}
+          badge={AI_CAT_LABELS[dblNode.cat] || dblNode.cat}
+          onClose={() => setDblNode(null)}
+        />
+      )}
     </div>
   )
 }
@@ -3037,6 +3300,7 @@ function KodBloklariHaritasi() {
   const [connections, setConnections] = useState([])
   const [dragging, setDragging] = useState(null)
   const [editId, setEditId] = useState(null)
+  const [dblNode, setDblNode] = useState(null)
   const [saving, setSaving] = useState(false)
   const [lastSaved, setLastSaved] = useState(null)
   const [canvasZoom, setCanvasZoom] = useState(1)
@@ -3044,6 +3308,18 @@ function KodBloklariHaritasi() {
   const setZoom = (z) => { canvasZoomRef.current = z; setCanvasZoom(z) }
   const selectionBoxRef = useRef(null)
   const canvasRef = useRef(null)
+  const lastTapRef = useRef({ id: null, time: 0 })
+  const handleDoubleTap = (e, term) => {
+    const now = Date.now()
+    const last = lastTapRef.current
+    if (last.id === term.id && now - last.time < 300) {
+      e.preventDefault()
+      lastTapRef.current = { id: null, time: 0 }
+      setDblNode(term)
+    } else {
+      lastTapRef.current = { id: term.id, time: now }
+    }
+  }
 
   useEffect(() => {
     fetch('/api/kod-bloklari')
@@ -3276,6 +3552,8 @@ function KodBloklariHaritasi() {
                     const pos = {}; terms.forEach(t => { if (currentSelected.includes(t.id)) pos[t.id] = { x: t.x, y: t.y } })
                     setDragging({ startMouseX: e.clientX, startMouseY: e.clientY, startPositions: pos, id: term.id })
                   }}
+                  onDoubleClick={(e) => { e.stopPropagation(); setDblNode(term) }}
+                  onTouchEnd={(e) => handleDoubleTap(e, term)}
                   style={{
                     position: 'absolute', left: term.x - KB_NODE_W / 2, top: term.y - KB_NODE_H / 2, width: KB_NODE_W, height: KB_NODE_H,
                     background: isSelected ? colors.stripe + '18' : colors.bg, border: `${isSelected ? 2 : 1}px solid ${isSelected ? colors.stripe : (isHovered ? colors.stripe : colors.border)}`,
@@ -3344,6 +3622,16 @@ function KodBloklariHaritasi() {
         {lastSaved && <span style={{ fontSize: 11, color: '#1D9E75' }}>Kaydedildi: {lastSaved}</span>}
         <button onClick={handleSave} disabled={saving} style={{ background: '#111', color: '#fff', border: 'none', borderRadius: 8, padding: '6px 14px', fontSize: 13, cursor: saving ? 'not-allowed' : 'pointer', opacity: saving ? 0.7 : 1, transition: 'all 0.2s' }}>{saving ? 'Kaydediliyor...' : 'Değişiklikleri Kaydet'}</button>
       </div>
+      {dblNode && (
+        <DetailModal
+          title={dblNode.abbr}
+          subtitle={dblNode.sub}
+          description={dblNode.desc}
+          accentColor={KB_CAT_COLORS[dblNode.cat]?.stripe || '#1D9E75'}
+          badge={KB_CAT_LABELS[dblNode.cat] || dblNode.cat}
+          onClose={() => setDblNode(null)}
+        />
+      )}
     </div>
   )
 }
@@ -4506,28 +4794,145 @@ function DijitalAnons() {
   )
 }
 
-// ─── SSS aracı — ReklamHiyerarsisi'nin SSS varyantı ──────────────────────────
+// ─── SSS aracı — Kart tabanlı düzen ──────────────────────────────────────────
 function SSS() {
+  const [items, setItems] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [saving, setSaving] = useState(false)
+  const [active, setActive] = useState(null) // null → grid, obje → editör
+
+  useEffect(() => {
+    fetch('/api/sss')
+      .then(r => r.json())
+      .then(data => { if (Array.isArray(data)) setItems(data) })
+      .catch(() => {})
+      .finally(() => setLoading(false))
+  }, [])
+
+  const persist = async (newItems) => {
+    setSaving(true)
+    try {
+      const res = await fetch('/api/sss', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(newItems),
+      })
+      const result = await res.json()
+      if (!res.ok || !result.ok) { alert('Kaydedilemedi: ' + (result.error || 'Hata')); return false }
+      return true
+    } catch (err) { alert('Hata: ' + err.message); return false }
+    finally { setSaving(false) }
+  }
+
+  const handleNew = () => {
+    const item = { id: Date.now(), title: '', description: '', faq: [], expanded: false }
+    setActive(item)
+  }
+
+  const handleSave = async () => {
+    const exists = items.some(i => i.id === active.id)
+    const updated = exists ? items.map(i => i.id === active.id ? active : i) : [active, ...items]
+    if (await persist(updated)) { setItems(updated); setActive(null) }
+  }
+
+  const handleDelete = async (id) => {
+    if (!confirm('Bu soruyu silmek istediğinize emin misiniz?')) return
+    const updated = items.filter(i => i.id !== id)
+    if (await persist(updated)) setItems(updated)
+  }
+
+  if (loading) return <div style={{ padding: '2rem', color: '#888', fontSize: 14 }}>Yükleniyor...</div>
+
+  // ─── Editör ─────────────────────────────────────────────────────
+  if (active !== null) {
+    return (
+      <div style={{ padding: '2rem 1.25rem', fontFamily: 'inherit', maxWidth: 800 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 20 }}>
+          <button
+            onClick={() => { if (confirm('Değişiklikler kaybolabilir. Geri dön?')) setActive(null) }}
+            style={{ padding: '6px 12px', background: '#fff', border: '1px solid #ddd', borderRadius: 6, cursor: 'pointer', fontSize: 12, color: '#555' }}>
+            ← SSS Listesi
+          </button>
+          {saving && <span style={{ fontSize: 11, color: '#888' }}>Kaydediliyor...</span>}
+        </div>
+        <div style={{ marginBottom: 14 }}>
+          <label style={{ fontSize: 11, color: '#888', display: 'block', marginBottom: 4 }}>SORU</label>
+          <textarea
+            value={active.title}
+            onChange={e => setActive(a => ({ ...a, title: e.target.value }))}
+            rows={3}
+            placeholder="Soru..."
+            style={{ width: '100%', padding: 12, fontSize: 14, border: '1px solid #ddd', borderRadius: 8, outline: 'none', resize: 'vertical', fontFamily: 'inherit', boxSizing: 'border-box' }}
+          />
+        </div>
+        <div style={{ marginBottom: 20 }}>
+          <label style={{ fontSize: 11, color: '#888', display: 'block', marginBottom: 4 }}>CEVAP</label>
+          <textarea
+            value={active.description}
+            onChange={e => setActive(a => ({ ...a, description: e.target.value }))}
+            rows={12}
+            placeholder="Cevap yaz..."
+            style={{ width: '100%', padding: 12, fontSize: 14, lineHeight: 1.7, border: '1px solid #ddd', borderRadius: 8, outline: 'none', resize: 'vertical', fontFamily: 'inherit', boxSizing: 'border-box' }}
+          />
+        </div>
+        <button
+          onClick={handleSave}
+          disabled={saving || !active.title.trim()}
+          style={{ padding: '10px 24px', background: '#111', color: '#fff', border: 'none', borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>
+          Kaydet
+        </button>
+      </div>
+    )
+  }
+
+  // ─── Kart grid ──────────────────────────────────────────────────
   return (
-    <ReklamHiyerarsisi
-      apiPath="/api/sss"
-      headerText="Sık Sorulan Sorular"
-      headerSubtext="Soru ve cevapları düzenle, kaydet"
-      emptyText="Henüz soru yok."
-      emptyIcon="?"
-      titlePlaceholder="Soru..."
-      descPlaceholder="Cevap yaz..."
-      searchPlaceholder="Soru veya cevapta ara..."
-      titleFallback="Soru yok"
-      descFallback="Cevap yok"
-      showNestedFaq={false}
-      addToTop={true}
-      descMinHeight={200}
-      focusedLeftWidth={220}
-      focusedDescMinHeight={520}
-      focusedDescFontSize={15}
-      focusedDescLineHeight={1.9}
-    />
+    <div style={{ padding: '2rem 1.25rem', fontFamily: 'inherit' }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1.5rem', flexWrap: 'wrap', gap: 10 }}>
+        <div>
+          <h1 style={{ fontSize: 22, fontWeight: 500, margin: 0 }}>Sık Sorulan Sorular</h1>
+          <p style={{ fontSize: 12, color: '#888', marginTop: 4 }}>{items.length} soru</p>
+        </div>
+        <button
+          onClick={handleNew}
+          style={{ background: '#111', color: '#fff', border: 'none', borderRadius: 8, padding: '8px 18px', fontSize: 13, fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6 }}>
+          <span style={{ fontSize: 16, fontWeight: 'bold' }}>+</span> Yeni Soru
+        </button>
+      </div>
+
+      {items.length === 0 ? (
+        <div style={{ padding: '4rem 2rem', textAlign: 'center', color: '#bbb', fontSize: 14, background: '#fafafa', borderRadius: 12, border: '1px dashed #e0e0e0' }}>
+          Henüz soru yok. Yeni bir soru ekle.
+        </div>
+      ) : (
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 14 }}>
+          {items.map(item => (
+            <div
+              key={item.id}
+              onClick={() => setActive({ ...item })}
+              style={{ background: '#fff', border: '1px solid #eee', borderRadius: 10, padding: '16px 18px', cursor: 'pointer', transition: 'all 0.15s', position: 'relative' }}
+              onMouseEnter={e => { e.currentTarget.style.borderColor = '#111'; e.currentTarget.style.boxShadow = '0 4px 14px rgba(0,0,0,0.06)' }}
+              onMouseLeave={e => { e.currentTarget.style.borderColor = '#eee'; e.currentTarget.style.boxShadow = 'none' }}
+            >
+              <div style={{ fontSize: 13, fontWeight: 700, color: '#111', lineHeight: 1.4, marginBottom: 8 }}>
+                {item.title || '(başlıksız)'}
+              </div>
+              <div style={{ fontSize: 12, color: '#999', lineHeight: 1.5, display: '-webkit-box', WebkitLineClamp: 3, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
+                {item.description || '(cevap yok)'}
+              </div>
+              <button
+                onClick={e => { e.stopPropagation(); handleDelete(item.id) }}
+                style={{ position: 'absolute', top: 10, right: 10, background: 'none', border: 'none', color: '#ff4d4f', cursor: 'pointer', fontSize: 11, padding: '2px 6px', opacity: 0 }}
+                onMouseEnter={e => e.currentTarget.style.opacity = 1}
+                onMouseLeave={e => e.currentTarget.style.opacity = 0}
+              >
+                Sil
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
   )
 }
 
@@ -4671,7 +5076,10 @@ const RH_CAT_LABELS = {
   kirmizi: 'Kırmızı', pembe: 'Pembe', lacivert: 'Lacivert', gumus: 'Gümüş',
 }
 
-function ReklamHiyerarsisiHaritasi() {
+function ReklamHiyerarsisiHaritasi({
+  apiPath = '/api/reklam-hiyerarsisi-harita',
+  title = 'Reklam Hiyerarşisi Haritası',
+} = {}) {
   const containerRef = useRef(null)
   const [canvasDim, setCanvasDim] = useState({ w: 1400, h: 900 })
   const [hovered, setHovered] = useState(null)
@@ -4681,6 +5089,7 @@ function ReklamHiyerarsisiHaritasi() {
   const [connections, setConnections] = useState(RH_CONNECTIONS)
   const [dragging, setDragging] = useState(null)
   const [editId, setEditId] = useState(null)
+  const [dblNode, setDblNode] = useState(null)
   const [saving, setSaving] = useState(false)
   const [lastSaved, setLastSaved] = useState(null)
   const [canvasZoom, setCanvasZoom] = useState(1)
@@ -4688,9 +5097,21 @@ function ReklamHiyerarsisiHaritasi() {
   const setZoom = (z) => { canvasZoomRef.current = z; setCanvasZoom(z) }
   const selectionBoxRef = useRef(null)
   const canvasRef = useRef(null)
+  const lastTapRef = useRef({ id: null, time: 0 })
+  const handleDoubleTap = (e, term) => {
+    const now = Date.now()
+    const last = lastTapRef.current
+    if (last.id === term.id && now - last.time < 300) {
+      e.preventDefault()
+      lastTapRef.current = { id: null, time: 0 }
+      setDblNode(term)
+    } else {
+      lastTapRef.current = { id: term.id, time: now }
+    }
+  }
 
   useEffect(() => {
-    fetch('/api/reklam-hiyerarsisi-harita')
+    fetch(apiPath)
       .then(res => res.json())
       .then(data => {
         if (data && !Array.isArray(data) && data.terms) {
@@ -4701,7 +5122,7 @@ function ReklamHiyerarsisiHaritasi() {
           setTerms(data)
         }
       })
-      .catch(err => console.error('Reklam Hiyerarsisi Haritası yükleme hatası:', err))
+      .catch(err => console.error(`Harita yükleme hatası (${apiPath}):`, err))
   }, [])
 
   useEffect(() => {
@@ -4735,7 +5156,7 @@ function ReklamHiyerarsisiHaritasi() {
   const handleSave = async () => {
     setSaving(true)
     try {
-      const res = await fetch('/api/reklam-hiyerarsisi-harita', {
+      const res = await fetch(apiPath, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ terms, connections, metadata: canvasDim }),
@@ -4821,7 +5242,7 @@ function ReklamHiyerarsisiHaritasi() {
     <div style={{ padding: '2rem 1.25rem', fontFamily: 'inherit' }}>
       <div style={{ marginBottom: '1.25rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <div>
-          <h1 style={{ fontSize: 22, fontWeight: 500, margin: 0 }}>Reklam Hiyerarşisi Haritası</h1>
+          <h1 style={{ fontSize: 22, fontWeight: 500, margin: 0 }}>{title}</h1>
           <p style={{ fontSize: 13, color: '#888', marginTop: 4 }}>
             Web ve reklam hiyerarşisi ilişkileri · Terime tıkla: açıklamayı gör
           </p>
@@ -5001,6 +5422,8 @@ function ReklamHiyerarsisiHaritasi() {
                       startPositions
                     })
                   }}
+                  onDoubleClick={(e) => { e.stopPropagation(); setDblNode(term) }}
+                  onTouchEnd={(e) => handleDoubleTap(e, term)}
                   style={{
                     position: 'absolute',
                     left: term.x - RH_NODE_W / 2,
@@ -5313,11 +5736,16 @@ function ReklamHiyerarsisiHaritasi() {
           )}
         </div>
       )}
-
-      {/* Reklam Hiyerarşisi içerik editörü — haritanın altında */}
-      <div style={{ marginTop: 32, borderTop: '1px solid #eee', paddingTop: 24 }}>
-        <ReklamHiyerarsisi />
-      </div>
+      {dblNode && (
+        <DetailModal
+          title={dblNode.abbr}
+          subtitle={dblNode.sub}
+          description={dblNode.desc}
+          accentColor={RH_CAT_COLORS[dblNode.cat]?.stripe || '#1D9E75'}
+          badge={RH_CAT_LABELS[dblNode.cat] || dblNode.cat}
+          onClose={() => setDblNode(null)}
+        />
+      )}
 
     </div>
   )
@@ -5781,6 +6209,322 @@ function BlogYazilari() {
   )
 }
 
+// ─── Danışmanlık Hizmetleri ───────────────────────────────────────────────────
+function Danismanlik() {
+  const [items, setItems] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [saving, setSaving] = useState(false)
+  const [activeItem, setActiveItem] = useState(null) // null → liste, obje → sihirbaz
+
+  useEffect(() => {
+    fetch('/api/danismanlik')
+      .then(r => r.json())
+      .then(data => { if (Array.isArray(data)) setItems(data) })
+      .catch(() => {})
+      .finally(() => setLoading(false))
+  }, [])
+
+  const persist = async (next) => {
+    setSaving(true)
+    try {
+      const res = await fetch('/api/danismanlik', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(next),
+      })
+      const result = await res.json()
+      if (!res.ok || !result.ok) {
+        alert('Kaydedilemedi: ' + (result.error || 'Bilinmeyen hata'))
+        return false
+      }
+      return true
+    } catch (err) {
+      alert('Hata: ' + err.message)
+      return false
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  const handleNew = () => setActiveItem({})
+  const handleEdit = (p) => setActiveItem(p)
+  const handleDelete = async (id) => {
+    if (!confirm('Bu danışmanlık hizmetini silmek istediğinize emin misiniz?')) return
+    const updated = items.filter(p => p.id !== id)
+    if (await persist(updated)) setItems(updated)
+  }
+  const handleWizardSave = async (final) => {
+    const exists = items.some(p => p.id === final.id)
+    const updated = exists
+      ? items.map(p => p.id === final.id ? final : p)
+      : [final, ...items]
+    if (await persist(updated)) {
+      setItems(updated)
+      setActiveItem(null)
+    }
+  }
+
+  const CAT_COLORS = { veri: '#2563eb', reklam: '#EF4444', web: '#1D9E75', otomasyon: '#8B5CF6', genel: '#6B7280' }
+
+  if (loading) return <div style={{ padding: '2rem', color: '#888', fontSize: 14 }}>Yükleniyor...</div>
+
+  if (activeItem !== null) {
+    return (
+      <div style={{ padding: '2rem 1.25rem', fontFamily: 'inherit' }}>
+        <div style={{ marginBottom: 14, display: 'flex', alignItems: 'center', gap: 10 }}>
+          <button
+            onClick={() => { if (confirm('Değişiklikler kaybolabilir. Listeye dönülsün mü?')) setActiveItem(null) }}
+            style={{ padding: '6px 12px', background: '#fff', border: '1px solid #ddd', borderRadius: 6, cursor: 'pointer', fontSize: 12, color: '#555' }}>
+            ← Danışmanlık Listesi
+          </button>
+          {saving && <span style={{ fontSize: 11, color: '#888' }}>Kaydediliyor...</span>}
+        </div>
+        <PaketWizard
+          initialPaket={activeItem.id ? activeItem : undefined}
+          onCancel={() => setActiveItem(null)}
+          onSave={handleWizardSave}
+        />
+      </div>
+    )
+  }
+
+  return (
+    <div style={{ padding: '2rem 1.25rem', fontFamily: 'inherit' }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1.5rem', flexWrap: 'wrap', gap: 10 }}>
+        <div>
+          <h1 style={{ fontSize: 22, fontWeight: 500, margin: 0 }}>Danışmanlık Hizmetleri</h1>
+          <p style={{ fontSize: 12, color: '#888', marginTop: 4 }}>
+            {items.length} hizmet · {items.filter(p => p.published).length} yayında · {items.filter(p => p.featured).length} ana sayfada
+          </p>
+        </div>
+        <button
+          onClick={handleNew}
+          style={{ background: '#111', color: '#fff', border: 'none', borderRadius: 8, padding: '8px 18px', fontSize: 13, fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6 }}>
+          <span style={{ fontSize: 16, fontWeight: 'bold' }}>+</span> Yeni Hizmet
+        </button>
+      </div>
+
+      {items.length === 0 ? (
+        <div style={{ padding: '4rem 2rem', textAlign: 'center', color: '#bbb', fontSize: 14, background: '#fafafa', borderRadius: 12, border: '1px dashed #e0e0e0' }}>
+          Henüz danışmanlık hizmeti yok. Growth Audit, Growth OS, Growth Pod gibi formatları buradan ekle.
+        </div>
+      ) : (
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: 14 }}>
+          {items.map(p => {
+            const accent = CAT_COLORS[p.category] || '#6B7280'
+            return (
+              <div
+                key={p.id}
+                onClick={() => handleEdit(p)}
+                style={{
+                  background: '#fff', border: '1px solid #eee', borderRadius: 10, overflow: 'hidden',
+                  cursor: 'pointer', transition: 'all 0.15s', position: 'relative',
+                }}
+                onMouseEnter={e => { e.currentTarget.style.borderColor = accent; e.currentTarget.style.boxShadow = '0 4px 14px rgba(0,0,0,0.06)' }}
+                onMouseLeave={e => { e.currentTarget.style.borderColor = '#eee'; e.currentTarget.style.boxShadow = 'none' }}
+              >
+                {p.cover ? (
+                  <img src={p.cover} alt="" style={{ width: '100%', height: 110, objectFit: 'cover', display: 'block' }} />
+                ) : (
+                  <div style={{ height: 80, background: accent + '22', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 32 }}>
+                    🎯
+                  </div>
+                )}
+                <div style={{ padding: '12px 14px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 6 }}>
+                    <span style={{ fontSize: 9, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: accent }}>
+                      {p.category}
+                    </span>
+                    {p.featured && (
+                      <span style={{ fontSize: 9, padding: '1px 6px', borderRadius: 10, background: 'rgba(255,95,0,0.1)', color: '#ff5f00', fontWeight: 700 }}>
+                        ★ ANA
+                      </span>
+                    )}
+                    <span style={{ fontSize: 10, padding: '1px 7px', borderRadius: 10, background: p.published ? 'rgba(29,158,117,0.1)' : '#f5f5f5', color: p.published ? '#1D9E75' : '#999', fontWeight: 600, marginLeft: 'auto' }}>
+                      {p.published ? 'Yayında' : 'Taslak'}
+                    </span>
+                  </div>
+                  <div style={{ fontSize: 14, fontWeight: 700, color: '#111', lineHeight: 1.3, marginBottom: 6 }}>
+                    {p.title || '(başlıksız)'}
+                  </div>
+                  <div style={{ fontSize: 11, color: '#aaa', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <span>
+                      {p.pricing?.setup?.amount > 0 ? `${Number(p.pricing.setup.amount).toLocaleString('tr-TR')} ${p.pricing.setup.currency || 'TRY'}` : 'Fiyatsız'}
+                    </span>
+                    <button
+                      onClick={e => { e.stopPropagation(); handleDelete(p.id) }}
+                      style={{ background: 'none', border: 'none', color: '#ff4d4f', cursor: 'pointer', fontSize: 11, padding: '2px 6px' }}>
+                      Sil
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )
+          })}
+        </div>
+      )}
+    </div>
+  )
+}
+
+// ─── Paketler ─────────────────────────────────────────────────────────────────
+function Paketler() {
+  const [items, setItems] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [saving, setSaving] = useState(false)
+  const [activePaket, setActivePaket] = useState(null) // null → liste, obje → sihirbaz
+
+  useEffect(() => {
+    fetch('/api/paketler')
+      .then(r => r.json())
+      .then(data => { if (Array.isArray(data)) setItems(data) })
+      .catch(() => {})
+      .finally(() => setLoading(false))
+  }, [])
+
+  const persist = async (next) => {
+    setSaving(true)
+    try {
+      const res = await fetch('/api/paketler', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(next),
+      })
+      const result = await res.json()
+      if (!res.ok || !result.ok) {
+        alert('Kaydedilemedi: ' + (result.error || 'Bilinmeyen hata'))
+        return false
+      }
+      return true
+    } catch (err) {
+      alert('Hata: ' + err.message)
+      return false
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  const handleNew = () => setActivePaket({})
+  const handleEdit = (p) => setActivePaket(p)
+  const handleDelete = async (id) => {
+    if (!confirm('Bu paketi silmek istediğinize emin misiniz?')) return
+    const updated = items.filter(p => p.id !== id)
+    if (await persist(updated)) setItems(updated)
+  }
+  const handleWizardSave = async (final) => {
+    const exists = items.some(p => p.id === final.id)
+    const updated = exists
+      ? items.map(p => p.id === final.id ? final : p)
+      : [final, ...items]
+    if (await persist(updated)) {
+      setItems(updated)
+      setActivePaket(null)
+    }
+  }
+
+  const CAT_COLORS = { veri: '#2563eb', reklam: '#EF4444', web: '#1D9E75', otomasyon: '#8B5CF6', genel: '#6B7280' }
+
+  if (loading) return <div style={{ padding: '2rem', color: '#888', fontSize: 14 }}>Yükleniyor...</div>
+
+  if (activePaket !== null) {
+    return (
+      <div style={{ padding: '2rem 1.25rem', fontFamily: 'inherit' }}>
+        <div style={{ marginBottom: 14, display: 'flex', alignItems: 'center', gap: 10 }}>
+          <button
+            onClick={() => { if (confirm('Değişiklikler kaybolabilir. Listeye dönülsün mü?')) setActivePaket(null) }}
+            style={{ padding: '6px 12px', background: '#fff', border: '1px solid #ddd', borderRadius: 6, cursor: 'pointer', fontSize: 12, color: '#555' }}>
+            ← Paket Listesi
+          </button>
+          {saving && <span style={{ fontSize: 11, color: '#888' }}>Kaydediliyor...</span>}
+        </div>
+        <PaketWizard
+          initialPaket={activePaket.id ? activePaket : undefined}
+          onCancel={() => setActivePaket(null)}
+          onSave={handleWizardSave}
+        />
+      </div>
+    )
+  }
+
+  return (
+    <div style={{ padding: '2rem 1.25rem', fontFamily: 'inherit' }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1.5rem', flexWrap: 'wrap', gap: 10 }}>
+        <div>
+          <h1 style={{ fontSize: 22, fontWeight: 500, margin: 0 }}>Paketler</h1>
+          <p style={{ fontSize: 12, color: '#888', marginTop: 4 }}>
+            {items.length} paket · {items.filter(p => p.published).length} yayında · {items.filter(p => p.featured).length} ana sayfada
+          </p>
+        </div>
+        <button
+          onClick={handleNew}
+          style={{ background: '#111', color: '#fff', border: 'none', borderRadius: 8, padding: '8px 18px', fontSize: 13, fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6 }}>
+          <span style={{ fontSize: 16, fontWeight: 'bold' }}>+</span> Yeni Paket
+        </button>
+      </div>
+
+      {items.length === 0 ? (
+        <div style={{ padding: '4rem 2rem', textAlign: 'center', color: '#bbb', fontSize: 14, background: '#fafafa', borderRadius: 12, border: '1px dashed #e0e0e0' }}>
+          Henüz paket yok. Yeni bir paket oluştur — başlık, fiyat ve add-on'ları belirle, yayınla.
+        </div>
+      ) : (
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: 14 }}>
+          {items.map(p => {
+            const accent = CAT_COLORS[p.category] || '#6B7280'
+            return (
+              <div
+                key={p.id}
+                onClick={() => handleEdit(p)}
+                style={{
+                  background: '#fff', border: '1px solid #eee', borderRadius: 10, overflow: 'hidden',
+                  cursor: 'pointer', transition: 'all 0.15s', position: 'relative',
+                }}
+                onMouseEnter={e => { e.currentTarget.style.borderColor = accent; e.currentTarget.style.boxShadow = '0 4px 14px rgba(0,0,0,0.06)' }}
+                onMouseLeave={e => { e.currentTarget.style.borderColor = '#eee'; e.currentTarget.style.boxShadow = 'none' }}
+              >
+                {p.cover ? (
+                  <img src={p.cover} alt="" style={{ width: '100%', height: 110, objectFit: 'cover', display: 'block' }} />
+                ) : (
+                  <div style={{ height: 80, background: accent + '22', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 32 }}>
+                    📦
+                  </div>
+                )}
+                <div style={{ padding: '12px 14px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 6 }}>
+                    <span style={{ fontSize: 9, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: accent }}>
+                      {p.category}
+                    </span>
+                    {p.featured && (
+                      <span style={{ fontSize: 9, padding: '1px 6px', borderRadius: 10, background: 'rgba(255,95,0,0.1)', color: '#ff5f00', fontWeight: 700 }}>
+                        ★ ANA
+                      </span>
+                    )}
+                    <span style={{ fontSize: 10, padding: '1px 7px', borderRadius: 10, background: p.published ? 'rgba(29,158,117,0.1)' : '#f5f5f5', color: p.published ? '#1D9E75' : '#999', fontWeight: 600, marginLeft: 'auto' }}>
+                      {p.published ? 'Yayında' : 'Taslak'}
+                    </span>
+                  </div>
+                  <div style={{ fontSize: 14, fontWeight: 700, color: '#111', lineHeight: 1.3, marginBottom: 6 }}>
+                    {p.title || '(başlıksız)'}
+                  </div>
+                  <div style={{ fontSize: 11, color: '#aaa', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <span>
+                      {p.pricing?.setup?.amount > 0 ? `${Number(p.pricing.setup.amount).toLocaleString('tr-TR')} ${p.pricing.setup.currency || 'TRY'}` : 'Fiyatsız'}
+                    </span>
+                    <button
+                      onClick={e => { e.stopPropagation(); handleDelete(p.id) }}
+                      style={{ background: 'none', border: 'none', color: '#ff4d4f', cursor: 'pointer', fontSize: 11, padding: '2px 6px' }}>
+                      Sil
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )
+          })}
+        </div>
+      )}
+    </div>
+  )
+}
+
 // ─── Araç listesi ─────────────────────────────────────────────────────────────
 // ─── ANA Blok Zihin Haritası ──────────────────────────────────────────────────
 function AnaHaritasi() {
@@ -5794,6 +6538,7 @@ function AnaHaritasi() {
   const [connections, setConnections] = useState([])
   const [dragging, setDragging] = useState(null)
   const [editId, setEditId] = useState(null)
+  const [dblNode, setDblNode] = useState(null)
   const [saving, setSaving] = useState(false)
   const [lastSaved, setLastSaved] = useState(null)
   const [canvasZoom, setCanvasZoom] = useState(1)
@@ -5801,6 +6546,18 @@ function AnaHaritasi() {
   const setZoom = (z) => { canvasZoomRef.current = z; setCanvasZoom(z) }
   const selectionBoxRef = useRef(null)
   const canvasRef = useRef(null)
+  const lastTapRef = useRef({ id: null, time: 0 })
+  const handleDoubleTap = (e, term) => {
+    const now = Date.now()
+    const last = lastTapRef.current
+    if (last.id === term.id && now - last.time < 300) {
+      e.preventDefault()
+      lastTapRef.current = { id: null, time: 0 }
+      setDblNode(term)
+    } else {
+      lastTapRef.current = { id: term.id, time: now }
+    }
+  }
 
   useEffect(() => {
     fetch('/api/ana-harita')
@@ -5977,6 +6734,8 @@ function AnaHaritasi() {
                     window.addEventListener('mousemove', onMove)
                     window.addEventListener('mouseup', onUp)
                   }}
+                  onDoubleClick={(e) => { e.stopPropagation(); setDblNode(term) }}
+                  onTouchEnd={(e) => handleDoubleTap(e, term)}
                   style={{ position: 'absolute', left: term.x - KB_NODE_W / 2, top: term.y - KB_NODE_H / 2, width: KB_NODE_W, height: KB_NODE_H, background: isSelected ? colors.stripe + '18' : colors.bg, border: `${isSelected ? 2 : 1}px solid ${isSelected ? colors.stripe : isHovered ? colors.stripe : colors.border}`, borderRadius: 8, padding: '6px 10px 6px 12px', opacity: isDimmed && !isDragging ? 0.22 : 1, transition: isDragging ? 'none' : 'all 0.13s', zIndex: isDragging ? 4 : isSelected ? 3 : isHovered ? 2 : 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', cursor: isDragging ? 'grabbing' : 'grab', userSelect: 'none', boxSizing: 'border-box', overflow: 'hidden' }}
                 >
                   <div style={{ fontSize: 13, fontWeight: 700, color: colors.stripe, lineHeight: 1.2, marginBottom: 3, whiteSpace: 'pre-line' }}>{term.abbr}</div>
@@ -6010,18 +6769,67 @@ function AnaHaritasi() {
                   <div><label style={{ fontSize: 11, color: '#888', display: 'block', marginBottom: 4 }}>Alt Başlık</label><input value={selectedTerm.sub} onChange={e => setTerms(prev => prev.map(t => t.id === selectedTerm.id ? { ...t, sub: e.target.value } : t))} style={{ width: '100%', padding: '6px 10px', fontSize: 13, border: '0.5px solid #ccc', borderRadius: 6, outline: 'none' }} /></div>
                   <div><label style={{ fontSize: 11, color: '#888', display: 'block', marginBottom: 4 }}>Renk</label><div style={{ display: 'flex', flexWrap: 'wrap', gap: 5 }}>{Object.entries(KB_CAT_COLORS).map(([cat, colors]) => (<div key={cat} onClick={() => setTerms(prev => prev.map(t => t.id === selectedTerm.id ? { ...t, cat } : t))} style={{ width: 26, height: 26, borderRadius: 6, cursor: 'pointer', background: colors.bg, border: selectedTerm.cat === cat ? `2.5px solid ${colors.stripe}` : `1.5px solid ${colors.border}`, display: 'flex', alignItems: 'flex-end', padding: '0 3px 3px', boxSizing: 'border-box' }}><div style={{ width: '100%', height: 3, borderRadius: 2, background: colors.stripe }} /></div>))}</div></div>
                   <div style={{ borderTop: '0.5px solid #eee', paddingTop: 12 }}>
-                    <label style={{ fontSize: 11, color: '#888', display: 'block', marginBottom: 8, fontWeight: 600 }}>BAĞLANTI YÖNETİMİ</label>
-                    <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-                      <div style={{ padding: '5px 10px', fontSize: 12, background: '#f0f0f0', border: '0.5px solid #ccc', borderRadius: 6, fontWeight: 700, whiteSpace: 'nowrap', color: '#333' }}>A: {selectedTerm.abbr}</div>
-                      <span style={{ fontSize: 16, color: '#999' }}>→</span>
-                      <select id="ana-target-select" style={{ flex: 1, padding: '6px 10px', fontSize: 12, border: '0.5px solid #ccc', borderRadius: 6, outline: 'none', background: '#fff' }}>
-                        <option value="">B düğümünü seç...</option>
+                    <label style={{ fontSize: 12, color: '#666', display: 'block', marginBottom: 10, fontWeight: 700, letterSpacing: '0.04em' }}>BAĞLANTI YÖNETİMİ</label>
+
+                    {/* GİDEN: Bu → Hedef */}
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginBottom: 10 }}>
+                      <div style={{ fontSize: 12, color: '#888', paddingLeft: 2 }}>
+                        <span style={{ fontWeight: 700, color: '#444' }}>Bu</span> → hedef seç:
+                      </div>
+                      <select id="ana-target-select" style={{ width: '100%', padding: '7px 10px', fontSize: 13, border: '1px solid #ddd', borderRadius: 7, outline: 'none', background: '#fff', color: '#333' }}>
+                        <option value="">— Hedef düğümü seç —</option>
                         {terms.filter(t => t.id !== selectedTerm.id).map(t => (<option key={t.id} value={t.id}>{t.abbr} ({t.sub})</option>))}
                       </select>
-                      <button onClick={() => { const sel = document.getElementById('ana-target-select'); if (sel.value) handleAddConnection(sel.value) }} style={{ padding: '6px 14px', fontSize: 12, background: '#f5f5f5', border: '0.5px solid #ccc', borderRadius: 6, cursor: 'pointer' }}>Ekle</button>
+                      <button
+                        onClick={() => { const sel = document.getElementById('ana-target-select'); if (sel && sel.value) { handleAddConnection(sel.value); sel.value = '' } }}
+                        style={{ width: '100%', padding: '7px 14px', fontSize: 13, fontWeight: 600, background: '#111', color: '#fff', border: 'none', borderRadius: 7, cursor: 'pointer' }}
+                      >+ Giden Ok Ekle</button>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
+                        {connections.filter(c => c.from === selectedTerm.id).map(c => {
+                          const target = termMap[c.to]; if (!target) return null
+                          return (
+                            <div key={c.to} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '5px 10px', background: '#f5f5f5', border: '0.5px solid #e8e8e8', borderRadius: 7, fontSize: 13 }}>
+                              <span style={{ color: '#333' }}>→ {target.abbr}</span>
+                              <button onClick={() => handleRemoveConnection(c.to)} style={{ border: 'none', background: 'none', cursor: 'pointer', color: '#ff4d4f', fontSize: 12 }}>Kaldır</button>
+                            </div>
+                          )
+                        })}
+                      </div>
                     </div>
-                    <div style={{ marginTop: 12, display: 'flex', flexDirection: 'column', gap: 6 }}>
-                      {connections.filter(c => c.from === selectedTerm.id).map(c => { const target = termMap[c.to]; if (!target) return null; return (<div key={c.to} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '4px 8px', background: '#f9f9f9', border: '0.5px solid #eee', borderRadius: 6, fontSize: 11 }}><span>→ {target.abbr}</span><button onClick={() => handleRemoveConnection(c.to)} style={{ border: 'none', background: 'none', cursor: 'pointer', color: '#ff4d4f' }}>Kaldır</button></div>) })}
+
+                    {/* GELEN: Kaynak → Bu */}
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 6, paddingTop: 10, borderTop: '0.5px solid #f0f0f0' }}>
+                      <div style={{ fontSize: 12, color: '#888', paddingLeft: 2 }}>
+                        kaynak seç → <span style={{ fontWeight: 700, color: '#444' }}>Bu</span>:
+                      </div>
+                      <select id="ana-source-select" style={{ width: '100%', padding: '7px 10px', fontSize: 13, border: '1px solid #ddd', borderRadius: 7, outline: 'none', background: '#fff', color: '#333' }}>
+                        <option value="">— Kaynak düğümü seç —</option>
+                        {terms.filter(t => t.id !== selectedTerm.id).map(t => (<option key={t.id} value={t.id}>{t.abbr} ({t.sub})</option>))}
+                      </select>
+                      <button
+                        onClick={() => {
+                          const sel = document.getElementById('ana-source-select')
+                          if (sel && sel.value) {
+                            const srcId = sel.value
+                            if (!connections.find(c => c.from === srcId && c.to === selectedTerm.id)) {
+                              setConnections(prev => [...prev, { from: srcId, to: selectedTerm.id }])
+                            }
+                            sel.value = ''
+                          }
+                        }}
+                        style={{ width: '100%', padding: '7px 14px', fontSize: 13, fontWeight: 600, background: '#444', color: '#fff', border: 'none', borderRadius: 7, cursor: 'pointer' }}
+                      >+ Gelen Ok Ekle</button>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
+                        {connections.filter(c => c.to === selectedTerm.id).map(c => {
+                          const source = termMap[c.from]; if (!source) return null
+                          return (
+                            <div key={c.from} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '5px 10px', background: '#f5f5f5', border: '0.5px solid #e8e8e8', borderRadius: 7, fontSize: 13 }}>
+                              <span style={{ color: '#333' }}>{source.abbr} →</span>
+                              <button onClick={() => setConnections(prev => prev.filter(c2 => !(c2.from === c.from && c2.to === selectedTerm.id)))} style={{ border: 'none', background: 'none', cursor: 'pointer', color: '#ff4d4f', fontSize: 12 }}>Kaldır</button>
+                            </div>
+                          )
+                        })}
+                      </div>
                     </div>
                   </div>
                   <div style={{ marginTop: 'auto', paddingTop: 12, borderTop: '0.5px solid #eee', display: 'flex', justifyContent: 'center' }}>
@@ -6061,11 +6869,335 @@ function AnaHaritasi() {
         {lastSaved && <span style={{ fontSize: 11, color: '#1D9E75' }}>Kaydedildi: {lastSaved}</span>}
         <button onClick={handleSave} disabled={saving} style={{ background: '#111', color: '#fff', border: 'none', borderRadius: 8, padding: '6px 14px', fontSize: 13, cursor: saving ? 'not-allowed' : 'pointer', opacity: saving ? 0.7 : 1, transition: 'all 0.2s' }}>{saving ? 'Kaydediliyor...' : 'Değişiklikleri Kaydet'}</button>
       </div>
+      {dblNode && (
+        <DetailModal
+          title={dblNode.abbr}
+          subtitle={dblNode.sub}
+          description={dblNode.desc}
+          accentColor={KB_CAT_COLORS[dblNode.cat]?.stripe || '#1D9E75'}
+          badge={KB_CAT_LABELS[dblNode.cat] || dblNode.cat}
+          onClose={() => setDblNode(null)}
+        />
+      )}
+    </div>
+  )
+}
+
+// Reklam Stratejisi haritası — generic ReklamHiyerarsisiHaritasi'yi farklı API ile kullanır
+function ReklamStratejisiHaritasi() {
+  return <ReklamHiyerarsisiHaritasi apiPath="/api/reklam-stratejisi-harita" title="Reklam Stratejisi Haritası" />
+}
+
+// ─── SEO Kontrol Merkezi ──────────────────────────────────────────────────────
+function SeoKontrolMerkezi() {
+  const [items, setItems] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [saving, setSaving] = useState(false)
+  const [dirty, setDirty] = useState(false)
+  const [filter, setFilter] = useState('all') // all | on-page | pagespeed | search-console
+
+  useEffect(() => {
+    fetch('/api/seo-kontrol-merkezi')
+      .then(r => r.json())
+      .then(d => { if (Array.isArray(d)) setItems(d); setLoading(false) })
+      .catch(() => setLoading(false))
+  }, [])
+
+  const save = async () => {
+    setSaving(true)
+    try {
+      const res = await fetch('/api/seo-kontrol-merkezi', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(items),
+      })
+      if (res.ok) setDirty(false)
+      else alert('Kaydetme başarısız: ' + (await res.text()))
+    } catch (e) { alert('Hata: ' + e.message) }
+    setSaving(false)
+  }
+
+  const updateItem = (id, patch) => {
+    const touchedFields = Object.keys(patch)
+    const shouldStamp = touchedFields.includes('notes') || touchedFields.includes('status')
+    setItems(prev => prev.map(it => it.id === id
+      ? { ...it, ...patch, ...(shouldStamp ? { lastCheckedAt: new Date().toISOString() } : {}) }
+      : it))
+    setDirty(true)
+  }
+
+  const deleteItem = (id) => {
+    if (!confirm('Bu adımı silmek istediğine emin misin?')) return
+    setItems(prev => prev.filter(it => it.id !== id))
+    setDirty(true)
+  }
+
+  const addItem = () => {
+    const group = filter === 'all' ? 'on-page' : filter
+    const newItem = {
+      id: 'custom-' + Date.now(),
+      group,
+      title: '',
+      link: '',
+      notes: '',
+      status: 'todo',
+    }
+    setItems(prev => [newItem, ...prev])
+    setDirty(true)
+  }
+
+  const GROUPS = {
+    'on-page': { label: 'On-Page SEO', color: '#0EA5E9' },
+    'pagespeed': { label: 'PageSpeed', color: '#F59E0B' },
+    'search-console': { label: 'Search Console', color: '#8B5CF6' },
+  }
+
+  const STATUS_META = {
+    todo: { label: 'TODO', bg: '#f3f4f6', fg: '#6b7280', dot: '#9ca3af' },
+    ok: { label: 'OK', bg: '#dcfce7', fg: '#166534', dot: '#22c55e' },
+    review: { label: 'GÖZDEN GEÇİR', bg: '#fef3c7', fg: '#92400e', dot: '#f59e0b' },
+  }
+
+  const cycleStatus = (s) => s === 'todo' ? 'ok' : s === 'ok' ? 'review' : 'todo'
+
+  const filtered = filter === 'all' ? items : items.filter(it => it.group === filter)
+  const counts = {
+    all: items.length,
+    'on-page': items.filter(i => i.group === 'on-page').length,
+    'pagespeed': items.filter(i => i.group === 'pagespeed').length,
+    'search-console': items.filter(i => i.group === 'search-console').length,
+  }
+  const okCount = items.filter(i => i.status === 'ok').length
+  const reviewCount = items.filter(i => i.status === 'review').length
+
+  if (loading) return <div style={{ padding: '2rem', color: '#888' }}>Yükleniyor...</div>
+
+  return (
+    <div style={{ padding: '2rem 1.25rem', fontFamily: 'inherit', maxWidth: 1100 }}>
+      {/* Header */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 20, gap: 16, flexWrap: 'wrap' }}>
+        <div>
+          <h1 style={{ fontSize: 22, fontWeight: 600, margin: 0, display: 'flex', alignItems: 'center', gap: 8 }}>
+            <span>🔍</span> SEO Kontrol Merkezi
+          </h1>
+          <p style={{ fontSize: 14, color: '#374151', marginTop: 6, lineHeight: 1.55, fontWeight: 500 }}>
+            On-Page, PageSpeed ve Search Console kontrol listesi. Tıkla → incele → not al → status güncelle → <b>Kaydet</b>.
+          </p>
+          <div style={{ display: 'flex', gap: 14, marginTop: 10, fontSize: 13, color: '#111', fontWeight: 600 }}>
+            <span>Toplam: <b>{items.length}</b></span>
+            <span style={{ color: '#15803d' }}>✓ OK: <b>{okCount}</b></span>
+            <span style={{ color: '#b45309' }}>⚠ Gözden geçir: <b>{reviewCount}</b></span>
+            <span style={{ color: '#374151' }}>○ TODO: <b>{items.length - okCount - reviewCount}</b></span>
+          </div>
+        </div>
+        <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+          <button onClick={addItem} style={{ padding: '8px 14px', background: '#fff', color: '#111', border: '1px solid #ddd', borderRadius: 8, cursor: 'pointer', fontSize: 13 }}>
+            + Ekle
+          </button>
+          <button
+            onClick={save}
+            disabled={saving || !dirty}
+            style={{
+              padding: '8px 18px',
+              background: dirty ? '#111' : '#ccc',
+              color: '#fff',
+              border: 'none',
+              borderRadius: 8,
+              cursor: dirty && !saving ? 'pointer' : 'not-allowed',
+              fontSize: 13,
+              fontWeight: 600,
+              transition: 'opacity 0.2s',
+              opacity: saving ? 0.6 : 1,
+            }}
+          >
+            {saving ? 'Kaydediliyor...' : dirty ? 'Kaydet' : 'Kaydedildi'}
+          </button>
+        </div>
+      </div>
+
+      {/* Filter tabs */}
+      <div style={{ display: 'flex', gap: 6, marginBottom: 18, borderBottom: '1px solid #eee', paddingBottom: 0, flexWrap: 'wrap' }}>
+        {[
+          { id: 'all', label: 'Tümü', color: '#111' },
+          { id: 'on-page', label: 'On-Page SEO', color: GROUPS['on-page'].color },
+          { id: 'pagespeed', label: 'PageSpeed', color: GROUPS['pagespeed'].color },
+          { id: 'search-console', label: 'Search Console', color: GROUPS['search-console'].color },
+        ].map(t => {
+          const active = filter === t.id
+          return (
+            <button
+              key={t.id}
+              onClick={() => setFilter(t.id)}
+              style={{
+                padding: '8px 14px',
+                background: 'transparent',
+                color: active ? t.color : '#374151',
+                border: 'none',
+                borderBottom: `2px solid ${active ? t.color : 'transparent'}`,
+                cursor: 'pointer',
+                fontSize: 14,
+                fontWeight: active ? 700 : 600,
+                marginBottom: -1,
+                transition: 'all 0.15s',
+              }}
+            >
+              {t.label} <span style={{ color: '#6b7280', fontWeight: 600, fontSize: 12 }}>({counts[t.id]})</span>
+            </button>
+          )
+        })}
+      </div>
+
+      {/* Items */}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+        {filtered.length === 0 && (
+          <div style={{ padding: '3rem 1rem', textAlign: 'center', color: '#374151', fontSize: 14, fontWeight: 500, border: '1px dashed #cbd5e1', borderRadius: 12 }}>
+            Bu grupta adım yok. Sağ üstten <b>+ Ekle</b> ile yeni bir adım oluşturabilirsin.
+          </div>
+        )}
+        {filtered.map(item => {
+          const groupMeta = GROUPS[item.group] || { label: item.group, color: '#999' }
+          const statusMeta = STATUS_META[item.status] || STATUS_META.todo
+          const lastChecked = item.lastCheckedAt
+            ? new Date(item.lastCheckedAt).toLocaleString('tr-TR', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })
+            : null
+          return (
+            <div
+              key={item.id}
+              style={{
+                background: '#fff',
+                border: '1px solid #e8e8e8',
+                borderRadius: 12,
+                padding: '14px 16px',
+                borderLeft: `4px solid ${groupMeta.color}`,
+                display: 'flex',
+                flexDirection: 'column',
+                gap: 8,
+              }}
+            >
+              {/* Title row */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+                <button
+                  onClick={() => updateItem(item.id, { status: cycleStatus(item.status) })}
+                  title="Durumu değiştir (todo → ok → review → todo)"
+                  style={{
+                    padding: '4px 10px',
+                    background: statusMeta.bg,
+                    color: statusMeta.fg,
+                    border: 'none',
+                    borderRadius: 6,
+                    fontSize: 11,
+                    fontWeight: 800,
+                    letterSpacing: '0.06em',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 5,
+                    flexShrink: 0,
+                  }}
+                >
+                  <span style={{ width: 7, height: 7, borderRadius: '50%', background: statusMeta.dot }} />
+                  {statusMeta.label}
+                </button>
+                <span style={{ fontSize: 11, fontWeight: 800, color: groupMeta.color, letterSpacing: '0.08em', textTransform: 'uppercase' }}>
+                  {groupMeta.label}
+                </span>
+                <input
+                  value={item.title}
+                  onChange={e => updateItem(item.id, { title: e.target.value })}
+                  placeholder="Adım başlığı..."
+                  style={{
+                    flex: 1,
+                    minWidth: 200,
+                    padding: '4px 6px',
+                    border: 'none',
+                    borderBottom: '1px solid transparent',
+                    fontSize: 15,
+                    fontWeight: 700,
+                    color: '#0f172a',
+                    fontFamily: 'inherit',
+                    outline: 'none',
+                  }}
+                  onFocus={e => e.currentTarget.style.borderBottomColor = '#ddd'}
+                  onBlur={e => e.currentTarget.style.borderBottomColor = 'transparent'}
+                />
+                {item.link && (
+                  <a href={item.link} target="_blank" rel="noopener noreferrer" title={item.link}
+                    style={{ fontSize: 14, textDecoration: 'none', padding: '4px 8px', borderRadius: 6, background: '#f5f5f5', color: '#444' }}>
+                    🔗
+                  </a>
+                )}
+                <button
+                  onClick={() => deleteItem(item.id)}
+                  title="Sil"
+                  style={{ background: 'none', border: 'none', color: '#bbb', cursor: 'pointer', fontSize: 16, padding: '2px 6px' }}
+                  onMouseEnter={e => e.currentTarget.style.color = '#ef4444'}
+                  onMouseLeave={e => e.currentTarget.style.color = '#bbb'}
+                >
+                  ×
+                </button>
+              </div>
+
+              {/* Link input */}
+              <input
+                value={item.link || ''}
+                onChange={e => updateItem(item.id, { link: e.target.value })}
+                placeholder="Harici link (opsiyonel) — örn. https://pagespeed.web.dev/..."
+                style={{
+                  padding: '7px 10px',
+                  border: '1px solid #d1d5db',
+                  borderRadius: 6,
+                  fontSize: 13,
+                  color: '#1f2937',
+                  fontWeight: 500,
+                  fontFamily: 'inherit',
+                  outline: 'none',
+                  background: '#fff',
+                }}
+              />
+
+              {/* Notes */}
+              <textarea
+                value={item.notes || ''}
+                onChange={e => updateItem(item.id, { notes: e.target.value })}
+                placeholder="Notların... (kontrol sonucu, bulgular, yapılacaklar)"
+                rows={2}
+                style={{
+                  padding: '9px 11px',
+                  border: '1px solid #d1d5db',
+                  borderRadius: 6,
+                  fontSize: 14,
+                  color: '#0f172a',
+                  fontWeight: 500,
+                  fontFamily: 'inherit',
+                  resize: 'vertical',
+                  minHeight: 54,
+                  outline: 'none',
+                  lineHeight: 1.65,
+                  background: '#fff',
+                }}
+              />
+
+              {/* Footer: last checked */}
+              {lastChecked && (
+                <div style={{ fontSize: 12, color: '#475569', textAlign: 'right', fontWeight: 600 }}>
+                  Son kontrol: {lastChecked}
+                </div>
+              )}
+            </div>
+          )
+        })}
+      </div>
     </div>
   )
 }
 
 const TOOLS = [
+  {
+    id: 'site-analizi',
+    label: 'Site Analizi',
+    icon: '⚡',
+    component: SiteAnalizi,
+  },
   {
     id: 'reklam-hiyerarsisi-harita',
     label: 'Reklam Hiyerarşisi',
@@ -6073,10 +7205,28 @@ const TOOLS = [
     component: ReklamHiyerarsisiHaritasi,
   },
   {
+    id: 'reklam-stratejisi-harita',
+    label: 'Reklam Stratejisi',
+    icon: '🎯',
+    component: ReklamStratejisiHaritasi,
+  },
+  {
     id: 'mantik-haritasi',
     label: 'Reklam KPI',
     icon: '⬡',
     component: MantiKHaritasi,
+  },
+  {
+    id: 'kampanya',
+    label: 'Kampanya',
+    icon: '📣',
+    component: KampanyaStudyosu,
+  },
+  {
+    id: 'mail-gonderim',
+    label: 'Mail Gönderim',
+    icon: '✉️',
+    component: MailGonderim,
   },
   {
     id: 'yz-haritasi',
@@ -6121,6 +7271,12 @@ const TOOLS = [
     component: KisaNotlar,
   },
   {
+    id: 'seo-kontrol-merkezi',
+    label: 'SEO Kontrol Merkezi',
+    icon: '🔍',
+    component: SeoKontrolMerkezi,
+  },
+  {
     id: 'ana-harita',
     label: 'ANA Blok',
     icon: '⬡',
@@ -6131,6 +7287,18 @@ const TOOLS = [
     label: 'Blog Yazıları',
     icon: '✍️',
     component: BlogYazilari,
+  },
+  {
+    id: 'paketler',
+    label: 'Paketler',
+    icon: '📦',
+    component: Paketler,
+  },
+  {
+    id: 'danismanlik',
+    label: 'Danışmanlık',
+    icon: '🎯',
+    component: Danismanlik,
   },
 ]
 

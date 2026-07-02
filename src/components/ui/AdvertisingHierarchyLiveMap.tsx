@@ -1,39 +1,11 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
+import { CAT_LABELS, getCatColors } from "@/lib/maps/categories";
+import DetailModal from "@/components/ui/DetailModal";
+import { NODE_W as RH_NODE_W, NODE_H as RH_NODE_H, edgePoint as rhEdgePoint } from "@/lib/maps/canvas";
 
-const RH_NODE_W = 136;
-const RH_NODE_H = 66;
-
-type Category = 'web' | 'seo' | 'ads' | 'sosyal' | 'kirmizi' | 'pembe' | 'lacivert' | 'gumus';
-
-const RH_CAT_COLORS: Record<string, { bg: string, border: string, stripe: string }> = {
-  web:      { bg: '#E3F2FD', border: '#1565C066', stripe: '#1565C0' },
-  seo:      { bg: '#FFF8E1', border: '#F57F1766', stripe: '#F57F17' },
-  ads:      { bg: '#E8F5E9', border: '#1B5E2066', stripe: '#1B5E20' },
-  sosyal:   { bg: '#F3E5F5', border: '#6A1B9A66', stripe: '#6A1B9A' },
-  kirmizi:  { bg: '#FFEBEE', border: '#C6282866', stripe: '#C62828' },
-  pembe:    { bg: '#FCE4EC', border: '#AD145766', stripe: '#AD1457' },
-  lacivert: { bg: '#E8EAF6', border: '#28359366', stripe: '#283593' },
-  gumus:    { bg: '#F5F5F5', border: '#61616166', stripe: '#616161' },
-};
-
-const RH_CAT_LABELS: Record<string, string> = {
-  web: 'Web Merkezi', seo: 'Organik Büyüme', ads: 'Ücretli Reklam', sosyal: 'Sosyal Medya',
-  kirmizi: 'Kırmızı', pembe: 'Pembe', lacivert: 'Lacivert', gumus: 'Gümüş',
-};
-
-function rhEdgePoint(from: any, to: any) {
-  const dx = to.x - from.x;
-  const dy = to.y - from.y;
-  if (Math.abs(dx) < 0.01 && Math.abs(dy) < 0.01) return { x: from.x, y: from.y };
-  const hw = RH_NODE_W / 2;
-  const hh = RH_NODE_H / 2;
-  const scaleX = Math.abs(dx) > 0.01 ? hw / Math.abs(dx) : Infinity;
-  const scaleY = Math.abs(dy) > 0.01 ? hh / Math.abs(dy) : Infinity;
-  const scale = Math.min(scaleX, scaleY);
-  return { x: from.x + dx * scale, y: from.y + dy * scale };
-}
+const RH_CAT_LABELS = CAT_LABELS;
 
 export default function AdvertisingHierarchyLiveMap() {
   const [terms, setTerms] = useState<any[]>([]);
@@ -42,9 +14,22 @@ export default function AdvertisingHierarchyLiveMap() {
   const [loading, setLoading] = useState(true);
   const [hovered, setHovered] = useState<string | null>(null);
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [dblNode, setDblNode] = useState<any>(null);
   const [zoom, setZoom] = useState(1);
   const canvasAreaRef = useRef<HTMLDivElement>(null);
   const infoPanelRef = useRef<HTMLDivElement>(null);
+  const lastTapRef = useRef<{ id: string | null; time: number }>({ id: null, time: 0 });
+  const handleDoubleTap = (e: React.TouchEvent, term: any) => {
+    const now = Date.now();
+    const last = lastTapRef.current;
+    if (last.id === term.id && now - last.time < 300) {
+      e.preventDefault();
+      lastTapRef.current = { id: null, time: 0 };
+      setDblNode(term);
+    } else {
+      lastTapRef.current = { id: term.id, time: now };
+    }
+  };
 
   // States for Panning
   const [isPanning, setIsPanning] = useState(false);
@@ -186,7 +171,7 @@ export default function AdvertisingHierarchyLiveMap() {
         <div className="flex flex-wrap gap-2 sm:gap-4 items-center mt-3 sm:mt-0">
           {Object.entries(RH_CAT_LABELS).map(([cat, label]) => (
             <div key={cat} className="flex items-center gap-1.5 text-[10px] sm:text-xs font-medium text-gray-600">
-              <div style={{ width: 8, height: 8, borderRadius: 2, background: (RH_CAT_COLORS[cat] || RH_CAT_COLORS.web).stripe }} />
+              <div style={{ width: 8, height: 8, borderRadius: 2, background: getCatColors(cat).stripe }} />
               {label}
             </div>
           ))}
@@ -252,7 +237,7 @@ export default function AdvertisingHierarchyLiveMap() {
 
               {/* Nodes */}
               {terms.map(term => {
-                const colors = RH_CAT_COLORS[term.cat] || RH_CAT_COLORS.web;
+                const colors = getCatColors(term.cat);
                 const isSelected = selectedId === term.id;
                 const isHov = hovered === term.id;
                 const isDimmed = connectedIds && !connectedIds.has(term.id);
@@ -266,6 +251,8 @@ export default function AdvertisingHierarchyLiveMap() {
                       e.stopPropagation(); // Avoid triggering pan
                       setSelectedId(prev => prev === term.id ? null : term.id);
                     }}
+                    onDoubleClick={(e) => { e.stopPropagation(); setDblNode(term); }}
+                    onTouchEnd={(e) => handleDoubleTap(e, term)}
                     style={{
                       position: 'absolute',
                       left: term.x - RH_NODE_W / 2,
@@ -325,6 +312,16 @@ export default function AdvertisingHierarchyLiveMap() {
           </div>
         </div>
 
+        {dblNode && (
+          <DetailModal
+            title={dblNode.abbr}
+            subtitle={dblNode.sub}
+            description={dblNode.desc}
+            accentColor={getCatColors(dblNode.cat).stripe}
+            badge={RH_CAT_LABELS[dblNode.cat] || dblNode.cat}
+            onClose={() => setDblNode(null)}
+          />
+        )}
         {/* Info Panel — below map */}
         {selectedTerm ? (
           <div
@@ -335,7 +332,7 @@ export default function AdvertisingHierarchyLiveMap() {
             <div className="flex items-start justify-between gap-4">
               <div className="flex-1">
                 <div className="flex items-center gap-2 mb-2">
-                  <div style={{ width: 10, height: 10, borderRadius: 3, background: (RH_CAT_COLORS[selectedTerm.cat] || RH_CAT_COLORS.web).stripe }} />
+                  <div style={{ width: 10, height: 10, borderRadius: 3, background: getCatColors(selectedTerm.cat).stripe }} />
                   <span className="text-[10px] font-bold tracking-wider text-gray-400 uppercase">
                     {RH_CAT_LABELS[selectedTerm.cat] || 'Kategori'}
                   </span>

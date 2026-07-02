@@ -1,6 +1,9 @@
 import type { Metadata } from "next";
 import { Outfit, Alex_Brush } from "next/font/google";
+import Script from "next/script";
 import { headers } from "next/headers";
+import { OrganizationLd, WebSiteLd } from "@/lib/seo/JsonLd";
+import { siteConfig } from "@/lib/seo/config";
 import "./globals.css";
 
 const inter = Outfit({
@@ -17,9 +20,25 @@ const signature = Alex_Brush({
 });
 
 export const metadata: Metadata = {
-  metadataBase: new URL("https://www.sukrugencoglu.com"),
-  robots: { index: true, follow: true },
+  metadataBase: new URL(siteConfig.baseUrl),
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      "max-image-preview": "large",
+      "max-snippet": -1,
+      "max-video-preview": -1,
+    },
+  },
   icons: { icon: "/g.svg" },
+  verification: {
+    ...(siteConfig.searchConsoleVerification
+      ? { google: siteConfig.searchConsoleVerification }
+      : {}),
+    other: { "msvalidate.01": "02D9C5F711359A698CD7F511CF3801FB" },
+  },
 };
 
 export default async function RootLayout({
@@ -30,9 +49,11 @@ export default async function RootLayout({
 
   return (
     <html lang={lang} className={`${inter.variable} ${signature.variable}`}>
-      <head>
-        {/* Google Tag Manager */}
-        <script
+      <body className="bg-white text-ink font-sans antialiased">
+        {/* Google Tag Manager — afterInteractive ile yüklenir, LCP'yi bloklamaz */}
+        <Script
+          id="gtm-script"
+          strategy="afterInteractive"
           dangerouslySetInnerHTML={{
             __html: `(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
 new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
@@ -41,10 +62,6 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
 })(window,document,'script','dataLayer','GTM-KB82ZWW7');`,
           }}
         />
-        {/* End Google Tag Manager */}
-      </head>
-      <body className="bg-white text-ink font-sans antialiased">
-        {/* Google Tag Manager (noscript) */}
         <noscript>
           <iframe
             src="https://www.googletagmanager.com/ns.html?id=GTM-KB82ZWW7"
@@ -53,7 +70,8 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
             style={{ display: "none", visibility: "hidden" }}
           ></iframe>
         </noscript>
-        {/* End Google Tag Manager (noscript) */}
+        <OrganizationLd />
+        <WebSiteLd />
         {children}
       </body>
     </html>

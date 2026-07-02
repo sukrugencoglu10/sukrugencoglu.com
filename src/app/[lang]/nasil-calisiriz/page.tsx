@@ -1,7 +1,9 @@
 import type { Metadata } from "next";
 import Image from "next/image";
+import { BreadcrumbLd } from "@/lib/seo/JsonLd";
+import { siteConfig } from "@/lib/seo/config";
 
-const baseUrl = "https://www.sukrugencoglu.com";
+const baseUrl = siteConfig.baseUrl;
 
 export const metadata: Metadata = {
   title: "Nasıl Çalışırız | Şükrü Gençoğlu",
@@ -24,7 +26,14 @@ export const metadata: Metadata = {
 };
 
 export default function ProcessPage() {
+  const breadcrumbs = [
+    { name: "Ana Sayfa", url: `${baseUrl}/tr` },
+    { name: "Nasıl Çalışırız", url: `${baseUrl}/tr/nasil-calisiriz` },
+  ];
+
   return (
+    <>
+      <BreadcrumbLd items={breadcrumbs} />
     <div className="w-full min-h-screen bg-surface flex flex-col items-center justify-start pt-20">
       <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-12">
         <div className="relative w-full overflow-hidden rounded-2xl shadow-xl border border-border bg-white">
@@ -48,5 +57,6 @@ export default function ProcessPage() {
         </div>
       </div>
     </div>
+    </>
   );
 }

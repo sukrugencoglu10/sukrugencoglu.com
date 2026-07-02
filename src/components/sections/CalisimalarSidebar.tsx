@@ -286,7 +286,7 @@ function DusuncelerPanel() {
 
   const ACCENT_COLORS: Record<string, string> = {
     gtm: "#1D9E75", analytics: "#3B82F6", cro: "#F59E0B",
-    otomasyon: "#8B5CF6", genel: "#6B7280", reklam: "#EF4444",
+    otomasyon: "#8B5CF6", genel: "#6B7280", reklam: "#EF4444", eticaret: "#EC4899", fullstack: "#14B8A6",
   };
 
   const formatDate = (iso: string) => {
