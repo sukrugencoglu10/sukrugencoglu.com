@@ -16,7 +16,7 @@ Asla "bu yazıda", "bu makalede", "günümüzde" gibi yapay AI klişeleri kullan
 async function callClaude(prompt, maxTokens = 800, systemPrompt = null) {
   const messages = [{ role: 'user', content: prompt }]
   const body = {
-    model: 'claude-3-5-sonnet-20241022',
+    model: 'claude-sonnet-5',
     max_tokens: maxTokens,
     messages,
   }
