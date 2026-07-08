@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState, useMemo, useRef, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { useLanguage } from "@/context/LanguageContext";
 
@@ -36,6 +36,34 @@ export default function BlogStrip() {
   const [posts, setPosts] = useState<BlogPost[]>([]);
   const [loading, setLoading] = useState(true);
   const [isPaused, setIsPaused] = useState(false);
+  const lastTapRef = useRef<number>(0);
+
+  // Detect mobile via touch support
+  const isMobile = typeof window !== "undefined" && "ontouchstart" in window;
+
+  const handleCardClick = useCallback(
+    (slug: string) => {
+      if (!isMobile) {
+        // Desktop: normal click navigates
+        router.push(`/${lang}/blog/${slug}`);
+        return;
+      }
+
+      // Mobile: double tap navigates, single tap pauses/resumes
+      const now = Date.now();
+      const timeSinceLastTap = now - lastTapRef.current;
+      lastTapRef.current = now;
+
+      if (timeSinceLastTap < 350) {
+        // Double tap → navigate
+        router.push(`/${lang}/blog/${slug}`);
+      } else {
+        // Single tap → toggle pause
+        setIsPaused((prev) => !prev);
+      }
+    },
+    [isMobile, lang, router]
+  );
 
   useEffect(() => {
     fetch("/api/blog-yazilari")
@@ -113,7 +141,7 @@ export default function BlogStrip() {
               <article
                 key={`${post.id}-${idx}`}
                 className="blog-strip-card"
-                onClick={() => router.push(`/${lang}/blog/${post.slug}`)}
+                onClick={() => handleCardClick(post.slug)}
                 style={{
                   ["--accent" as string]: accentColor,
                   ["--accent-bg" as string]:
@@ -255,7 +283,7 @@ export default function BlogStrip() {
 
         @media (max-width: 768px) {
           .blog-strip-track {
-            animation-duration: 60s;
+            animation-duration: 100s;
             gap: 12px;
           }
         }
