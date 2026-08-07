@@ -7196,117 +7196,151 @@ const TOOLS = [
     id: 'site-analizi',
     label: 'Site Analizi',
     icon: '⚡',
+    cat: 'reklam',
     component: SiteAnalizi,
   },
   {
     id: 'reklam-hiyerarsisi-harita',
     label: 'Reklam Hiyerarşisi',
     icon: '⬡',
+    cat: 'reklam',
     component: ReklamHiyerarsisiHaritasi,
   },
   {
     id: 'reklam-stratejisi-harita',
     label: 'Reklam Stratejisi',
     icon: '🎯',
+    cat: 'reklam',
     component: ReklamStratejisiHaritasi,
   },
   {
     id: 'mantik-haritasi',
     label: 'Reklam KPI',
     icon: '⬡',
+    cat: 'reklam',
     component: MantiKHaritasi,
   },
   {
     id: 'kampanya',
     label: 'Kampanya',
     icon: '📣',
+    cat: 'kampanya',
     component: KampanyaStudyosu,
   },
   {
     id: 'mail-gonderim',
     label: 'Mail Gönderim',
     icon: '✉️',
+    cat: 'kampanya',
     component: MailGonderim,
-  },
-  {
-    id: 'yz-haritasi',
-    label: 'Şablonlar',
-    icon: '◉',
-    component: YzHaritasi,
-  },
-  {
-    id: 'kod-bloklari',
-    label: 'Kod Blokları',
-    icon: '〈 〉',
-    component: KodBloklariHaritasi,
   },
   {
     id: 'dijital-anons',
     label: 'Dijital Anons',
     icon: '▶',
+    cat: 'kampanya',
     component: DijitalAnons,
-  },
-  {
-    id: 'vaka-calismalari',
-    label: 'Vaka Çalışmaları',
-    icon: '◆',
-    component: VakaCalismalari,
-  },
-  {
-    id: 'renkler',
-    label: 'Renkler',
-    icon: '◕',
-    component: Renkler,
-  },
-  {
-    id: 'sss',
-    label: 'SSS',
-    icon: '?',
-    component: SSS,
-  },
-  {
-    id: 'kisa-notlar',
-    label: 'Kısa Notlar',
-    icon: '📝',
-    component: KisaNotlar,
-  },
-  {
-    id: 'seo-kontrol-merkezi',
-    label: 'SEO Kontrol Merkezi',
-    icon: '🔍',
-    component: SeoKontrolMerkezi,
-  },
-  {
-    id: 'ana-harita',
-    label: 'ANA Blok',
-    icon: '⬡',
-    component: AnaHaritasi,
   },
   {
     id: 'blog-yazilari',
     label: 'Blog Yazıları',
     icon: '✍️',
+    cat: 'icerik',
     component: BlogYazilari,
+  },
+  {
+    id: 'yz-haritasi',
+    label: 'Şablonlar',
+    icon: '◉',
+    cat: 'icerik',
+    component: YzHaritasi,
+  },
+  {
+    id: 'seo-kontrol-merkezi',
+    label: 'SEO Kontrol Merkezi',
+    icon: '🔍',
+    cat: 'icerik',
+    component: SeoKontrolMerkezi,
+  },
+  {
+    id: 'vaka-calismalari',
+    label: 'Vaka Çalışmaları',
+    icon: '◆',
+    cat: 'icerik',
+    component: VakaCalismalari,
   },
   {
     id: 'paketler',
     label: 'Paketler',
     icon: '📦',
+    cat: 'satis',
     component: Paketler,
   },
   {
     id: 'danismanlik',
     label: 'Danışmanlık',
     icon: '🎯',
+    cat: 'satis',
     component: Danismanlik,
   },
+  {
+    id: 'kod-bloklari',
+    label: 'Kod Blokları',
+    icon: '〈 〉',
+    cat: 'kaynak',
+    component: KodBloklariHaritasi,
+  },
+  {
+    id: 'ana-harita',
+    label: 'ANA Blok',
+    icon: '⬡',
+    cat: 'kaynak',
+    component: AnaHaritasi,
+  },
+  {
+    id: 'renkler',
+    label: 'Renkler',
+    icon: '◕',
+    cat: 'kaynak',
+    component: Renkler,
+  },
+  {
+    id: 'kisa-notlar',
+    label: 'Kısa Notlar',
+    icon: '📝',
+    cat: 'kaynak',
+    component: KisaNotlar,
+  },
+  {
+    id: 'sss',
+    label: 'SSS',
+    icon: '?',
+    cat: 'kaynak',
+    component: SSS,
+  },
+]
+
+// ─── Sidebar kategorileri — sıralı gruplar ───────────────────────────────────
+const CATEGORIES = [
+  { id: 'reklam',   label: 'Reklam & Analiz',      icon: '📊' },
+  { id: 'kampanya', label: 'Kampanya & İletişim',  icon: '📣' },
+  { id: 'icerik',   label: 'İçerik & SEO',         icon: '✍️' },
+  { id: 'satis',    label: 'Satış & Hizmet',       icon: '💼' },
+  { id: 'kaynak',   label: 'Kaynaklar',            icon: '📁' },
 ]
 
 // ─── Stüdyo düzeni — hamburger toggle sidebar + içerik alanı ─────────────────
 function StudyoLayout({ onLogout }) {
   const [activeId, setActiveId] = useState(TOOLS[0].id)
   const [sidebarOpen, setSidebarOpen] = useState(true)
+  // Açık kategoriler — varsayılan olarak sadece aktif aracın kategorisi açık başlar
+  const [openCats, setOpenCats] = useState(() => {
+    const activeCat = TOOLS.find(t => t.id === TOOLS[0].id)?.cat
+    return activeCat ? [activeCat] : []
+  })
   const ActiveTool = TOOLS.find(t => t.id === activeId)?.component ?? null
+  const toggleCat = (catId) =>
+    setOpenCats(prev => prev.includes(catId) ? prev.filter(c => c !== catId) : [...prev, catId])
 
   return (
     <div style={{ display: 'flex', minHeight: '100vh', fontFamily: 'inherit', position: 'relative' }}>
@@ -7369,32 +7403,79 @@ function StudyoLayout({ onLogout }) {
           STÜDYO
         </div>
         <nav style={{ flex: 1 }}>
-          {TOOLS.map(tool => {
-            const active = tool.id === activeId
+          {CATEGORIES.map(cat => {
+            const catTools = TOOLS.filter(t => t.cat === cat.id)
+            if (catTools.length === 0) return null
+            const open = openCats.includes(cat.id)
+            const hasActive = catTools.some(t => t.id === activeId)
             return (
-              <button
-                key={tool.id}
-                onClick={() => setActiveId(tool.id)}
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 8,
-                  width: '100%',
-                  padding: '9px 16px',
-                  background: active ? '#fff' : 'transparent',
-                  border: 'none',
-                  boxShadow: active ? 'inset 2px 0 0 #111' : 'none',
-                  color: active ? '#111' : '#888',
-                  fontSize: 13,
-                  fontFamily: 'inherit',
-                  cursor: 'pointer',
-                  textAlign: 'left',
-                  transition: 'all 0.1s',
-                }}
-              >
-                <span style={{ fontSize: 12, opacity: active ? 1 : 0.5 }}>{tool.icon}</span>
-                {tool.label}
-              </button>
+              <div key={cat.id} style={{ marginBottom: 2 }}>
+                {/* Kategori başlığı — tıklanınca aç/kapa */}
+                <button
+                  onClick={() => toggleCat(cat.id)}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 7,
+                    width: '100%',
+                    padding: '7px 16px',
+                    background: 'transparent',
+                    border: 'none',
+                    color: hasActive ? '#333' : '#999',
+                    fontSize: 11,
+                    fontWeight: 600,
+                    letterSpacing: '0.02em',
+                    fontFamily: 'inherit',
+                    cursor: 'pointer',
+                    textAlign: 'left',
+                    textTransform: 'uppercase',
+                    transition: 'color 0.1s',
+                  }}
+                  title={open ? 'Kategoriyi kapat' : 'Kategoriyi aç'}
+                >
+                  <span style={{ fontSize: 11 }}>{cat.icon}</span>
+                  <span style={{ flex: 1 }}>{cat.label}</span>
+                  <span style={{
+                    fontSize: 9,
+                    color: '#c4c4c4',
+                    transform: open ? 'rotate(90deg)' : 'rotate(0deg)',
+                    transition: 'transform 0.18s ease',
+                    display: 'inline-block',
+                  }}>▶</span>
+                </button>
+
+                {/* Kategori içindeki araçlar */}
+                {open && catTools.map(tool => {
+                  const active = tool.id === activeId
+                  return (
+                    <button
+                      key={tool.id}
+                      onClick={() => setActiveId(tool.id)}
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 8,
+                        width: '100%',
+                        padding: '8px 16px 8px 26px',
+                        background: active ? '#fff' : 'transparent',
+                        border: 'none',
+                        boxShadow: active ? 'inset 2px 0 0 #111' : 'none',
+                        color: active ? '#111' : '#888',
+                        fontSize: 12.5,
+                        fontFamily: 'inherit',
+                        cursor: 'pointer',
+                        textAlign: 'left',
+                        transition: 'all 0.1s',
+                      }}
+                      onMouseEnter={e => { if (!active) e.currentTarget.style.background = '#f2f2f2' }}
+                      onMouseLeave={e => { if (!active) e.currentTarget.style.background = 'transparent' }}
+                    >
+                      <span style={{ fontSize: 12, opacity: active ? 1 : 0.5 }}>{tool.icon}</span>
+                      {tool.label}
+                    </button>
+                  )
+                })}
+              </div>
             )
           })}
         </nav>
