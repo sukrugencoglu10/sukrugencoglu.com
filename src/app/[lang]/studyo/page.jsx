@@ -7351,7 +7351,7 @@ function StudyoLayout({ onLogout }) {
         style={{
           position: 'fixed',
           top: 92,
-          left: sidebarOpen ? 158 : 14,
+          left: sidebarOpen ? 198 : 14,
           zIndex: 200,
           width: 32,
           height: 32,
@@ -7383,7 +7383,7 @@ function StudyoLayout({ onLogout }) {
 
       {/* Sol sidebar */}
       <aside style={{
-        width: 200,
+        width: 240,
         flexShrink: 0,
         background: '#fafafa',
         borderRight: '0.5px solid #e8e8e8',
@@ -7395,11 +7395,11 @@ function StudyoLayout({ onLogout }) {
         left: 0,
         bottom: 0,
         zIndex: 100,
-        transform: sidebarOpen ? 'translateX(0)' : 'translateX(-200px)',
+        transform: sidebarOpen ? 'translateX(0)' : 'translateX(-240px)',
         transition: 'transform 0.22s ease',
         overflowY: 'auto',
       }}>
-        <div style={{ fontSize: 11, fontWeight: 600, color: '#bbb', letterSpacing: '0.08em', padding: '0 16px', marginBottom: '0.75rem' }}>
+        <div style={{ fontSize: 12, fontWeight: 700, color: '#aaa', letterSpacing: '0.1em', padding: '0 18px', marginBottom: '0.9rem' }}>
           STÜDYO
         </div>
         <nav style={{ flex: 1 }}>
@@ -7416,15 +7416,15 @@ function StudyoLayout({ onLogout }) {
                   style={{
                     display: 'flex',
                     alignItems: 'center',
-                    gap: 7,
+                    gap: 10,
                     width: '100%',
-                    padding: '7px 16px',
+                    padding: '11px 18px',
                     background: 'transparent',
                     border: 'none',
-                    color: hasActive ? '#333' : '#999',
-                    fontSize: 11,
-                    fontWeight: 600,
-                    letterSpacing: '0.02em',
+                    color: hasActive ? '#1a1a1a' : '#666',
+                    fontSize: 13.5,
+                    fontWeight: 700,
+                    letterSpacing: '0.03em',
                     fontFamily: 'inherit',
                     cursor: 'pointer',
                     textAlign: 'left',
@@ -7433,11 +7433,11 @@ function StudyoLayout({ onLogout }) {
                   }}
                   title={open ? 'Kategoriyi kapat' : 'Kategoriyi aç'}
                 >
-                  <span style={{ fontSize: 11 }}>{cat.icon}</span>
+                  <span style={{ fontSize: 16 }}>{cat.icon}</span>
                   <span style={{ flex: 1 }}>{cat.label}</span>
                   <span style={{
-                    fontSize: 9,
-                    color: '#c4c4c4',
+                    fontSize: 10,
+                    color: '#b0b0b0',
                     transform: open ? 'rotate(90deg)' : 'rotate(0deg)',
                     transition: 'transform 0.18s ease',
                     display: 'inline-block',
@@ -7454,14 +7454,15 @@ function StudyoLayout({ onLogout }) {
                       style={{
                         display: 'flex',
                         alignItems: 'center',
-                        gap: 8,
+                        gap: 10,
                         width: '100%',
-                        padding: '8px 16px 8px 26px',
+                        padding: '10px 16px 10px 34px',
                         background: active ? '#fff' : 'transparent',
                         border: 'none',
-                        boxShadow: active ? 'inset 2px 0 0 #111' : 'none',
-                        color: active ? '#111' : '#888',
-                        fontSize: 12.5,
+                        boxShadow: active ? 'inset 3px 0 0 #111' : 'none',
+                        color: active ? '#111' : '#777',
+                        fontSize: 14,
+                        fontWeight: active ? 600 : 500,
                         fontFamily: 'inherit',
                         cursor: 'pointer',
                         textAlign: 'left',
@@ -7470,7 +7471,7 @@ function StudyoLayout({ onLogout }) {
                       onMouseEnter={e => { if (!active) e.currentTarget.style.background = '#f2f2f2' }}
                       onMouseLeave={e => { if (!active) e.currentTarget.style.background = 'transparent' }}
                     >
-                      <span style={{ fontSize: 12, opacity: active ? 1 : 0.5 }}>{tool.icon}</span>
+                      <span style={{ fontSize: 15, opacity: active ? 1 : 0.6 }}>{tool.icon}</span>
                       {tool.label}
                     </button>
                   )
@@ -7493,18 +7494,19 @@ function StudyoLayout({ onLogout }) {
               background: 'transparent',
               border: 'none',
               borderRadius: 8,
-              color: '#aaa',
-              fontSize: 13,
+              color: '#999',
+              fontSize: 14,
+              fontWeight: 500,
               fontFamily: 'inherit',
               cursor: 'pointer',
               textAlign: 'left',
               transition: 'all 0.1s',
             }}
             onMouseEnter={e => { e.currentTarget.style.background = '#fff'; e.currentTarget.style.color = '#555'; }}
-            onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = '#aaa'; }}
+            onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = '#999'; }}
             title="Oturumu kapat"
           >
-            <span style={{ fontSize: 13 }}>⎋</span>
+            <span style={{ fontSize: 15 }}>⎋</span>
             Çıkış yap
           </button>
         </div>
@@ -7514,7 +7516,7 @@ function StudyoLayout({ onLogout }) {
       <main style={{
         flex: 1,
         overflowY: 'auto',
-        marginLeft: sidebarOpen ? 200 : 0,
+        marginLeft: sidebarOpen ? 240 : 0,
         transition: 'margin-left 0.22s ease',
         paddingTop: '0.5rem',
       }}>
