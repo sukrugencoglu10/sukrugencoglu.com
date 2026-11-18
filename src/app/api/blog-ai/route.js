@@ -240,6 +240,47 @@ ${snippet}
       return NextResponse.json({ summary })
     }
 
+    if (action === 'suggest_social_posts') {
+      const { titleTR = '', summaryTR = '', tags = [], url = '' } = body
+      const postUrl = url || 'https://www.sukrugencoglu.com/tr/blog'
+      const tagStr = Array.isArray(tags) && tags.length
+        ? tags.slice(0, 4).map(t => '#' + String(t).replace(/[^a-zA-Z0-9ğüşıöçĞÜŞİÖÇ]/g, '')).join(' ')
+        : '#DijitalPazarlama #GoogleAds #GrowthEngineering'
+
+      const prompt = `Aşağıdaki yeni blog yazısı için LinkedIn ve X (Twitter) paylaşım metinleri hazırla.
+
+Başlık: ${titleTR}
+Özet: ${summaryTR}
+Yazı Linki: ${postUrl}
+Etiketler: ${tagStr}
+
+Kurallar:
+1) LinkedIn metni (linkedinText):
+   - İlk satır güçlü, merak uyandıran bir kanca (hook) olsun.
+   - Yazıdan 3-4 maddelik net çıkarım (• veya → ile) içersin.
+   - Samimi, deneyime dayalı bir Growth Engineer (Şükrü Gençoğlu) ağzıyla yazılsın.
+   - Sonunda yazının linki (${postUrl}) ve 3-4 hashtag yer alsın.
+   - Toplam 600-1100 karakter arası olsun.
+2) X / Twitter metni (xText):
+   - Maksimum 240 karakter olsun (link dahil toplam 275 karakteri kesinlikle geçmesin!).
+   - Vurucu tek bir içgörü + yazı linki (${postUrl}) + en fazla 2 hashtag içersin.
+
+Sadece şu JSON formatında dön, başka hiçbir açıklama yazma:
+{
+  "linkedinText": "...",
+  "xText": "..."
+}`
+      const text = await callClaude(prompt, 1000, PERSONA)
+      const parsed = extractJson(text)
+      if (!parsed || (!parsed.linkedinText && !parsed.xText)) {
+        return NextResponse.json({ error: 'Sosyal medya metni üretilemedi', raw: text }, { status: 502 })
+      }
+      return NextResponse.json({
+        linkedinText: parsed.linkedinText || '',
+        xText: parsed.xText || '',
+      })
+    }
+
     return NextResponse.json({ error: 'Bilinmeyen action' }, { status: 400 })
   } catch (err) {
     console.error('blog-ai hatası:', err)

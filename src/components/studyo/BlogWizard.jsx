@@ -150,6 +150,17 @@ export default function BlogWizard({ initialPost, onCancel, onSave }) {
   const [translating, setTranslating] = useState(false)
   const [translateError, setTranslateError] = useState('')
 
+  // LinkedIn & X Otomatik Paylaşım
+  const [linkedinText, setLinkedinText] = useState(initialPost?.linkedinText || '')
+  const [xText, setXText] = useState(initialPost?.xText || '')
+  const [shareLinkedin, setShareLinkedin] = useState(!initialPost?.published)
+  const [shareX, setShareX] = useState(!initialPost?.published)
+  const [loadingSocial, setLoadingSocial] = useState(false)
+  const [socialError, setSocialError] = useState('')
+  const [socialConfig, setSocialConfig] = useState({ linkedinConfigured: false, xConfigured: false, webhookConfigured: false })
+  const [manualSharing, setManualSharing] = useState(false)
+  const [shareFeedback, setShareFeedback] = useState('')
+
   const update = (patch) => setPost(p => ({ ...p, ...patch }))
 
   // ─── AI helpers ─────────────────────────────────────────────────
@@ -268,6 +279,38 @@ export default function BlogWizard({ initialPost, onCancel, onSave }) {
     }
   }
 
+  const getPostPublicUrl = (customSlug) => {
+    const s = customSlug || post.slug || slugify(post.titleTR) || post.id
+    return `https://www.sukrugencoglu.com/tr/blog/${s}`
+  }
+
+  const suggestSocialPosts = async () => {
+    if (!post.contentTR) return
+    setLoadingSocial(true); setSocialError('')
+    try {
+      const res = await fetch('/api/blog-ai', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'suggest_social_posts',
+          titleTR: post.titleTR,
+          summaryTR: post.summaryTR,
+          contentTR: post.contentTR,
+          tags: post.tags,
+          url: getPostPublicUrl(),
+        }),
+      })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error || 'Sosyal medya metinleri üretilemedi')
+      if (data.linkedinText) setLinkedinText(data.linkedinText)
+      if (data.xText) setXText(data.xText)
+    } catch (err) {
+      setSocialError(err.message)
+    } finally {
+      setLoadingSocial(false)
+    }
+  }
+
   // Auto-fetch on step change
   useEffect(() => {
     if (step === 2 && !titleSuggestions.length && post.contentTR && !loadingTitles) suggestTitles()
@@ -280,7 +323,14 @@ export default function BlogWizard({ initialPost, onCancel, onSave }) {
   }, [step])
 
   useEffect(() => {
-    if (step === 5 && !post.summaryTR && post.contentTR && !loadingSummary) suggestSummary()
+    if (step === 5) {
+      if (!post.summaryTR && post.contentTR && !loadingSummary) suggestSummary()
+      if (!linkedinText && !xText && post.contentTR && !loadingSocial) suggestSocialPosts()
+      fetch('/api/blog-social-share')
+        .then(r => r.json())
+        .then(cfg => { if (cfg && typeof cfg === 'object') setSocialConfig(cfg) })
+        .catch(() => {})
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [step])
 
@@ -364,16 +414,94 @@ export default function BlogWizard({ initialPost, onCancel, onSave }) {
 
   const go = (n) => setStep(n)
 
+  // ─── Social Share Helper ────────────────────────────────────────
+  const triggerSocialShare = async (finalSlug, { isManual = false } = {}) => {
+    const platforms = []
+    if (shareLinkedin) platforms.push('linkedin')
+    if (shareX) platforms.push('x')
+    if (!platforms.length) return
+
+    const postUrl = getPostPublicUrl(finalSlug)
+    const finalLinkedinText = linkedinText.trim() || `${post.titleTR}\n\n${post.summaryTR || ''}\n\n👉 ${postUrl}`
+    const finalXText = xText.trim() || `${post.titleTR}\n\n${postUrl}`
+
+    if (isManual) {
+      setManualSharing(true)
+      setShareFeedback('')
+    }
+
+    try {
+      const res = await fetch('/api/blog-social-share', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          title: post.titleTR,
+          summary: post.summaryTR,
+          url: postUrl,
+          coverImage: post.coverImage,
+          linkedinText: finalLinkedinText,
+          xText: finalXText,
+          tags: post.tags,
+          platforms,
+        }),
+      })
+      const data = await res.json().catch(() => ({}))
+      const r = data?.results || {}
+      const webhookOk = r.webhook?.ok
+
+      const statusParts = []
+      if (platforms.includes('linkedin')) {
+        if (r.linkedin?.ok || webhookOk) {
+          statusParts.push('LinkedIn: Otomatik paylaşıldı ✓')
+        } else {
+          // API anahtarı henüz girilmemişse metni hazır doldurarak LinkedIn paylaşım ekranını aç
+          window.open(
+            `https://www.linkedin.com/feed/?shareActive=true&text=${encodeURIComponent(finalLinkedinText)}`,
+            '_blank',
+            'noopener,noreferrer'
+          )
+          statusParts.push('LinkedIn: Hazır metinle paylaşım penceresi açıldı ↗')
+        }
+      }
+
+      if (platforms.includes('x')) {
+        if (r.x?.ok) {
+          statusParts.push('X: Otomatik paylaşıldı ✓')
+        } else {
+          // X API anahtarı tanımlı değilse metni hazır doldurarak X paylaşım ekranını aç
+          window.open(
+            `https://x.com/intent/post?text=${encodeURIComponent(finalXText)}`,
+            '_blank',
+            'noopener,noreferrer'
+          )
+          statusParts.push('X: Hazır tweet ekranı açıldı ↗')
+        }
+      }
+
+      if (isManual) setShareFeedback(statusParts.join(' · '))
+    } catch (err) {
+      if (isManual) setSocialError(err.message)
+    } finally {
+      if (isManual) setManualSharing(false)
+    }
+  }
+
   // ─── Publish / Save ─────────────────────────────────────────────
   const finalize = async (publish) => {
     setPublishing(true)
     try {
+      const finalSlug = post.slug || slugify(post.titleTR) || post.id
       const final = {
         ...post,
-        slug: post.slug || slugify(post.titleTR) || post.id,
+        slug: finalSlug,
         readingMinutes: post.readingMinutes || readingMin(post.contentTR),
         published: publish,
         publishedAt: publish && !post.publishedAt ? new Date().toISOString().split('T')[0] : post.publishedAt,
+        linkedinText,
+        xText,
+      }
+      if (publish && (shareLinkedin || shareX)) {
+        await triggerSocialShare(finalSlug)
       }
       await onSave(final)
     } finally {
@@ -948,6 +1076,138 @@ export default function BlogWizard({ initialPost, onCancel, onSave }) {
               placeholder="Kart görünümünde gösterilir..."
               style={{ width: '100%', padding: 10, fontSize: 13, border: '1px solid #ddd', borderRadius: 6, outline: 'none', resize: 'vertical', fontFamily: 'inherit', boxSizing: 'border-box' }}
             />
+          </div>
+
+          {/* ─── LinkedIn & X Otomatik Paylaşım Paneli ─── */}
+          <div style={{ marginBottom: 18, padding: 16, background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: 10 }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, flexWrap: 'wrap', marginBottom: 12 }}>
+              <div>
+                <div style={{ fontSize: 13, fontWeight: 700, color: '#111', display: 'flex', alignItems: 'center', gap: 6 }}>
+                  <span>📣 LinkedIn & X Otomatik Paylaşım</span>
+                  {(socialConfig.linkedinConfigured || socialConfig.xConfigured || socialConfig.webhookConfigured) ? (
+                    <span style={{ fontSize: 10, padding: '2px 8px', borderRadius: 10, background: 'rgba(29,158,117,0.12)', color: '#1D9E75', fontWeight: 700 }}>
+                      API / Webhook Aktif
+                    </span>
+                  ) : (
+                    <span style={{ fontSize: 10, padding: '2px 8px', borderRadius: 10, background: '#eef2ff', color: '#4f46e5', fontWeight: 600 }}>
+                      Akıllı Paylaşım Modu
+                    </span>
+                  )}
+                </div>
+                <div style={{ fontSize: 11, color: '#64748b', marginTop: 2 }}>
+                  &ldquo;🚀 Yayınla&rdquo; butonuna bastığında seçili platformlarda otomatik paylaşılır.
+                </div>
+              </div>
+
+              <div style={{ display: 'flex', gap: 6 }}>
+                <button
+                  type="button"
+                  onClick={suggestSocialPosts}
+                  disabled={loadingSocial}
+                  style={{
+                    padding: '6px 12px', fontSize: 11, fontWeight: 600, borderRadius: 6,
+                    background: '#fff', border: '1px solid #cbd5e1', color: '#334155',
+                    cursor: loadingSocial ? 'wait' : 'pointer',
+                  }}>
+                  {loadingSocial ? 'Üretiliyor...' : '✨ AI ile Metinleri Yenile'}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => triggerSocialShare(undefined, { isManual: true })}
+                  disabled={manualSharing || (!shareLinkedin && !shareX)}
+                  style={{
+                    padding: '6px 12px', fontSize: 11, fontWeight: 700, borderRadius: 6,
+                    background: '#111', border: 'none', color: '#fff',
+                    cursor: manualSharing ? 'wait' : 'pointer',
+                  }}>
+                  {manualSharing ? 'Paylaşılıyor...' : '↗ Şimdi Paylaş'}
+                </button>
+              </div>
+            </div>
+
+            {/* Platform Seçim Checkbox'ları */}
+            <div style={{ display: 'flex', gap: 12, marginBottom: 12, flexWrap: 'wrap' }}>
+              <label style={{
+                display: 'inline-flex', alignItems: 'center', gap: 7, padding: '7px 12px',
+                borderRadius: 8, cursor: 'pointer', fontSize: 12, fontWeight: 600,
+                background: shareLinkedin ? 'rgba(10,102,194,0.1)' : '#fff',
+                border: `1px solid ${shareLinkedin ? '#0A66C2' : '#cbd5e1'}`,
+                color: shareLinkedin ? '#0A66C2' : '#64748b',
+              }}>
+                <input
+                  type="checkbox"
+                  checked={shareLinkedin}
+                  onChange={e => setShareLinkedin(e.target.checked)}
+                  style={{ accentColor: '#0A66C2' }}
+                />
+                <span>in LinkedIn&apos;de Paylaş</span>
+              </label>
+
+              <label style={{
+                display: 'inline-flex', alignItems: 'center', gap: 7, padding: '7px 12px',
+                borderRadius: 8, cursor: 'pointer', fontSize: 12, fontWeight: 600,
+                background: shareX ? 'rgba(17,17,17,0.08)' : '#fff',
+                border: `1px solid ${shareX ? '#111' : '#cbd5e1'}`,
+                color: shareX ? '#111' : '#64748b',
+              }}>
+                <input
+                  type="checkbox"
+                  checked={shareX}
+                  onChange={e => setShareX(e.target.checked)}
+                  style={{ accentColor: '#111' }}
+                />
+                <span>𝕏 X (Twitter)&apos;da Paylaş</span>
+              </label>
+            </div>
+
+            {socialError && (
+              <div style={{ padding: 8, background: '#fff1f0', border: '1px solid #ffccc7', borderRadius: 6, color: '#cf1322', fontSize: 11, marginBottom: 10 }}>
+                {socialError}
+              </div>
+            )}
+
+            {shareFeedback && (
+              <div style={{ padding: 8, background: '#ecfdf5', border: '1px solid #a7f3d0', borderRadius: 6, color: '#065f46', fontSize: 11, fontWeight: 600, marginBottom: 10 }}>
+                {shareFeedback}
+              </div>
+            )}
+
+            {/* Metin Kutuları */}
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: 12 }}>
+              {shareLinkedin && (
+                <div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
+                    <label style={{ fontSize: 11, fontWeight: 700, color: '#0A66C2' }}>LinkedIn Gönderi Metni</label>
+                    <span style={{ fontSize: 10, color: '#94a3b8' }}>{linkedinText.length} karakter</span>
+                  </div>
+                  <textarea
+                    value={linkedinText}
+                    onChange={e => setLinkedinText(e.target.value)}
+                    rows={5}
+                    placeholder={loadingSocial ? 'AI LinkedIn metnini hazırlıyor...' : 'LinkedIn paylaşım metni...'}
+                    style={{ width: '100%', padding: 9, fontSize: 12, lineHeight: 1.5, border: '1px solid #cbd5e1', borderRadius: 6, outline: 'none', resize: 'vertical', fontFamily: 'inherit', boxSizing: 'border-box', background: '#fff' }}
+                  />
+                </div>
+              )}
+
+              {shareX && (
+                <div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
+                    <label style={{ fontSize: 11, fontWeight: 700, color: '#111' }}>X (Twitter) Gönderi Metni</label>
+                    <span style={{ fontSize: 10, color: xText.length > 280 ? '#ef4444' : '#94a3b8', fontWeight: xText.length > 280 ? 700 : 400 }}>
+                      {xText.length} / 280
+                    </span>
+                  </div>
+                  <textarea
+                    value={xText}
+                    onChange={e => setXText(e.target.value)}
+                    rows={5}
+                    placeholder={loadingSocial ? 'AI X metnini hazırlıyor...' : 'X (Twitter) paylaşım metni...'}
+                    style={{ width: '100%', padding: 9, fontSize: 12, lineHeight: 1.5, border: '1px solid #cbd5e1', borderRadius: 6, outline: 'none', resize: 'vertical', fontFamily: 'inherit', boxSizing: 'border-box', background: '#fff' }}
+                  />
+                </div>
+              )}
+            </div>
           </div>
 
           {/* Son düzenleme — başlık + içerik */}
