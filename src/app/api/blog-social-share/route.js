@@ -244,11 +244,20 @@ export async function POST(req) {
     // 3) Make.com / Zapier / n8n Webhook
     if (process.env.SOCIAL_WEBHOOK_URL || DEFAULT_MAKE_WEBHOOK) {
       try {
+        const resolvedCoverImage =
+          coverImage && coverImage.startsWith('http')
+            ? coverImage
+            : coverImage
+            ? `https://www.sukrugencoglu.com${coverImage}`
+            : url
+            ? `${url}/opengraph-image`
+            : 'https://www.sukrugencoglu.com/tr/opengraph-image'
+
         results.webhook = await postToWebhook({
           title,
           summary,
           url,
-          coverImage,
+          coverImage: resolvedCoverImage,
           linkedinText: cleanLinkedinText,
           xText,
           tags,

@@ -32,16 +32,17 @@ async function getPost(slug: string): Promise<Post | null> {
 export default async function OgImage({
   params,
 }: {
-  params: { lang: string; slug: string };
+  params: Promise<{ lang: string; slug: string }>;
 }) {
-  const post = await getPost(params.slug);
+  const { lang, slug } = await params;
+  const post = await getPost(slug);
   const title = post
-    ? params.lang === "tr"
-      ? post.titleTR || post.titleEN || params.slug
-      : post.titleEN || post.titleTR || params.slug
-    : params.slug;
+    ? lang === "tr"
+      ? post.titleTR || post.titleEN || slug
+      : post.titleEN || post.titleTR || slug
+    : slug;
   const subtitle = post
-    ? params.lang === "tr"
+    ? lang === "tr"
       ? post.summaryTR
       : post.summaryEN
     : undefined;
