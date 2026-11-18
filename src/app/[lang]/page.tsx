@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import HeroSection from "@/components/sections/HeroSection";
-import BlogStrip from "@/components/sections/BlogStrip";
 import MarqueeText from "@/components/sections/MarqueeText";
 import WorkSection from "@/components/sections/WorkSection";
 import MantikhHaritasiSection from "@/components/sections/MantikhHaritasiSection";
@@ -53,7 +52,6 @@ export default function HomePage() {
       <div className="relative z-10 mt-0 md:-mt-[80px]">
         <MarqueeText />
       </div>
-      <BlogStrip />
       <WorkSection />
       <MantikhHaritasiSection belowDashboard={<ContactSection noWrapper />} />
       {/* Masaüstünde mantık haritasının altında */}
