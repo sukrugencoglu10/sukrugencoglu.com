@@ -251,7 +251,7 @@ ${snippet}
 
 Başlık: ${titleTR}
 Özet: ${summaryTR}
-Yazı Linki: ${postUrl}
+Yazı Linki (Sadece X için): ${postUrl}
 Etiketler: ${tagStr}
 
 Kurallar:
@@ -259,7 +259,7 @@ Kurallar:
    - İlk satır güçlü, merak uyandıran bir kanca (hook) olsun.
    - Yazıdan 3-4 maddelik net çıkarım (• veya → ile) içersin.
    - Samimi, deneyime dayalı bir Growth Engineer (Şükrü Gençoğlu) ağzıyla yazılsın.
-   - Sonunda yazının linki (${postUrl}) ve 3-4 hashtag yer alsın.
+   - KESİNLİKLE metnin içine URL / link EKLEME (çünkü LinkedIn paylaşımın altında site kartı kutucuğunu otomatik gösteriyor). Link yerine sonda "Detaylar aşağıdaki makale kartında 👇" benzeri kısa bir yönlendirme ve 3-4 hashtag yer alsın.
    - Toplam 600-1100 karakter arası olsun.
 2) X / Twitter metni (xText):
    - Maksimum 240 karakter olsun (link dahil toplam 275 karakteri kesinlikle geçmesin!).
@@ -275,8 +275,13 @@ Sadece şu JSON formatında dön, başka hiçbir açıklama yazma:
       if (!parsed || (!parsed.linkedinText && !parsed.xText)) {
         return NextResponse.json({ error: 'Sosyal medya metni üretilemedi', raw: text }, { status: 502 })
       }
+      const cleanLinkedinText = (parsed.linkedinText || '')
+        .replace(/https?:\/\/\S+/gi, '')
+        .replace(/[ \t]+\n/g, '\n')
+        .replace(/\n{3,}/g, '\n\n')
+        .trim()
       return NextResponse.json({
-        linkedinText: parsed.linkedinText || '',
+        linkedinText: cleanLinkedinText,
         xText: parsed.xText || '',
       })
     }

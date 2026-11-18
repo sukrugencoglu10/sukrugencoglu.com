@@ -212,11 +212,17 @@ export async function POST(req) {
 
     const results = {}
 
+    const cleanLinkedinText = linkedinText
+      .replace(/https?:\/\/\S+/gi, '')
+      .replace(/[ \t]+\n/g, '\n')
+      .replace(/\n{3,}/g, '\n\n')
+      .trim()
+
     // 1) LinkedIn
-    if (platforms.includes('linkedin') && linkedinText.trim()) {
+    if (platforms.includes('linkedin') && cleanLinkedinText) {
       try {
         results.linkedin = await postToLinkedIn({
-          text: linkedinText.trim(),
+          text: cleanLinkedinText,
           url,
           title,
           summary,
@@ -243,7 +249,7 @@ export async function POST(req) {
           summary,
           url,
           coverImage,
-          linkedinText,
+          linkedinText: cleanLinkedinText,
           xText,
           tags,
           platforms,

@@ -422,7 +422,12 @@ export default function BlogWizard({ initialPost, onCancel, onSave }) {
     if (!platforms.length) return
 
     const postUrl = getPostPublicUrl(finalSlug)
-    const finalLinkedinText = linkedinText.trim() || `${post.titleTR}\n\n${post.summaryTR || ''}\n\n👉 ${postUrl}`
+    const rawLinkedin = linkedinText.trim() || `${post.titleTR}\n\n${post.summaryTR || ''}`
+    const finalLinkedinText = rawLinkedin
+      .replace(/https?:\/\/\S+/gi, '')
+      .replace(/[ \t]+\n/g, '\n')
+      .replace(/\n{3,}/g, '\n\n')
+      .trim()
     const finalXText = xText.trim() || `${post.titleTR}\n\n${postUrl}`
 
     if (isManual) {
